@@ -222,7 +222,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   afterwards.
 - **Gallery block**: a grid of uploaded pictures in one shape, each with a
   caption (`GalleryBlock.vue`, `GalleryForm.vue`); its pictures count as in
-  use when unused ones are tidied (`server/image-limits.ts`).
+  use when unused ones are tidied (`server/image-limits.ts`). Clicking a
+  picture opens it whole in a full-size view (`GalleryLightbox.vue`, the
+  browser's own `<dialog>`), with Previous / Next, the arrow keys and Esc.
 - **Work page**: a work's own page at `/<site>/work/<pageSlug>`
   (`src/components/works/WorkPage.vue`): the work's details on top, then
   blocks the owner adds in the Work tab (`WorkPageFields.vue`). Its blocks

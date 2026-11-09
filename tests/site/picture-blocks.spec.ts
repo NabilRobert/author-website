@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import { createMemoryHistory } from 'vue-router'
@@ -132,5 +132,71 @@ describe('a gallery', () => {
     const empty = { imageKey: null, imageCrop: centredCrop(), description: '' }
     const result = blockSchema.safeParse({ ...gallery({ pictures: [] }), pictures: [empty] })
     expect(result.error?.issues[0]?.message).toBe('Upload a picture, or remove this one.')
+  })
+})
+
+describe("a gallery's full-size view", () => {
+  // jsdom has no modal dialogs; these stand in for the browser's.
+  beforeEach(() => {
+    HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) {
+      this.open = true
+    })
+    HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
+      this.open = false
+      this.dispatchEvent(new Event('close'))
+    })
+  })
+
+  const KEYS = ['images/0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e01.jpg', 'images/0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e02.jpg']
+  function mountGallery() {
+    const pictures = KEYS.map((imageKey, index) => ({
+      imageKey,
+      imageCrop: centredCrop(),
+      description: `Room ${index + 1}`,
+    }))
+    const block = blockOf('gallery', { heading: '', pictures, columns: 3, imageShape: 'square' })
+    return mount(GalleryBlock, { props: { block } })
+  }
+  const shownPicture = (gallery: ReturnType<typeof mountGallery>) => gallery.find('dialog img').attributes('src')
+
+  it('opens the clicked picture whole, uncropped, with its caption', async () => {
+    const gallery = mountGallery()
+    await gallery.find('button[aria-label="Open Room 2 full size"]').trigger('click')
+    expect((gallery.find('dialog').element as HTMLDialogElement).open).toBe(true)
+    expect(shownPicture(gallery)).toBe(`/api/${KEYS[1]}`)
+    expect(gallery.find('dialog figcaption').text()).toBe('Room 2')
+    expect(gallery.find('dialog').text()).toContain('2 of 2')
+  })
+
+  it('steps through the pictures with the buttons and the arrow keys, wrapping around', async () => {
+    const gallery = mountGallery()
+    await gallery.find('button[aria-label="Open Room 2 full size"]').trigger('click')
+    await gallery
+      .findAll('dialog button')
+      .find((button) => button.text() === 'Next →')!
+      .trigger('click')
+    expect(shownPicture(gallery)).toBe(`/api/${KEYS[0]}`)
+    await gallery.find('dialog').trigger('keydown', { key: 'ArrowLeft' })
+    expect(shownPicture(gallery)).toBe(`/api/${KEYS[1]}`)
+  })
+
+  it('closes with the Close button', async () => {
+    const gallery = mountGallery()
+    await gallery.find('button[aria-label="Open Room 1 full size"]').trigger('click')
+    await gallery
+      .findAll('dialog button')
+      .find((button) => button.text().startsWith('Close'))!
+      .trigger('click')
+    expect((gallery.find('dialog').element as HTMLDialogElement).open).toBe(false)
+  })
+
+  it("stays shut for a click that arrives already prevented, as in the editor's preview", async () => {
+    const gallery = mountGallery()
+    const button = gallery.find('button[aria-label="Open Room 1 full size"]').element
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true })
+    click.preventDefault()
+    button.dispatchEvent(click)
+    await gallery.vm.$nextTick()
+    expect(HTMLDialogElement.prototype.showModal).not.toHaveBeenCalled()
   })
 })

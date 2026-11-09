@@ -33,11 +33,12 @@ const BLOCK_OUTLINES = [
   '[&_[data-selected]]:outline-3 [&_[data-selected]]:outline-solid',
 ]
 
-// Links never navigate (RouterLink skips an event that is already
-// prevented); a click anywhere in a block selects that block.
+// Links and buttons in the site never act here (RouterLink, and a
+// gallery's full-size view, skip an event that is already prevented); a
+// click anywhere in a block selects that block.
 function handleClick(event: MouseEvent) {
   const target = event.target as Element
-  if (target.closest('a')) event.preventDefault()
+  if (target.closest('a, button')) event.preventDefault()
   const blockId = target.closest<HTMLElement>('[data-block-id]')?.dataset.blockId
   if (blockId) emit('selectBlock', blockId)
 }
