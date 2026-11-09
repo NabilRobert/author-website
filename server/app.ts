@@ -6,27 +6,25 @@
  *   /api/sites/...     anyone: a site's content, reporting a page (server/public-routes.ts)
  *   /api/images/...    anyone: pictures (server/image-routes.ts)
  *   /api/me/...        the logged-in person's own site (server/me-routes.ts)
- *   /api/dev/...       local development only (server/dev-routes.ts)
  */
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { createAuth } from './auth'
 import type { Auth } from './auth'
-import { loginCodeSender } from './email'
-import type { SendLoginCode } from './email'
+import { emailCodeSender } from './email'
+import type { SendEmailCode } from './email'
 import type { Env } from './env'
 import type { AppEnv } from './session'
 import { publicRoutes } from './public-routes'
 import { imageServeRoutes } from './image-routes'
 import { meRoutes } from './me-routes'
-import { devRoutes } from './dev-routes'
 
 interface AppOptions {
-  /** How login codes are sent; tests pass one that keeps them. */
-  loginCodeSenderFor?: (env: Env) => SendLoginCode
+  /** How emailed codes are sent; tests pass one that keeps them. */
+  emailCodeSenderFor?: (env: Env) => SendEmailCode
 }
 
-export function createApp({ loginCodeSenderFor = loginCodeSender }: AppOptions = {}) {
+export function createApp({ emailCodeSenderFor = emailCodeSender }: AppOptions = {}) {
   const app = new Hono<AppEnv>().basePath('/api')
 
   // Better Auth starts setting itself up (reading the database) as soon as
@@ -34,15 +32,13 @@ export function createApp({ loginCodeSenderFor = loginCodeSender }: AppOptions =
   // and requests refused early never start it.
   app.use('*', async (c, next) => {
     let auth: Auth | undefined
-    c.set('auth', () => (auth ??= createAuth(c.env, loginCodeSenderFor(c.env))))
+    c.set('auth', () => (auth ??= createAuth(c.env, emailCodeSenderFor(c.env))))
     await next()
   })
   app.on(['GET', 'POST'], '/auth/*', (c) => c.var.auth().handler(c.req.raw))
   app.route('/', publicRoutes)
   app.route('/', imageServeRoutes)
   app.route('/me', meRoutes)
-  // Local development only; answers 404 everywhere else (server/dev-routes.ts).
-  app.route('/dev', devRoutes)
 
   app.notFound((c) => c.json({ error: `There is no API address ${c.req.method} ${c.req.path}.` }, 404))
   // Details go to the Cloudflare logs; the browser gets a message a person

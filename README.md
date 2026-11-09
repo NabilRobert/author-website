@@ -10,8 +10,9 @@ live preview.
 
 Built with Vue 3, TypeScript, Tailwind and Vite. Runs on Cloudflare's free
 plan: Pages for the site, a Pages Function (Hono) for the API, D1 for
-accounts and content, R2 for pictures. Login is an emailed code through
-Better Auth; codes are sent with Resend's free tier. No passwords exist.
+accounts and content, R2 for pictures. Login is an email and password
+through Better Auth; emailed codes (Resend's free tier) confirm the email
+at sign-up and reset a forgotten password.
 
 > Status: works end to end locally (sign up, edit, save, public page). Not
 > deployed yet: see the setup checklist below. The example content is an
@@ -21,25 +22,26 @@ Better Auth; codes are sent with Resend's free tier. No passwords exist.
 
 ```bash
 npm install
-cp .dev.vars.example .dev.vars   # local settings: login codes print in the terminal
+cp .dev.vars.example .dev.vars   # local settings: emailed codes print in the terminal
 npm run db:migrate:local         # create the tables in a local D1 (once)
 npm run db:seed:test             # optional: a test page at http://localhost:8788/test (local only)
 npm run dev:api                  # site and API on http://localhost:8788
 npm run check                    # types, lint, format, tests and build (what CI runs)
 ```
 
-Open http://localhost:8788/login, type any email, and copy the code from
-the terminal. Or log in as the **test account**, `test@framed.local`: on a
-local server it needs no code, and it owns the page at `/test`. Once
-logged in, your own page shows an **Edit this page** button; the editor's
-**Done** brings you back.
+Open http://localhost:8788/login and sign up with any email and a
+password; the code that confirms the email is printed in the terminal. Or
+log in as the **test account**: `test@framed.local`, password
+`framed-local-test` (local database only; it owns the page at `/test`).
+Once logged in, your own page shows an **Edit this page** button; the
+editor's **Done** brings you back.
 
-> **Never set `LOCAL_DEV_TEST_LOGIN` (or any `LOCAL_DEV_` setting) on a
-> deployed site.** It lets the test account log in without a code
-> (`/api/dev/test-account-login`). It also
-> refuses unless `SITE_URL` is a localhost address, and a test fails if
-> `wrangler.toml` ever sets it, but the safe rule is: local `.dev.vars` only. For live reloading while changing the site, also run
-`npm run dev` (http://localhost:5173, with `/api` passed to port 8788).
+> **Never set `LOCAL_DEV_PRINT_CODES` (or any `LOCAL_DEV_` setting) on a
+> deployed site.** It would print people's codes in the logs instead of
+> emailing them. A test fails if `wrangler.toml` ever sets one; the safe
+> rule is: local `.dev.vars` only. For live reloading while changing the
+> site, also run `npm run dev` (http://localhost:5173, with `/api` passed
+> to port 8788).
 
 ## Layout
 

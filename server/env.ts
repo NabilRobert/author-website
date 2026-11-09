@@ -12,12 +12,6 @@ export interface Env {
   RESEND_API_KEY?: string
   /** The sender of login codes, like "Framed <login@framed.my.id>". */
   EMAIL_FROM?: string
-  /** "true" prints login codes in the terminal instead of emailing them: local development only. */
+  /** "true" prints emailed codes in the terminal instead of sending them: local development only. */
   LOCAL_DEV_PRINT_CODES?: string
-  /**
-   * "true" turns on /api/dev/test-login (one-click login as the local test
-   * user, server/dev-routes.ts). Local .dev.vars only, never on a deployed
-   * site; it also refuses unless SITE_URL and the request are localhost.
-   */
-  LOCAL_DEV_TEST_LOGIN?: string
 }

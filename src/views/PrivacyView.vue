@@ -14,16 +14,19 @@ useHead({ title: 'Privacy · Framed' })
       <p class="rounded-md bg-notice p-3 text-sm">Draft, to be reviewed before Framed opens to the public.</p>
       <h2 class="text-xl font-semibold">What we keep</h2>
       <ul class="list-disc space-y-1 pl-6">
-        <li>Your email address, to send you login codes. We never ask for a password.</li>
+        <li>Your email address, to log you in and to send you codes to confirm it or reset your password.</li>
+        <li>
+          Your password, only scrambled (hashed) so that nobody, including us, can read it. When you choose one, we
+          check it against Have I Been Pwned's list of leaked passwords; only the first 5 characters of a scrambled copy
+          are sent, never the password.
+        </li>
         <li>Your page and the pictures you upload, to show them to visitors.</li>
         <li>Your login sessions (which device, until when), so you stay logged in for up to a week.</li>
       </ul>
       <h2 class="text-xl font-semibold">What we don't do</h2>
-      <p>
-        No ads, no tracking, no selling or sharing your data. Login codes are sent through Resend, an email service.
-      </p>
+      <p>No ads, no tracking, no selling or sharing your data. Codes are emailed through Resend, an email service.</p>
       <h2 class="text-xl font-semibold">Where it is kept</h2>
-      <p>On Cloudflare's servers. Login codes are stored scrambled (hashed) and expire after 10 minutes.</p>
+      <p>On Cloudflare's servers. Emailed codes are stored scrambled (hashed) and expire after 10 minutes.</p>
       <h2 class="text-xl font-semibold">Deleting everything</h2>
       <p>
         In your editor, under "About you", choose "Delete my account". Your account, page and pictures are removed at

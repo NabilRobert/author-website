@@ -94,36 +94,6 @@ describe('the editor', () => {
   })
 })
 
-describe('the test account on the login page', () => {
-  async function logInAs(email: string, answers: Record<string, FakeAnswer>) {
-    const { page, router } = await open('/login', { 'GET /api/me': json({ error: 'x' }, 401) })
-    fakeApi(answers)
-    await page.find('#login-email').setValue(email)
-    await page.find('form').trigger('submit')
-    await flushPromises()
-    return { page, router }
-  }
-
-  it('logs straight in without asking for a code, locally', async () => {
-    const { page, router } = await logInAs('test@framed.local', {
-      'POST /api/dev/test-account-login': json({ ok: true }),
-      'GET /api/me': json({ email: 'test@framed.local', site: { name: 'test' } }),
-      'GET /api/me/content': json({ ...demoContent, updatedAt: 'saved' }),
-    })
-    expect(authClient.emailOtp.sendVerificationOtp).not.toHaveBeenCalled()
-    await vi.waitFor(() => expect(router.currentRoute.value.fullPath).toBe('/test/edit'))
-    page.unmount()
-  })
-
-  it('explains that it works only locally when the server refuses', async () => {
-    const { page } = await logInAs('test@framed.local', {
-      'POST /api/dev/test-account-login': json({ error: 'Not found' }, 404),
-    })
-    expect(page.find('[role="alert"]').text()).toContain('works only on a local development server')
-    page.unmount()
-  })
-})
-
 describe("Framed's header", () => {
   it('shows "My page" to someone logged in', async () => {
     const { page } = await open('/', { 'GET /api/me': json(MARA) })

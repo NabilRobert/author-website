@@ -5,7 +5,6 @@
 SITE_URL=http://localhost:8788
 # Any 32+ characters will do locally. Production uses its own secret.
 BETTER_AUTH_SECRET=local-only-secret-change-me-0123456789
-# Print login codes in the terminal instead of emailing them.
+# Print emailed codes (confirming an email, resetting a password) in the
+# terminal instead of sending them.
 LOCAL_DEV_PRINT_CODES=true
-# One-click login as the test user at /api/dev/test-login (npm run db:seed:test first).
-LOCAL_DEV_TEST_LOGIN=true

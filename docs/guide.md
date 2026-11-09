@@ -74,12 +74,13 @@ sequenceDiagram
   participant E as Editor (src/views/EditView.vue)
   participant S as API (server/me-routes.ts)
   participant D as D1
-  B->>L: email
-  L->>A: send a code
+  B->>L: email + password
+  L->>A: sign up (first time)
   A-->>B: 6-digit code by email (Resend)
   B->>L: the code
-  L->>A: log in with it
+  L->>A: confirm the email
   A-->>B: login cookie (HttpOnly, a week)
+  Note over B,A: later visits: email + password, no code
   L->>S: POST /api/me/site (first time: claim a name)
   B->>E: /alex/edit
   E->>S: GET /api/me, then GET /api/me/content
@@ -88,11 +89,16 @@ sequenceDiagram
   S->>D: saveContent for the logged-in person's site only
 ```
 
-1. **Login** (`src/auth/useLogin.ts`, `src/auth/authClient.ts`): the
-   person types their email, gets a code from Better Auth, and types it in.
-   No passwords exist. Codes are stored hashed, expire after 10 minutes,
-   allow 5 tries, and can be asked for 3 times a minute (`server/auth.ts`).
-   Locally the code is printed in the terminal (`server/email.ts`).
+1. **Login** (`src/auth/useLogin.ts`, `src/auth/authClient.ts`): a new
+   person signs up with an email and a password (at least 10 characters,
+   `shared/passwords.ts`), then types the 6-digit code we email to confirm
+   the address; after that they log in with the password. "Forgot your
+   password?" emails a code that sets a new one and logs out every device.
+   Passwords are hashed with PBKDF2 (`server/password-hash.ts`), and ones
+   found in data breaches are refused (Better Auth's `haveIBeenPwned`).
+   Codes are stored hashed, expire after 10 minutes and allow 5 tries;
+   logging in and asking for codes are rate-limited (`server/auth.ts`).
+   Locally the codes are printed in the terminal (`server/email.ts`).
 2. **A name** (first time only): `POST /api/me/site` claims
    `framed.my.id/<name>` (`server/sites.ts: createSite`); the rules are in
    `shared/names.ts`, checked in the form and again by the API.
@@ -249,8 +255,18 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   real local D1 (`tests/api/test-database.ts`).
 - **Better Auth**: the login library (`server/auth.ts`). It runs in our own
   Worker and keeps its tables (`user`, `session`, `verification`, `account`,
-  `rateLimit`) in our D1 (`migrations/0001`). No passwords.
-- **Login code (OTP)**: the 6-digit one-time code emailed to log in.
+  `rateLimit`) in our D1 (`migrations/0001`); password hashes live in
+  `account.password`.
+- **Emailed code (OTP)**: a 6-digit one-time code, emailed to confirm an
+  address at sign-up or to reset a password. It can't be used to log in.
+- **Password hash (PBKDF2)**: a password scrambled one way, with a random
+  salt and 100,000 rounds (the most Cloudflare allows), so a stolen
+  database doesn't reveal passwords (`server/password-hash.ts`). The round
+  count is stored with each hash so it can be raised later.
+- **Leaked-password check**: Better Auth's `haveIBeenPwned` plugin sends the
+  first 5 characters of the password's SHA-1 hash to api.pwnedpasswords.com
+  and refuses passwords found in breaches; the password itself never
+  leaves the server.
 - **Session**: a login, remembered by an HttpOnly cookie for a week; "Log
   out" ends it at once.
 - **Site name**: the part of the address after `framed.my.id/`
@@ -258,9 +274,8 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **CSRF**: a hostile website making a logged-in person's browser send a
   request. `csrf()` (`server/me-routes.ts`) refuses writes whose Origin
   isn't Framed, on top of the cookie's SameSite rule.
-- **Test account**: `test@framed.local`, which owns `/test` locally
-  (`npm run db:seed:test`) and logs in without a code, but only on a local
-  server with `LOCAL_DEV_TEST_LOGIN` on (`server/dev-routes.ts`).
+- **Test account**: `test@framed.local`, which owns `/test` in the local
+  database only (`npm run db:seed:test`, which also sets its password).
 - **Fail closed**: when something is missing or wrong, refuse rather than
   allow.
 - **Draft backup**: a copy of unsaved changes in the browser's
@@ -314,8 +329,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   `server/me-routes.ts`, `server/content-routes.ts`, `server/session.ts`
   and `server/image-limits.ts`; login messages in `src/auth/useLogin.ts`;
   connection messages in `src/editor/editorApi.ts`.
-- **Change the login (code length, expiry, session length):** the
-  constants at the top of `server/auth.ts`.
+- **Change the login (code length, expiry, session length, rate limits):**
+  the constants at the top of `server/auth.ts`; password length in
+  `shared/passwords.ts`; hashing rounds in `server/password-hash.ts`.
 - **Change a site's picture allowance:** `server/image-limits.ts`.
 - **Reserve another address:** `RESERVED_NAMES` in `shared/names.ts`.
 - **Add an API address:** a route in `server/public-routes.ts` (anyone) or

@@ -6,8 +6,9 @@
  *
  *   npm run db:seed:test
  *
- * Log in as test@framed.local on the login page: locally it needs no code.
- * Running it again leaves an existing test page as it is.
+ * Log in as test@framed.local with TEST_PASSWORD. The email counts as
+ * confirmed already. Running it again leaves an existing test page as it
+ * is, and gives an older test account (from before passwords) its password.
  */
 import { getPlatformProxy } from 'wrangler'
 import type { Env } from '../server/env'
@@ -16,9 +17,12 @@ import { loadContent } from '../server/content-read'
 import { saveContent } from '../server/content-write'
 import { demoContent } from '../shared/demo-content'
 import { TEST_ACCOUNT_EMAIL, TEST_ACCOUNT_SITE } from '../shared/test-account'
+import { hashPassword } from '../server/password-hash'
 
 const TEST_NAME = TEST_ACCOUNT_SITE
 const TEST_USER = { id: 'local-test-user', email: TEST_ACCOUNT_EMAIL }
+// A test value for the local database only (README, "Run it locally").
+const TEST_PASSWORD = 'framed-local-test'
 
 const { env, dispose } = await getPlatformProxy<Env>({ remoteBindings: false })
 try {
@@ -29,13 +33,20 @@ try {
   )
     .bind(TEST_USER.id, TEST_USER.email, now.toISOString(), now.toISOString())
     .run()
+  // Better Auth keeps a password on a "credential" account row.
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO account (id, "accountId", "providerId", "userId", password, "createdAt", "updatedAt")
+     VALUES ('local-test-account', ?, 'credential', ?, ?, ?, ?)`,
+  )
+    .bind(TEST_USER.id, TEST_USER.id, await hashPassword(TEST_PASSWORD), now.toISOString(), now.toISOString())
+    .run()
   const site = (await findSiteByName(env.DB, TEST_NAME)) ?? (await createSite(env.DB, TEST_USER.id, TEST_NAME, now))
   if (!site) throw new Error(`Could not create /${TEST_NAME}: is the name taken by another local account?`)
   if (await loadContent(env.DB, site.id)) {
     console.log(`/${TEST_NAME} already has content; left as it is.`)
   } else {
     await saveContent(env.DB, site.id, demoContent, now)
-    console.log(`Created http://localhost:8788/${TEST_NAME} (log in as ${TEST_USER.email} to edit it).`)
+    console.log(`Created http://localhost:8788/${TEST_NAME} (log in as ${TEST_USER.email}, ${TEST_PASSWORD}).`)
   }
 } finally {
   await dispose()

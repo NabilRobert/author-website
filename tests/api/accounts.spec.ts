@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { createTestApp } from './test-app'
+import { createTestApp, PASSWORD } from './test-app'
 import type { TestApp } from './test-app'
 
 let api: TestApp
@@ -11,28 +11,88 @@ afterEach(async () => {
   await api.dispose()
 })
 
-describe('logging in with an emailed code', () => {
-  it('sends a 6-digit code and logs in with it', async () => {
-    const cookie = await api.logIn('mara@example.com')
-    expect(api.codes.get('mara@example.com')).toMatch(/^\d{6}$/)
+describe('signing up and logging in with a password', () => {
+  const email = 'mara@example.com'
+  const signUp = (password = PASSWORD) => api.postJson('/api/auth/sign-up/email', { email, password, name: '' })
+  const logIn = (password = PASSWORD) => api.postJson('/api/auth/sign-in/email', { email, password })
+
+  it('emails a 6-digit code at sign-up, and the code confirms the email and logs in', async () => {
+    const cookie = await api.logIn(email)
+    expect(api.codes.get(email)).toMatch(/^\d{6}$/)
     const me = await api.request('/api/me', {}, cookie)
-    expect(await me.json()).toEqual({ email: 'mara@example.com', site: null })
+    expect(await me.json()).toEqual({ email, site: null })
   })
 
-  it('refuses a wrong code', async () => {
-    await api.postJson('/api/auth/email-otp/send-verification-otp', { email: 'mara@example.com', type: 'sign-in' })
-    const response = await api.postJson('/api/auth/sign-in/email-otp', { email: 'mara@example.com', otp: '000000' })
-    expect(response.ok).toBe(false)
+  it('logs in with the password once the email is confirmed', async () => {
+    await api.logIn(email)
+    expect((await logIn()).ok).toBe(true)
   })
 
-  it('stores the code hashed, not as typed', async () => {
-    await api.postJson('/api/auth/email-otp/send-verification-otp', { email: 'mara@example.com', type: 'sign-in' })
+  it('refuses to log in before the email is confirmed', async () => {
+    await signUp()
+    expect((await logIn()).status).toBe(403)
+  })
+
+  it('refuses a wrong password', async () => {
+    await api.logIn(email)
+    expect((await logIn('not the password at all')).status).toBe(401)
+  })
+
+  it('refuses a password shorter than 10 characters', async () => {
+    expect((await signUp('short-pw')).status).toBe(400)
+  })
+
+  it('refuses a password found in a data breach, and says why', async () => {
+    api.leakedPasswords.add('password1234')
+    const response = await signUp('password1234')
+    expect(response.status).toBe(400)
+    expect(await response.text()).toContain('appeared in a data breach')
+  })
+
+  it('stores the password hashed with PBKDF2, never as typed', async () => {
+    await api.logIn(email)
+    const row = await api.db.prepare('SELECT password FROM account').first<{ password: string }>()
+    expect(row?.password).toMatch(/^pbkdf2-sha256\$100000\$/)
+    expect(row?.password).not.toContain(PASSWORD)
+  })
+
+  it('stores the emailed code hashed, not as sent', async () => {
+    await signUp()
     const row = await api.db.prepare('SELECT value FROM verification').first<{ value: string }>()
-    expect(row?.value).not.toContain(api.codes.get('mara@example.com'))
+    expect(row?.value).not.toContain(api.codes.get(email))
+  })
+
+  it('no longer logs in with a code instead of the password', async () => {
+    const response = await api.postJson('/api/auth/sign-in/email-otp', { email, otp: '123456' })
+    expect(response.status).toBe(404)
   })
 
   it('answers /api/me with 401 when nobody is logged in', async () => {
     expect((await api.request('/api/me')).status).toBe(401)
+  })
+})
+
+describe('resetting a forgotten password', () => {
+  const email = 'mara@example.com'
+  const NEW_PASSWORD = 'a brand new passphrase'
+
+  async function resetPassword(otp: string | undefined) {
+    return api.postJson('/api/auth/email-otp/reset-password', { email, otp, password: NEW_PASSWORD })
+  }
+
+  it('emails a code that sets a new password, and logs out everywhere', async () => {
+    const oldCookie = await api.logIn(email)
+    await api.postJson('/api/auth/email-otp/request-password-reset', { email })
+    expect((await resetPassword(api.codes.get(email))).ok).toBe(true)
+    expect((await api.postJson('/api/auth/sign-in/email', { email, password: PASSWORD })).status).toBe(401)
+    expect((await api.postJson('/api/auth/sign-in/email', { email, password: NEW_PASSWORD })).ok).toBe(true)
+    expect((await api.request('/api/me', {}, oldCookie)).status).toBe(401)
+  })
+
+  it('refuses a wrong code', async () => {
+    await api.logIn(email)
+    await api.postJson('/api/auth/email-otp/request-password-reset', { email })
+    expect((await resetPassword('000000')).ok).toBe(false)
   })
 })
 
