@@ -1,0 +1,54 @@
+/* Design tokens: a warm paper page with ink text and one oxblood accent, like
+   a printed book. WCAG contrast on paper (#f7f2e8):
+     ink 15.3:1 · muted 7.0:1 · accent 8.7:1 · ok 7.6:1   (text and links)
+   Cover colours are only behind cream title text on typeset covers:
+     cream on each cover colour ≥ 9:1. */
+@theme {
+  --color-*: initial;
+  --color-paper: #f7f2e8;
+  --color-paper-deep: #ece4d4;
+  --color-ink: #1f1b16;
+  --color-muted: #5a5046;
+  --color-accent: #7c2622;
+  --color-line: #d8ccb6;
+  --color-cream: #fbf7ef;
+  --color-ok: #24572f;
+  --color-cover-1: #2e3b4e;
+  --color-cover-2: #4a2c2a;
+  --color-cover-3: #2f4a3a;
+  --color-cover-4: #3d3350;
+
+  --font-serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Small letter-spaced capitals: labels, dates, the series line. */
+@utility small-caps {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+/* The page's width and side margins, shared by the header, main and footer. */
+@utility page-width {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  @media (width >= 40rem) {
+    padding-inline: 2rem;
+  }
+}
+
+/* Running text: comfortable measure and spacing between paragraphs. */
+@utility prose-text {
+  max-width: 38rem;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  & > p + p {
+    margin-top: 1em;
+  }
+}
