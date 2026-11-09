@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { useHead } from '@unhead/vue'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { Pane, Splitpanes } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 import { createEditor, DRAFT_KEY } from '@/editor/useEditor'
@@ -14,6 +15,8 @@ import LayoutButtons from '@/editor/LayoutButtons.vue'
 // draft. On a wide screen they sit side by side with a divider to drag (all
 // the way to one side hides the other); on a narrow one they stack.
 const props = defineProps<{ site: string }>()
+const route = useRoute()
+const router = useRouter()
 const editor = createEditor(props.site)
 const { draft, status, loadError, ownName, isStarter, isRestored, isDirty } = editor
 provide(DRAFT_KEY, draft)
@@ -24,7 +27,6 @@ const isWide = useWideScreen('64rem')
 // The forms' share of the width, in percent.
 const editorShare = ref(45)
 const previewPageId = ref('')
-const isLocalTestPage = props.site === 'test' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
 
 // The divider between the forms and the preview: a wide bar with a grip,
 // blue on hover. Splitpanes draws it (class "splitpanes__splitter"), so it
@@ -39,8 +41,24 @@ const DIVIDER = [
   '[&>[class*=splitter]]:after:rounded-full [&>[class*=splitter]]:after:bg-panel-muted',
 ]
 
-// Preview the front page until the owner picks another.
-watch(status, () => (previewPageId.value ||= draft.value.pages[0]?.id ?? ''))
+// Preview the page the owner was viewing (?page=books), or the front page.
+watch(status, () => {
+  const wanted = draft.value.pages.find((page) => page.slug === String(route.query.page ?? ''))
+  previewPageId.value ||= wanted?.id ?? draft.value.pages[0]?.id ?? ''
+})
+
+// "Done": back to the public page being previewed, as visitors see it.
+function finishEditing() {
+  const slug = draft.value.pages.find((page) => page.id === previewPageId.value)?.slug ?? ''
+  void router.push(slug ? `/${props.site}/${slug}` : `/${props.site}`)
+}
+
+// Leaving the editor inside the app with unsaved changes asks first; they
+// are kept on this computer either way (src/editor/draftBackup.ts).
+onBeforeRouteLeave(() => {
+  if (!isDirty.value) return true
+  return window.confirm('You have changes that are not saved. Leave the editor anyway? They stay on this computer.')
+})
 
 // Leaving with unsaved changes asks first (the browser shows its own message).
 function warnBeforeLeaving(event: BeforeUnloadEvent) {
@@ -64,14 +82,6 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
         class="mt-4 inline-block rounded-md bg-action px-6 py-3 font-semibold text-panel"
         >Log in</RouterLink
       >
-      <!-- Local development only: the server answers this address only on
-           localhost with LOCAL_DEV_TEST_LOGIN on (server/dev-routes.ts). -->
-      <a
-        v-if="isLocalTestPage"
-        href="/api/dev/test-login"
-        class="mt-4 ml-3 inline-block rounded-md border border-action px-6 py-3 font-semibold text-action"
-        >Open as the test user (local only)</a
-      >
     </div>
     <div v-else-if="status === 'not-yours'" class="p-8 text-lg">
       <p>framed.my.id/{{ site }} isn't your page, so you can't edit it.</p>
@@ -80,16 +90,10 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
         class="mt-4 inline-block rounded-md bg-action px-6 py-3 font-semibold text-panel"
         >{{ ownName ? 'Edit your own page' : 'Make your own page' }}</RouterLink
       >
-      <a
-        v-if="isLocalTestPage"
-        href="/api/dev/test-login"
-        class="mt-4 ml-3 inline-block rounded-md border border-action px-6 py-3 font-semibold text-action"
-        >Open as the test user (local only)</a
-      >
     </div>
     <p v-else-if="status === 'failed'" class="p-8 text-lg text-danger" role="alert">{{ loadError }}</p>
     <template v-else>
-      <EditorTopBar :editor="editor">
+      <EditorTopBar :editor="editor" @done="finishEditing">
         <LayoutButtons v-if="isWide" v-model="editorShare" />
       </EditorTopBar>
       <p v-if="isRestored" class="shrink-0 bg-notice px-4 py-3" role="status">

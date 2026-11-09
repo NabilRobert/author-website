@@ -32,3 +32,12 @@ export async function deleteAccount(): Promise<boolean> {
   const response = await fetch('/api/me', { method: 'DELETE' }).catch(() => null)
   return response?.ok ?? false
 }
+
+/**
+ * Logs in as the local test account without a code. Only a local
+ * development server answers; anywhere else this returns false.
+ */
+export async function testAccountLogin(): Promise<boolean> {
+  const response = await fetch('/api/dev/test-account-login', { method: 'POST' }).catch(() => null)
+  return response?.ok ?? false
+}

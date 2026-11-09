@@ -28,12 +28,14 @@ npm run check                    # types, lint, format, tests and build (what CI
 ```
 
 Open http://localhost:8788/login, type any email, and copy the code from
-the terminal. To edit the test page, open http://localhost:8788/api/dev/test-login
-(local only: it logs you in as `test@framed.local` and opens `/test/edit`;
-it answers only on localhost with `LOCAL_DEV_TEST_LOGIN=true` in `.dev.vars`).
+the terminal. Or log in as the **test account**, `test@framed.local`: on a
+local server it needs no code, and it owns the page at `/test`. Once
+logged in, your own page shows an **Edit this page** button; the editor's
+**Done** brings you back.
 
 > **Never set `LOCAL_DEV_TEST_LOGIN` (or any `LOCAL_DEV_` setting) on a
-> deployed site.** `/api/dev/test-login` logs in without a code. It also
+> deployed site.** It lets the test account log in without a code
+> (`/api/dev/test-account-login`). It also
 > refuses unless `SITE_URL` is a localhost address, and a test fails if
 > `wrangler.toml` ever sets it, but the safe rule is: local `.dev.vars` only. For live reloading while changing the site, also run
 `npm run dev` (http://localhost:5173, with `/api` passed to port 8788).
@@ -52,7 +54,7 @@ it answers only on localhost with `LOCAL_DEV_TEST_LOGIN=true` in `.dev.vars`).
 | `src/editor/` | The editor: its state and API calls, tabs, a form per block type, fields, cropper, preview |
 | `src/content/` | Loading a site, its links (`sitePath.ts`), theme and background as CSS variables, formatting |
 | `tests/` | Vitest specs: `api/` on a real local D1 and R2 (Miniflare), `site/`, `editor/` and `auth/` for the pages |
-| `scripts/` | `seed-test-site.ts`: the local test page; `print-auth-tables.mjs`: regenerates Better Auth's table SQL after an upgrade |
+| `scripts/` | `seed-test-site.ts`: the local test account and its page; `print-auth-tables.mjs`: regenerates Better Auth's table SQL after an upgrade |
 | `docs/guide.md` | How a request flows through the code, a glossary, and where to change things |
 
 ## Setup checklist (Arthur)

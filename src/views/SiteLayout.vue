@@ -6,6 +6,7 @@ import { themeVariables } from '@/content/themeVariables'
 import { loadFonts } from '@/styles/fonts'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import SiteFooter from '@/components/layout/SiteFooter.vue'
+import OwnerBar from '@/components/layout/OwnerBar.vue'
 
 // Someone's public site at /<site>: loads their content, wears their theme
 // (colours, fonts, background) and wraps each of their pages in their
@@ -44,6 +45,7 @@ watchEffect(() => {
       </main>
       <SiteFooter :content="loadedContent" />
     </div>
+    <OwnerBar :site="site" />
   </div>
   <main v-else class="page-width py-24 text-center text-lg" aria-live="polite">
     <p v-if="status === 'loading'" class="text-muted">Loading…</p>

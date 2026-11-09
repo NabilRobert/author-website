@@ -1,7 +1,8 @@
 /**
  * Local development only:
  *
- *   GET /api/dev/test-login   log in as the test user and open /test/edit
+ *   POST /api/dev/test-account-login   log in as the test account without a code
+ *                                      (the login form uses it for test@framed.local)
  *
  * Every /api/dev/* address sits behind `localDevOnly`, which answers 404
  * (as if the address didn't exist) unless ALL of these hold:
@@ -16,14 +17,12 @@
  */
 import { Hono } from 'hono'
 import { createMiddleware } from 'hono/factory'
+import { TEST_ACCOUNT_EMAIL } from '../shared/test-account'
 import { createAuth } from './auth'
 import type { Env } from './env'
 import type { AppEnv } from './session'
 
 const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1'])
-// Created by `npm run db:seed:test` (scripts/seed-test-site.ts).
-const TEST_EMAIL = 'test@framed.local'
-const TEST_EDITOR = '/test/edit'
 
 function isLocalhost(url: string): boolean {
   try {
@@ -47,14 +46,14 @@ export const devRoutes = new Hono<AppEnv>()
 
 devRoutes.use('*', localDevOnly)
 
-devRoutes.get('/test-login', async (c) => {
+devRoutes.post('/test-account-login', async (c) => {
   let code = ''
   const auth = createAuth(c.env, async (_email, sentCode) => void (code = sentCode))
-  await auth.api.sendVerificationOTP({ body: { email: TEST_EMAIL, type: 'sign-in' } })
-  const login = await auth.api.signInEmailOTP({ body: { email: TEST_EMAIL, otp: code }, asResponse: true })
-  if (!login.ok) return c.text('Test login failed. Run `npm run db:seed:test` first.', 500)
+  await auth.api.sendVerificationOTP({ body: { email: TEST_ACCOUNT_EMAIL, type: 'sign-in' } })
+  const login = await auth.api.signInEmailOTP({ body: { email: TEST_ACCOUNT_EMAIL, otp: code }, asResponse: true })
+  if (!login.ok) return c.json({ error: 'Test login failed. Run `npm run db:seed:test` first.' }, 500)
 
-  const headers = new Headers({ Location: TEST_EDITOR })
+  const headers = new Headers({ 'Content-Type': 'application/json' })
   for (const cookie of login.headers.getSetCookie()) headers.append('Set-Cookie', cookie)
-  return new Response(null, { status: 302, headers })
+  return new Response(JSON.stringify({ ok: true }), { status: 200, headers })
 })

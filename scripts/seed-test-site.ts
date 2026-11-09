@@ -6,7 +6,7 @@
  *
  *   npm run db:seed:test
  *
- * Log in as test@framed.local; the code prints in the dev:api terminal.
+ * Log in as test@framed.local on the login page: locally it needs no code.
  * Running it again leaves an existing test page as it is.
  */
 import { getPlatformProxy } from 'wrangler'
@@ -15,9 +15,10 @@ import { createSite, findSiteByName } from '../server/sites'
 import { loadContent } from '../server/content-read'
 import { saveContent } from '../server/content-write'
 import { demoContent } from '../shared/demo-content'
+import { TEST_ACCOUNT_EMAIL, TEST_ACCOUNT_SITE } from '../shared/test-account'
 
-const TEST_NAME = 'test'
-const TEST_USER = { id: 'local-test-user', email: 'test@framed.local' }
+const TEST_NAME = TEST_ACCOUNT_SITE
+const TEST_USER = { id: 'local-test-user', email: TEST_ACCOUNT_EMAIL }
 
 const { env, dispose } = await getPlatformProxy<Env>({ remoteBindings: false })
 try {

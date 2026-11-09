@@ -101,22 +101,28 @@ sequenceDiagram
    site (`requireSite`). The site never comes from the request, so nobody
    can write to someone else's. Writes must also come from Framed's own
    pages (`csrf()` checks the Origin header).
-4. **Loading** (`src/editor/useEditor.ts: createEditor` →
+4. **Edit mode**: the app knows who is logged in on every page
+   (`src/auth/useAccount.ts`). On their own page the owner sees a small bar
+   (`src/components/layout/OwnerBar.vue`): "Edit this page" opens the
+   editor on that page (`/<name>/edit?page=books`), and the editor's "Done"
+   goes back, asking first if anything is unsaved. Edit mode only changes
+   what the screen shows; the server checks the login on every save.
+5. **Loading** (`src/editor/useEditor.ts: createEditor` →
    `src/editor/editorApi.ts: fetchDraft`): the editor asks who is logged in;
    on someone else's page it says so and links to theirs. A new site starts
    from the example content.
-5. **Editing**: the tabs (`src/editor/tabs/`) change the draft directly;
+6. **Editing**: the tabs (`src/editor/tabs/`) change the draft directly;
    each block type has its form (`src/editor/block-forms/`). The draft is
    shared through `provide`/`inject` (`useDraft`).
-6. **Preview** (`src/editor/SitePreview.vue`): the same components as the
+7. **Preview** (`src/editor/SitePreview.vue`): the same components as the
    public site draw the draft, in the draft's colours and fonts.
-7. **Saving** (`saveDraft`): checked with the schema first, so mistakes are
+8. **Saving** (`saveDraft`): checked with the schema first, so mistakes are
    listed right away with where they are (`src/editor/problems.ts`); the API
    checks again, refuses a save from an older copy (409), writes it, and
    tidies pictures the site no longer uses (`server/image-limits.ts`).
-8. **Unsaved changes are kept** in the browser (`src/editor/draftBackup.ts`,
+9. **Unsaved changes are kept** in the browser (`src/editor/draftBackup.ts`,
    one backup per site), so an expired login or a closed tab loses nothing.
-9. **Deleting an account** (`server/account-deletion.ts`) removes the
+10. **Deleting an account** (`server/account-deletion.ts`) removes the
    person's pictures, site, logins and account at once.
 
 ### Pictures
@@ -217,6 +223,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **CSRF**: a hostile website making a logged-in person's browser send a
   request. `csrf()` (`server/me-routes.ts`) refuses writes whose Origin
   isn't Framed, on top of the cookie's SameSite rule.
+- **Test account**: `test@framed.local`, which owns `/test` locally
+  (`npm run db:seed:test`) and logs in without a code, but only on a local
+  server with `LOCAL_DEV_TEST_LOGIN` on (`server/dev-routes.ts`).
 - **Fail closed**: when something is missing or wrong, refuse rather than
   allow.
 - **Draft backup**: a copy of unsaved changes in the browser's
