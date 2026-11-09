@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { mount } from '@vue/test-utils'
+import BlockThumbnail from '@/editor/tabs/BlockThumbnail.vue'
 import { moveItem, newBlock, newPage, slugify } from '@/editor/newItems'
 import { describeLocation } from '@/editor/problems'
 import { blockSchema } from '@shared/blocks'
@@ -54,5 +56,13 @@ describe('describeLocation', () => {
 
   it('names the site for a whole-site problem', () => {
     expect(describeLocation(['pages'], demoContent)).toBe('Pages')
+  })
+})
+
+describe('BlockThumbnail', () => {
+  it.each(Object.keys(BLOCK_NAMES) as BlockType[])('draws a sketch for %s blocks', (type) => {
+    const sketch = mount(BlockThumbnail, { props: { type } })
+    expect(sketch.find('svg[aria-hidden="true"]').exists()).toBe(true)
+    expect(sketch.findAll('rect, circle, path').length).toBeGreaterThan(1)
   })
 })
