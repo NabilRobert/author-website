@@ -23,11 +23,14 @@
     "@fontsource-variable/lora": "^5.3.0",
     "@fontsource-variable/playfair-display": "^5.3.0",
     "@unhead/vue": "^3.4.3",
+    "hono": "^4.13.17",
+    "jose": "^6.2.16",
     "vue": "^3.5.45",
     "vue-router": "^5.4.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261109.1",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.5",
     "@types/node": "^26.6.6",
@@ -39,12 +42,14 @@
     "eslint-plugin-vue": "^10.12.0",
     "globals": "^17.14.0",
     "jsdom": "^31.0.0",
+    "miniflare": "4.20260730.0",
     "prettier": "^3.9.10",
     "tailwindcss": "^4.3.5",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",
     "vite": "^8.3.6",
     "vitest": "^5.1.0",
-    "vue-tsc": "^3.3.14"
+    "vue-tsc": "^3.3.14",
+    "wrangler": "^4.158.0"
   }
 }
