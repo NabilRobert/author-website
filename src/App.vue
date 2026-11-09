@@ -16,17 +16,19 @@ useSiteTheme()
 
 <template>
   <RouterView v-if="isEditor" />
-  <div v-else-if="status === 'ready' && loadedContent" class="@container">
-    <a
-      href="#main"
-      class="sr-only bg-button px-4 py-2 font-sans text-button-text focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
-      >Skip to content</a
-    >
-    <SiteHeader :content="loadedContent" />
-    <main id="main" tabindex="-1" class="page-width focus:outline-none">
-      <RouterView />
-    </main>
-    <SiteFooter :content="loadedContent" />
+  <div v-else-if="status === 'ready' && loadedContent" class="site-background min-h-screen @container">
+    <div class="site-panel">
+      <a
+        href="#main"
+        class="sr-only bg-button px-4 py-2 font-sans text-button-text focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+        >Skip to content</a
+      >
+      <SiteHeader :content="loadedContent" />
+      <main id="main" tabindex="-1" class="page-width focus:outline-none">
+        <RouterView />
+      </main>
+      <SiteFooter :content="loadedContent" />
+    </div>
   </div>
   <main v-else class="page-width py-24 text-center text-lg" aria-live="polite">
     <p v-if="status === 'loading'" class="text-muted">Loading…</p>

@@ -5,6 +5,8 @@ import type { FontKey } from '@shared/theme'
 import { useDraft } from '@/editor/useEditor'
 import ColourField from '@/editor/fields/ColourField.vue'
 import ChoiceField from '@/editor/fields/ChoiceField.vue'
+import PatternField from '@/editor/fields/PatternField.vue'
+import ImageField from '@/editor/fields/ImageField.vue'
 
 // The site's colours and fonts, with a warning when text would be hard to
 // read on its background.
@@ -41,6 +43,12 @@ function resetTheme() {
         Hard to read: {{ hardToRead.join(', ') }}. Pick colours further apart (one darker, one lighter).
       </p>
     </div>
+    <PatternField v-model="draft.theme.backgroundPattern" :theme="draft.theme" />
+    <ImageField
+      v-model="draft.theme.backgroundImageKey"
+      label="Background picture"
+      hint="Optional. It replaces the pattern; the text sits on a light panel over it so it stays readable."
+    />
     <ChoiceField v-model="draft.theme.headingFont" label="Font for headings" :options="FONT_OPTIONS" />
     <ChoiceField v-model="draft.theme.bodyFont" label="Font for text" :options="FONT_OPTIONS" />
     <button type="button" class="rounded-md border border-panel-line bg-panel px-4 py-2" @click="resetTheme">

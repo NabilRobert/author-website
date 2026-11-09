@@ -9,6 +9,7 @@
  */
 import { FONTS } from '@shared/theme'
 import type { Theme } from '@shared/theme'
+import { backgroundVariables } from '@/content/backgroundStyle'
 
 export function themeVariables(theme: Theme): Record<string, string> {
   const mix = (textShare: number) => `color-mix(in srgb, ${theme.textColour} ${textShare}%, ${theme.backgroundColour})`
@@ -23,5 +24,6 @@ export function themeVariables(theme: Theme): Record<string, string> {
     '--color-paper-deep': mix(6),
     '--font-heading': FONTS[theme.headingFont].stack,
     '--font-body': FONTS[theme.bodyFont].stack,
+    ...backgroundVariables(theme),
   }
 }

@@ -130,7 +130,16 @@ The site's colours and fonts come from `content.theme`:
 `src/composables/useSiteTheme.ts` turns them into CSS variables
 (`src/content/themeVariables.ts`) on the page and loads the chosen fonts
 (`src/styles/fonts.ts`). Every style uses those variables, so changing the
-theme restyles the whole site at once.
+theme restyles the whole site at once. The background is part of the theme
+too: a pattern drawn in CSS from the text colour, or a picture with a light
+panel over it (`src/content/backgroundStyle.ts`, the `site-background` and
+`site-panel` utilities in `src/styles/theme.css`).
+
+The site's layout follows the width of its container, not of the window:
+the components use Tailwind's container variants (`@2xl:`, `@3xl:`), and
+the page and the editor's preview are each a container (`@container`). So
+when the owner drags the divider in the editor (`src/views/EditView.vue`,
+with `splitpanes`), a narrow preview shows the phone layout.
 
 The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 `showInMenu` is on, in the order of `content.pages`.
@@ -155,6 +164,11 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   read; setting it once changes every place that uses it.
 - **Contrast ratio**: how readable text is on its background, from 1 to 21.
   4.5 or more is readable (`shared/theme.ts: contrastRatio`).
+- **Background pattern**: dots, graph paper, pinstripes, argyle or linen,
+  made of CSS gradients in a faint mix of the text colour, so they suit any
+  colours and fonts.
+- **Container query**: a style rule that depends on the width of a box on
+  the page rather than the whole window (`@container`).
 - **Typeset cover**: the plain title-on-colour cover shown until a book has
   a cover image (`src/components/books/BookCover.vue`).
 - **D1**: Cloudflare's SQLite database. The tables are in
@@ -205,6 +219,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Change the default colours or fonts:** `DEFAULT_THEME` in
   `shared/theme.ts`, and the same values in `src/styles/theme.css` (shown
   before the content loads).
+- **Add a background pattern:** a name in `BACKGROUND_PATTERNS`
+  (`shared/theme.ts`) and its gradients in `PATTERNS`
+  (`src/content/backgroundStyle.ts`).
 - **Offer another font:** install its `@fontsource-variable/…` package, add
   it to `FONTS` in `shared/theme.ts` and to `FONT_LOADERS` in
   `src/styles/fonts.ts`.

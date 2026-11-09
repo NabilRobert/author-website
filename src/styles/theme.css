@@ -62,6 +62,21 @@
   }
 }
 
+/* The site's background (pattern or picture) and, over a picture, a light
+   panel behind the content (src/content/backgroundStyle.ts). */
+@utility site-background {
+  background-color: var(--color-paper);
+  background-image: var(--site-background-image, none);
+  background-size: var(--site-background-size, auto);
+  background-position: center;
+}
+@utility site-panel {
+  width: min(76rem, 100% - 2 * var(--site-panel-inset, 0px));
+  margin: var(--site-panel-inset, 0px) auto;
+  border-radius: var(--site-panel-inset, 0px);
+  background: var(--site-panel-background, transparent);
+}
+
 /* Running text: comfortable measure and spacing between paragraphs. */
 @utility prose-text {
   max-width: 38rem;

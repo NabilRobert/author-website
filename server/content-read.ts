@@ -24,6 +24,8 @@ interface ThemeRow {
   button_text_colour: string
   heading_font: string
   body_font: string
+  background_pattern: string
+  background_image_key: string | null
 }
 interface LinkRow {
   label: string
@@ -124,6 +126,8 @@ function toTheme(row: ThemeRow | undefined) {
     buttonTextColour: row.button_text_colour,
     headingFont: row.heading_font,
     bodyFont: row.body_font,
+    backgroundPattern: row.background_pattern,
+    backgroundImageKey: row.background_image_key,
   }
 }
 

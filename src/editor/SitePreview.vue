@@ -26,15 +26,17 @@ watchEffect(() => loadFonts([props.content.theme.headingFont, props.content.them
     :style="style"
     class="overflow-hidden rounded-md border border-panel-line bg-paper font-[family-name:var(--font-body)] text-ink"
   >
-    <div inert class="@container">
-      <SiteHeader :content="content" />
-      <div class="page-width pb-4">
-        <template v-if="page">
-          <SectionHeading v-if="!startsWithBanner" :title="page.title" />
-          <PageBlocks :page="page" :content="content" />
-        </template>
+    <div inert class="site-background @container">
+      <div class="site-panel">
+        <SiteHeader :content="content" />
+        <div class="page-width pb-4">
+          <template v-if="page">
+            <SectionHeading v-if="!startsWithBanner" :title="page.title" />
+            <PageBlocks :page="page" :content="content" />
+          </template>
+        </div>
+        <SiteFooter :content="content" />
       </div>
-      <SiteFooter :content="content" />
     </div>
   </div>
 </template>

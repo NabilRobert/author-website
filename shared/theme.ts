@@ -6,6 +6,7 @@
  * requests); the site loads only the ones in use (src/styles/fonts.ts).
  */
 import { z } from 'zod'
+import { imageKey } from './fields'
 
 /** The fonts on offer: what the editor calls each, and its CSS stack. */
 export const FONTS = {
@@ -18,6 +19,21 @@ export const FONTS = {
 } as const
 
 export type FontKey = keyof typeof FONTS
+
+/**
+ * Background patterns, drawn in CSS from the theme's text colour at low
+ * strength (src/content/backgroundStyle.ts), so they suit any colours.
+ */
+export const BACKGROUND_PATTERNS = {
+  none: 'Plain',
+  dots: 'Dots',
+  grid: 'Graph paper',
+  stripes: 'Pinstripes',
+  argyle: 'Argyle',
+  linen: 'Linen',
+} as const
+
+export type BackgroundPattern = keyof typeof BACKGROUND_PATTERNS
 const fontKey = z.enum(Object.keys(FONTS) as [FontKey, ...FontKey[]])
 
 export const colour = z.string().regex(/^#[0-9a-f]{6}$/i, 'Pick a colour.')
@@ -33,6 +49,12 @@ export const themeSchema = z.object({
   buttonTextColour: colour,
   headingFont: fontKey,
   bodyFont: fontKey,
+  // Added after the first saves, hence the defaults.
+  backgroundPattern: z
+    .enum(Object.keys(BACKGROUND_PATTERNS) as [BackgroundPattern, ...BackgroundPattern[]])
+    .default('none'),
+  // A picture behind the whole site; it replaces the pattern.
+  backgroundImageKey: imageKey.default(null),
 })
 
 export type Theme = z.infer<typeof themeSchema>
@@ -46,6 +68,8 @@ export const DEFAULT_THEME: Theme = {
   buttonTextColour: '#fbf7ef',
   headingFont: 'fraunces',
   bodyFont: 'fraunces',
+  backgroundPattern: 'none',
+  backgroundImageKey: null,
 }
 
 /** WCAG's minimum contrast for body text; the editor warns below it. */
