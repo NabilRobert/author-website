@@ -17,6 +17,7 @@ import type { Env } from './env'
 import type { AppEnv } from './session'
 import { publicRoutes } from './public-routes'
 import { imageServeRoutes } from './image-routes'
+import { fileServeRoutes } from './file-routes'
 import { meRoutes } from './me-routes'
 
 interface AppOptions {
@@ -38,6 +39,7 @@ export function createApp({ emailCodeSenderFor = emailCodeSender }: AppOptions =
   app.on(['GET', 'POST'], '/auth/*', (c) => c.var.auth().handler(c.req.raw))
   app.route('/', publicRoutes)
   app.route('/', imageServeRoutes)
+  app.route('/', fileServeRoutes)
   app.route('/me', meRoutes)
 
   app.notFound((c) => c.json({ error: `There is no API address ${c.req.method} ${c.req.path}.` }, 404))

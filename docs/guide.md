@@ -232,6 +232,11 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   HTML (`server/link-preview-page.ts`, `server/link-previews.ts`).
   `public/_routes.json` keeps built files (`/assets/*`) away from functions,
   so they stay free and fast.
+- **Downloads block**: PDFs to download, like a CV (`DownloadsBlock.vue`,
+  `shared/files.ts`). They are uploaded to `POST /api/me/files` (PDF bytes
+  checked, up to 10 MB), stored in R2 under `files/`, count towards the
+  same allowance as pictures, and are always sent as sandboxed downloads
+  (`server/file-routes.ts`), never shown inside Framed's pages.
 - **Video block**: a YouTube or Vimeo link (`shared/videos.ts:
   parseVideoUrl`). Until a visitor presses play it is only a button on our
   site; then the player loads from youtube-nocookie.com or Vimeo with

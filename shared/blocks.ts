@@ -13,6 +13,7 @@
 import { z } from 'zod'
 import { boxStyleSchema, fillColour, optionalColour, pictureCornersSchema, plainBox, workShapeSchema } from './theme'
 import { parseVideoUrl } from './videos'
+import { fileKey } from './files'
 import { imageCrop, imageKey, itemId, linkSchema, linkTarget, longText, requiredText, shortText } from './fields'
 
 // Every block's box (shared/theme.ts: boxStyleSchema); plain unless the
@@ -114,6 +115,21 @@ const videoBlock = z.object({
   caption: shortText,
 })
 
+export const MAX_DOWNLOADS = 10
+
+// A file to download, with the words its link shows ("My CV").
+const download = z
+  .object({ fileKey, label: requiredText('Say what the file is, like "My CV".') })
+  .refine((file) => file.fileKey !== null, { message: 'Upload a PDF, or remove this one.', path: ['fileKey'] })
+
+const downloadsBlock = z.object({
+  id: itemId,
+  style: blockStyle,
+  type: z.literal('downloads'),
+  heading: shortText,
+  files: z.array(download).max(MAX_DOWNLOADS, `A downloads block can hold up to ${MAX_DOWNLOADS} files.`),
+})
+
 const listBlock = z.object({
   id: itemId,
   style: blockStyle,
@@ -179,6 +195,7 @@ export const blockSchema = z.discriminatedUnion('type', [
   imageTextBlock,
   galleryBlock,
   videoBlock,
+  downloadsBlock,
   listBlock,
   quoteBlock,
   buttonsBlock,
@@ -201,6 +218,7 @@ export const BLOCK_NAMES: Record<BlockType, string> = {
   imageText: 'Picture and text',
   gallery: 'Picture gallery',
   video: 'Video',
+  downloads: 'Downloads',
   list: 'List',
   quote: 'Quote',
   buttons: 'Buttons',

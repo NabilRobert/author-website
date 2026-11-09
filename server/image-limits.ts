@@ -1,5 +1,6 @@
 /**
- * Each site's picture allowance, and tidying up pictures nobody uses.
+ * Each site's allowance for pictures and files (PDFs, server/file-routes.ts),
+ * and tidying up the ones nobody uses.
  *
  * Every upload is recorded in the `images` table with its site and size.
  * After each save, pictures the site no longer uses are deleted, so the
@@ -21,10 +22,10 @@ export async function checkImageAllowance(db: D1Database, siteId: string, bytes:
     .bind(siteId)
     .first<{ count: number; total: number }>()
   if ((usage?.count ?? 0) >= MAX_IMAGES_PER_SITE) {
-    return `Your site has ${MAX_IMAGES_PER_SITE} pictures, the most it can hold. Remove some from your pages and save first.`
+    return `Your site has ${MAX_IMAGES_PER_SITE} pictures and files, the most it can hold. Remove some from your pages and save first.`
   }
   if ((usage?.total ?? 0) + bytes > MAX_IMAGE_BYTES_PER_SITE) {
-    return 'Your pictures have used the 200 MB your site can hold. Remove some from your pages and save first.'
+    return 'Your pictures and files have used the 200 MB your site can hold. Remove some from your pages and save first.'
   }
   return null
 }
@@ -48,13 +49,14 @@ export async function pruneUnusedImages(env: Env, siteId: string, content: SiteC
   await env.DB.batch(unused.map((key) => env.DB.prepare('DELETE FROM images WHERE key = ?').bind(key)))
 }
 
-/** The pictures one block shows: its own, or a gallery's. */
+/** The pictures (or files) one block shows: its own, a gallery's or a downloads list's. */
 function blockImageKeys(block: Block): (string | null)[] {
   if (block.type === 'gallery') return block.pictures.map((picture) => picture.imageKey)
+  if (block.type === 'downloads') return block.files.map((file) => file.fileKey)
   return 'imageKey' in block ? [block.imageKey] : []
 }
 
-/** Every picture the site shows anywhere. */
+/** Every picture and file the site shows anywhere. */
 export function usedImageKeys(content: SiteContent): Set<string> {
   const keys = [
     content.profile.photoKey,

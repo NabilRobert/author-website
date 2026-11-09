@@ -8,6 +8,7 @@ import ImageTextBlock from '@/components/blocks/ImageTextBlock.vue'
 import HeroBlock from '@/components/blocks/HeroBlock.vue'
 import PressKitBlock from '@/components/blocks/PressKitBlock.vue'
 import GalleryBlock from '@/components/blocks/GalleryBlock.vue'
+import DownloadsBlock from '@/components/blocks/DownloadsBlock.vue'
 import WorksForm from '@/editor/block-forms/WorksForm.vue'
 import { DRAFT_KEY } from '@/editor/useEditor'
 import { blockSchema } from '@shared/blocks'
@@ -198,5 +199,25 @@ describe("a gallery's full-size view", () => {
     button.dispatchEvent(click)
     await gallery.vm.$nextTick()
     expect(HTMLDialogElement.prototype.showModal).not.toHaveBeenCalled()
+  })
+})
+
+describe('a downloads block', () => {
+  const KEY = 'files/0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e01.pdf'
+
+  it('links each file for download under its label', () => {
+    const block = blockOf('downloads', { heading: 'Downloads', files: [{ fileKey: KEY, label: 'My CV' }] })
+    const link = mount(DownloadsBlock, { props: { block } }).find('a')
+    expect(link.attributes('href')).toBe(`/api/${KEY}?as=My%20CV`)
+    expect(link.attributes('download')).toBeDefined()
+    expect(link.text()).toContain('My CV')
+  })
+
+  it('refuses to save a file that was never uploaded', () => {
+    const result = blockSchema.safeParse({
+      ...blockOf('downloads', { heading: '', files: [] }),
+      files: [{ fileKey: null, label: 'My CV' }],
+    })
+    expect(result.error?.issues[0]?.message).toBe('Upload a PDF, or remove this one.')
   })
 })

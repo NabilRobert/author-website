@@ -91,10 +91,19 @@ async function readError(response: Response): Promise<ErrorBody> {
 export type UploadResult = { isUploaded: true; key: string } | { isUploaded: false; message: string }
 
 /** Sends one picture to R2 through the API; the key goes into the draft. */
-export async function uploadImage(file: File): Promise<UploadResult> {
+export function uploadImage(file: File): Promise<UploadResult> {
+  return upload('/api/me/images', 'image', file)
+}
+
+/** Sends one PDF to R2 through the API; the key goes into the draft. */
+export function uploadFile(file: File): Promise<UploadResult> {
+  return upload('/api/me/files', 'file', file)
+}
+
+async function upload(path: string, field: string, file: File): Promise<UploadResult> {
   const form = new FormData()
-  form.set('image', file)
-  const response = await fetch('/api/me/images', { method: 'POST', body: form }).catch(() => null)
+  form.set(field, file)
+  const response = await fetch(path, { method: 'POST', body: form }).catch(() => null)
   if (!response) return { isUploaded: false, message: NO_CONNECTION }
   if (response.status === 401) return { isUploaded: false, message: SIGNED_OUT }
   if (!response.ok) {
