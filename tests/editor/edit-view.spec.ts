@@ -85,3 +85,23 @@ describe('the editor page', () => {
     editor.unmount()
   })
 })
+
+describe('the Books tab', () => {
+  it('gives every book a drag handle and keeps Up and Down', async () => {
+    const editor = await openEditor()
+    await editor
+      .findAll('[role="tab"]')
+      .find((tab) => tab.text() === 'Books')!
+      .trigger('click')
+    expect(editor.findAll('.drag-handle')).toHaveLength(4)
+    const moveDown = editor.find('button[aria-label="Move the book “The Lantern Year” down"]')
+    await moveDown.trigger('click')
+    expect(editor.findAll('details summary').map((summary) => summary.text().replace('⠿', '').trim())).toEqual([
+      'The Low Tide House',
+      'The Lantern Year',
+      'Between Two Ferries',
+      'The Salt Wedding',
+    ])
+    editor.unmount()
+  })
+})

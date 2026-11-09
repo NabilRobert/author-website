@@ -14,7 +14,7 @@ const DESCRIPTIONS: Record<BlockType, string> = {
   list: 'Bullet points or a numbered list',
   quote: 'A large quotation',
   buttons: 'A row of buttons linking anywhere',
-  books: 'Your books, from the Books tab',
+  books: 'Your books, in the order of the Books tab',
   news: 'Your news and events, from the News tab',
   contact: 'Your email, social links and newsletter',
   pressKit: 'Short bio, photo and covers for journalists',

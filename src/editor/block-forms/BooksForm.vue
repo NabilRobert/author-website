@@ -5,7 +5,7 @@ import ChoiceField from '@/editor/fields/ChoiceField.vue'
 
 const block = defineModel<BlockOf<'books'>>({ required: true })
 const SHOW = [
-  { value: 'all' as const, label: 'All books, series in reading order' },
+  { value: 'all' as const, label: 'All books, in the order of the Books tab' },
   { value: 'newest' as const, label: 'Only the newest book' },
 ]
 </script>

@@ -30,8 +30,10 @@ flowchart TD
    for books, news, contact and press kit, the content they show).
 5. **Each block draws itself**, for example
    `src/components/blocks/ImageTextBlock.vue` puts the picture beside the
-   text. Books come from `src/components/books/BookList.vue`, which groups a
-   series in reading order (`src/content/format.ts: groupBooksBySeries`).
+   text. Books come from `src/components/books/BookList.vue`, in exactly the
+   order the owner arranged them; neighbouring books of one series share a
+   heading (`src/content/format.ts: groupAdjacentSeries`). In the editor the
+   owner drags them into order (`vue-draggable-plus`) or uses Up and Down.
 
 ### Behind GET /api/content
 

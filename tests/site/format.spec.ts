@@ -1,26 +1,28 @@
 import { describe, expect, it } from 'vitest'
 import type { Book } from '@shared/schema'
-import { formatDate, groupBooksBySeries, imageUrl, newestFirst, paragraphs, seriesLabel } from '@/content/format'
+import { formatDate, groupAdjacentSeries, imageUrl, newestFirst, paragraphs, seriesLabel } from '@/content/format'
 import { demoContent } from '@shared/demo-content'
 
 function book(title: string, seriesName = '', seriesPosition: number | null = null): Book {
   return { ...demoContent.books[0]!, id: title, title, seriesName, seriesPosition }
 }
 
-describe('groupBooksBySeries', () => {
-  it('puts a series in reading order where its first book was listed', () => {
-    const books = [book('Solo A'), book('Two', 'Tides', 2), book('Solo B'), book('One', 'Tides', 1)]
-    const groups = groupBooksBySeries(books)
-    expect(groups.map((group) => group.books.map((b) => b.title))).toEqual([['Solo A'], ['One', 'Two'], ['Solo B']])
+describe('groupAdjacentSeries', () => {
+  it('keeps the owner order exactly, re-sorting nothing', () => {
+    const books = [book('Two', 'Tides', 2), book('Solo'), book('One', 'Tides', 1)]
+    const groups = groupAdjacentSeries(books)
+    expect(groups.map((group) => group.books.map((b) => b.title))).toEqual([['Two'], ['Solo'], ['One']])
+  })
+
+  it('gives neighbouring books of one series a shared heading', () => {
+    const books = [book('Solo'), book('One', 'Tides', 1), book('Two', 'Tides', 2)]
+    const groups = groupAdjacentSeries(books)
+    expect(groups.map((group) => group.seriesName)).toEqual(['', 'Tides'])
+    expect(groups[1]?.books.map((b) => b.title)).toEqual(['One', 'Two'])
   })
 
   it('keeps each standalone book in its own group', () => {
-    expect(groupBooksBySeries([book('A'), book('B')])).toHaveLength(2)
-  })
-
-  it('puts a series book without a number last in its series', () => {
-    const groups = groupBooksBySeries([book('Unnumbered', 'Tides'), book('One', 'Tides', 1)])
-    expect(groups[0]?.books.map((b) => b.title)).toEqual(['One', 'Unnumbered'])
+    expect(groupAdjacentSeries([book('A'), book('B')])).toHaveLength(2)
   })
 })
 

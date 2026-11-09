@@ -11,28 +11,18 @@ export interface BookGroup {
 }
 
 /**
- * Groups a series' books together, in reading order, at the place where the
- * owner listed the series' first book. Standalone books stay where they are.
+ * The books in the owner's order, nothing re-sorted. Books of the same
+ * series that sit next to each other share a heading; a standalone book is
+ * a group of its own.
  */
-export function groupBooksBySeries(books: Book[]): BookGroup[] {
+export function groupAdjacentSeries(books: Book[]): BookGroup[] {
   const groups: BookGroup[] = []
-  const groupBySeries = new Map<string, BookGroup>()
   for (const book of books) {
-    const existing = book.seriesName ? groupBySeries.get(book.seriesName) : undefined
-    if (existing) {
-      existing.books.push(book)
-      continue
-    }
-    const group = { seriesName: book.seriesName, books: [book] }
-    groups.push(group)
-    if (book.seriesName) groupBySeries.set(book.seriesName, group)
+    const previous = groups.at(-1)
+    if (book.seriesName && previous?.seriesName === book.seriesName) previous.books.push(book)
+    else groups.push({ seriesName: book.seriesName, books: [book] })
   }
-  for (const group of groups) group.books.sort(bySeriesPosition)
   return groups
-}
-
-function bySeriesPosition(a: Book, b: Book): number {
-  return (a.seriesPosition ?? Infinity) - (b.seriesPosition ?? Infinity)
 }
 
 /** "Saltmarsh, book 2", or '' for a standalone book. */
