@@ -1,0 +1,5 @@
+# Local settings for `npm run dev:api` (wrangler pages dev).
+# Copy this file to .dev.vars; .dev.vars is not committed.
+
+# Lets the editor save without Cloudflare Access, on localhost only.
+LOCAL_DEV_NO_LOGIN=true

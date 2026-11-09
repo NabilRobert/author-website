@@ -2,11 +2,13 @@
  * The API, as a Hono app. It runs as a Cloudflare Pages Function
  * (functions/api/[[path]].ts), so every request to /api/* lands here.
  *
- * Public:  GET /api/content   the whole site, for the public pages
+ * Public:  GET /api/content         the whole site, for the public pages
+ * Editor:  /api/admin/*             signed-in owner only (server/admin-routes.ts)
  */
 import { Hono } from 'hono'
 import type { Env } from './env'
 import { loadContent } from './content-read'
+import { adminRoutes } from './admin-routes'
 
 // Visitors may see a saved change up to a minute late; in return, most
 // page views are served from cache instead of reading the database.
@@ -22,6 +24,8 @@ app.get('/content', async (c) => {
   c.header('Cache-Control', PUBLIC_CACHE)
   return c.json(content)
 })
+
+app.route('/admin', adminRoutes)
 
 app.notFound((c) => c.json({ error: `There is no API address ${c.req.method} ${c.req.path}.` }, 404))
 
