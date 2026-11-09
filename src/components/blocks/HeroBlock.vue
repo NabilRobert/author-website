@@ -10,17 +10,25 @@ import SiteLink from '@/components/ui/SiteLink.vue'
 // the page's title (h1).
 const props = defineProps<{ block: BlockOf<'hero'>; isPageTitle: boolean }>()
 
-const colours = computed(() => ({
-  backgroundColor: props.block.backgroundColour || undefined,
-  color: props.block.textColour || undefined,
+// The owner's colours arrive as CSS variables; the Tailwind classes below
+// use them only when they are set, and otherwise fall back to the theme.
+const colourVariables = computed(() => ({
+  '--hero-background': props.block.backgroundColour,
+  '--hero-text': props.block.textColour,
 }))
+const colourClasses = computed(() => {
+  const { backgroundColour, textColour, imageKey } = props.block
+  const background = backgroundColour ? 'bg-(--hero-background)' : imageKey ? 'bg-ink' : 'bg-paper-deep'
+  const text = textColour ? 'text-(--hero-text)' : imageKey ? 'text-cream' : ''
+  return [background, text]
+})
 </script>
 
 <template>
   <section
     class="relative overflow-hidden rounded-sm px-6 py-16 text-center @2xl:py-24"
-    :class="block.imageKey ? 'bg-ink text-cream' : 'bg-paper-deep'"
-    :style="colours"
+    :class="colourClasses"
+    :style="colourVariables"
   >
     <div v-if="block.imageKey" class="absolute inset-0 overflow-hidden opacity-45">
       <FramedImage :image-key="block.imageKey" :crop="block.imageCrop" alt="" eager />

@@ -53,9 +53,10 @@ describe('HeroBlock', () => {
   it('uses the banner own colours when the owner picked them', async () => {
     const wrapper = mount(HeroBlock, { props: { block: hero, isPageTitle: true } })
     await flushPromises()
-    const style = wrapper.find('section').attributes('style')
-    expect(style).toContain('background-color: rgb(18, 52, 86)')
-    expect(style).toContain('color: rgb(254, 254, 254)')
+    const section = wrapper.find('section')
+    expect(section.attributes('style')).toContain('--hero-background: #123456')
+    expect(section.attributes('style')).toContain('--hero-text: #fefefe')
+    expect(section.classes()).toEqual(expect.arrayContaining(['bg-(--hero-background)', 'text-(--hero-text)']))
   })
 
   it('makes its heading the page title only at the top of a page', () => {

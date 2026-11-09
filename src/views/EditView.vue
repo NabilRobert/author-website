@@ -24,6 +24,19 @@ const isWide = useWideScreen('64rem')
 const editorShare = ref(45)
 const previewPageId = ref('')
 
+// The divider between the forms and the preview: a wide bar with a grip,
+// blue on hover. Splitpanes draws it (class "splitpanes__splitter"), so it
+// is styled from the parent; matching on "splitter" avoids underscores,
+// which Tailwind's bracket syntax would read as spaces.
+const DIVIDER = [
+  '[&>[class*=splitter]]:relative [&>[class*=splitter]]:w-3 [&>[class*=splitter]]:cursor-col-resize',
+  '[&>[class*=splitter]]:bg-panel-line [&>[class*=splitter]:hover]:bg-action',
+  "[&>[class*=splitter]]:after:absolute [&>[class*=splitter]]:after:content-['']",
+  '[&>[class*=splitter]]:after:top-1/2 [&>[class*=splitter]]:after:left-1/2 [&>[class*=splitter]]:after:h-10',
+  '[&>[class*=splitter]]:after:w-1 [&>[class*=splitter]]:after:-translate-1/2',
+  '[&>[class*=splitter]]:after:rounded-full [&>[class*=splitter]]:after:bg-panel-muted',
+]
+
 // Preview the front page until the owner picks another.
 watch(status, () => (previewPageId.value ||= draft.value.pages[0]?.id ?? ''))
 
@@ -60,7 +73,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
         Your site is new, so this is example content. Change it to your own, then press <strong>Save changes</strong>
         to publish it.
       </p>
-      <Splitpanes v-if="isWide" class="editor-split min-h-0 flex-1" @resized="editorShare = $event.panes[0]!.size">
+      <Splitpanes v-if="isWide" :class="DIVIDER" class="min-h-0 flex-1" @resized="editorShare = $event.panes[0]!.size">
         <Pane :size="editorShare" :min-size="0" class="overflow-y-auto">
           <EditPanel v-model:preview-page-id="previewPageId" />
         </Pane>
@@ -75,26 +88,3 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
     </template>
   </div>
 </template>
-
-<style>
-/* The divider between the forms and the preview: a wide, visible grip. */
-.editor-split > .splitpanes__splitter {
-  position: relative;
-  width: 0.75rem;
-  background: var(--color-panel-line);
-  cursor: col-resize;
-}
-.editor-split > .splitpanes__splitter::after {
-  content: '';
-  position: absolute;
-  inset: 50% auto auto 50%;
-  width: 0.2rem;
-  height: 2.5rem;
-  border-radius: 1rem;
-  background: var(--color-panel-muted);
-  transform: translate(-50%, -50%);
-}
-.editor-split > .splitpanes__splitter:hover {
-  background: var(--color-action);
-}
-</style>

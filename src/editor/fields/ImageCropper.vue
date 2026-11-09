@@ -2,7 +2,7 @@
 import { ref, useId } from 'vue'
 import { centredCrop } from '@shared/fields'
 import type { ImageCrop } from '@shared/fields'
-import { FRAME_SHAPES } from '@/content/frames'
+import { FRAME_CLASSES } from '@/content/frames'
 import type { FrameShape } from '@/content/frames'
 import FramedImage from '@/components/ui/FramedImage.vue'
 
@@ -66,7 +66,7 @@ function setZoom(event: Event) {
       tabindex="0"
       aria-label="Picture position: drag it, or use the arrow keys, to choose what stays in view"
       class="relative w-full max-w-xs cursor-grab touch-none overflow-hidden rounded-md border border-panel-line bg-panel-back active:cursor-grabbing"
-      :style="{ aspectRatio: FRAME_SHAPES[props.shape] }"
+      :class="FRAME_CLASSES[props.shape]"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="lastPointer = null"

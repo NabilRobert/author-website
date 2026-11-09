@@ -32,17 +32,17 @@ function pointer(frame: ReturnType<typeof mountCropper>['frame'], type: string, 
 describe('FramedImage', () => {
   it('keeps the focus point in view and zooms around it', () => {
     const image = mount(FramedImage, { props: { imageKey: KEY, crop: { x: 20, y: 70, zoom: 1.5 }, alt: 'Cover' } })
-    const style = image.find('img').attributes('style')
-    expect(style).toContain('object-position: 20% 70%')
-    expect(style).toContain('scale(1.5)')
-    expect(style).toContain('transform-origin: 20% 70%')
+    const img = image.find('img')
+    expect(img.attributes('style')).toContain('--focus: 20% 70%')
+    expect(img.attributes('style')).toContain('--zoom: 1.5')
+    expect(img.classes()).toEqual(expect.arrayContaining(['object-(--focus)', 'origin-(--focus)', 'scale-(--zoom)']))
   })
 })
 
 describe('ImageCropper', () => {
   it('shows the frame in the shape the picture has on the site', () => {
     const { frame } = mountCropper()
-    expect(frame.attributes('style')).toContain('aspect-ratio: 2 / 3')
+    expect(frame.classes()).toContain('aspect-[2/3]')
   })
 
   it('moves the focus point the other way when the picture is dragged', async () => {
