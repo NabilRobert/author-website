@@ -7,13 +7,13 @@
  * site is small: a save writes about 50 to 150 rows, against the free
  * plan's 100,000 a day.
  */
-import type { Book, NewsItem, Page, SiteContent } from '../shared/schema'
+import type { Book, NewsItem, Page, SiteContent, Theme } from '../shared/schema'
 
 /** Thrown when the save was made from an older copy of the content. */
 export class StaleSaveError extends Error {}
 
 // Children before parents, so foreign keys never point at a deleted row.
-const TABLES_TO_CLEAR = ['blocks', 'pages', 'news', 'reviews', 'buy_links', 'books', 'social_links', 'author']
+const TABLES_TO_CLEAR = ['blocks', 'pages', 'news', 'reviews', 'buy_links', 'books', 'social_links', 'theme', 'author']
 
 /**
  * Replaces the stored content with `content` and returns it with its new
@@ -32,6 +32,7 @@ export async function saveContent(db: D1Database, content: SiteContent, now: Dat
   await db.batch([
     ...TABLES_TO_CLEAR.map((table) => db.prepare(`DELETE FROM ${table}`)),
     ...authorStatements(db, saved),
+    themeStatement(db, saved.theme),
     ...saved.books.flatMap((book, position) => bookStatements(db, book, position)),
     ...saved.news.map((item, position) => newsStatement(db, item, position)),
     ...saved.pages.flatMap((page, position) => pageStatements(db, page, position)),
@@ -51,6 +52,24 @@ function authorStatements(db: D1Database, content: SiteContent): D1PreparedState
     db.prepare('INSERT INTO social_links (position, label, url) VALUES (?, ?, ?)').bind(position, link.label, link.url),
   )
   return [authorRow, ...links]
+}
+
+function themeStatement(db: D1Database, theme: Theme): D1PreparedStatement {
+  return db
+    .prepare(
+      `INSERT INTO theme (id, background_colour, text_colour, accent_colour, button_colour, button_text_colour,
+         heading_font, body_font)
+       VALUES (1, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      theme.backgroundColour,
+      theme.textColour,
+      theme.accentColour,
+      theme.buttonColour,
+      theme.buttonTextColour,
+      theme.headingFont,
+      theme.bodyFont,
+    )
 }
 
 function bookStatements(db: D1Database, book: Book, position: number): D1PreparedStatement[] {

@@ -12,6 +12,17 @@ CREATE TABLE author (
   updated_at TEXT NOT NULL
 );
 
+CREATE TABLE theme (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  background_colour TEXT NOT NULL,
+  text_colour TEXT NOT NULL,
+  accent_colour TEXT NOT NULL,
+  button_colour TEXT NOT NULL,
+  button_text_colour TEXT NOT NULL,
+  heading_font TEXT NOT NULL,
+  body_font TEXT NOT NULL
+);
+
 CREATE TABLE social_links (
   position INTEGER PRIMARY KEY,
   label TEXT NOT NULL,

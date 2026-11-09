@@ -16,6 +16,15 @@ interface AuthorRow {
   newsletter_url: string
   updated_at: string
 }
+interface ThemeRow {
+  background_colour: string
+  text_colour: string
+  accent_colour: string
+  button_colour: string
+  button_text_colour: string
+  heading_font: string
+  body_font: string
+}
 interface LinkRow {
   label: string
   url: string
@@ -68,8 +77,9 @@ export class StoredContentError extends Error {}
  * than breaking a page.
  */
 export async function loadContent(db: D1Database): Promise<SiteContent | null> {
-  const [author, socialLinks, books, buyLinks, reviews, news, pages, blocks] = await db.batch([
+  const [author, theme, socialLinks, books, buyLinks, reviews, news, pages, blocks] = await db.batch([
     db.prepare('SELECT * FROM author WHERE id = 1'),
+    db.prepare('SELECT * FROM theme WHERE id = 1'),
     db.prepare('SELECT label, url FROM social_links ORDER BY position'),
     db.prepare('SELECT * FROM books ORDER BY position'),
     db.prepare('SELECT book_id, label, url FROM buy_links ORDER BY book_id, position'),
@@ -90,6 +100,7 @@ export async function loadContent(db: D1Database): Promise<SiteContent | null> {
       newsletterUrl: authorRow.newsletter_url,
       socialLinks: rowsOf<LinkRow>(socialLinks),
     },
+    theme: toTheme(rowsOf<ThemeRow>(theme)[0]),
     books: assembleBooks(rowsOf(books), rowsOf(buyLinks), rowsOf(reviews)),
     news: rowsOf<NewsRow>(news).map(toNewsItem),
     pages: assemblePages(rowsOf(pages), rowsOf(blocks)),
@@ -100,6 +111,20 @@ export async function loadContent(db: D1Database): Promise<SiteContent | null> {
 
 function rowsOf<Row>(result: D1Result | undefined): Row[] {
   return (result?.results ?? []) as Row[]
+}
+
+// Font names are checked against the list on offer by the schema.
+function toTheme(row: ThemeRow | undefined) {
+  if (!row) return undefined
+  return {
+    backgroundColour: row.background_colour,
+    textColour: row.text_colour,
+    accentColour: row.accent_colour,
+    buttonColour: row.button_colour,
+    buttonTextColour: row.button_text_colour,
+    headingFont: row.heading_font,
+    bodyFont: row.body_font,
+  }
 }
 
 function assembleBooks(books: BookRow[], buyLinks: BookLinkRow[], reviews: ReviewRow[]): Book[] {
