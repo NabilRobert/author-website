@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useBlockSelection } from '@/editor/blockSelection'
 import PagesTab from '@/editor/tabs/PagesTab.vue'
 import WorksTab from '@/editor/tabs/WorksTab.vue'
 import NewsTab from '@/editor/tabs/NewsTab.vue'
@@ -19,6 +20,11 @@ const TABS = [
   { key: 'look', label: 'Look' },
 ] as const
 const activeTab = ref<(typeof TABS)[number]['key']>('pages')
+
+// A block clicked in the preview is edited in the Pages tab.
+watch(useBlockSelection(), (picked) => {
+  if (picked?.source === 'preview') activeTab.value = 'pages'
+})
 </script>
 
 <template>

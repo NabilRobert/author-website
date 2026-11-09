@@ -13,13 +13,20 @@ import ContactBlock from '@/components/blocks/ContactBlock.vue'
 import PressKitBlock from '@/components/blocks/PressKitBlock.vue'
 
 // A page's blocks, top to bottom, each in its box (BlockBox). The public page and the editor's preview
-// both use this, so the preview is exactly what visitors will see.
-defineProps<{ page: Page; content: SiteContent }>()
+// both use this, so the preview is exactly what visitors will see. Each box carries its block's id
+// (data-block-id) so the editor's preview can tell which block was clicked, and marks the selected one.
+defineProps<{ page: Page; content: SiteContent; selectedBlockId?: string }>()
 </script>
 
 <template>
   <div class="space-y-16">
-    <BlockBox v-for="(block, index) in page.blocks" :key="block.id" :box-style="block.style">
+    <BlockBox
+      v-for="(block, index) in page.blocks"
+      :key="block.id"
+      :box-style="block.style"
+      :data-block-id="block.id"
+      :data-selected="block.id === selectedBlockId || undefined"
+    >
       <HeroBlock v-if="block.type === 'hero'" :block="block" :is-page-title="index === 0" />
       <TextBlock v-else-if="block.type === 'text'" :block="block" />
       <ImageTextBlock v-else-if="block.type === 'imageText'" :block="block" />

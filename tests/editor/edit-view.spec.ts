@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createHead } from '@unhead/vue/client'
 import { createMemoryHistory } from 'vue-router'
@@ -107,6 +107,39 @@ describe('the Works tab', () => {
       'Tidewater Market',
       'Ferry Posters',
     ])
+    editor.unmount()
+  })
+})
+
+describe('click to edit', () => {
+  // jsdom has no layout, so it has no scrollIntoView; record the calls instead.
+  const scrollIntoView = vi.fn()
+  beforeEach(() => {
+    Element.prototype.scrollIntoView = scrollIntoView
+    scrollIntoView.mockClear()
+  })
+  const [, worksBlock, newsBlock] = demoContent.pages[0]!.blocks
+
+  it('opens a block clicked in the preview in the Pages tab and scrolls to its form', async () => {
+    const editor = await openEditor()
+    await editor
+      .findAll('[role="tab"]')
+      .find((tab) => tab.text() === 'Look')!
+      .trigger('click')
+    await editor.find(`[data-block-id="${worksBlock!.id}"] h2`).trigger('click')
+    await flushPromises()
+    expect(editor.find('[role="tab"][aria-selected="true"]').text()).toBe('Pages')
+    const form = editor.find('section[aria-label="Block 2: Your work"]')
+    expect(form.attributes('data-selected')).toBeDefined()
+    expect(scrollIntoView.mock.contexts).toContain(form.element)
+    editor.unmount()
+  })
+
+  it('outlines the block in the preview when the owner works in its form', async () => {
+    const editor = await openEditor()
+    await editor.find('section[aria-label="Block 3: News and events"] input').trigger('focusin')
+    expect(editor.find(`[data-block-id="${newsBlock!.id}"]`).attributes('data-selected')).toBeDefined()
+    expect(editor.findAll('[data-block-id][data-selected]')).toHaveLength(1)
     editor.unmount()
   })
 })

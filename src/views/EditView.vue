@@ -5,6 +5,7 @@ import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { Pane, Splitpanes } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 import { createEditor, DRAFT_KEY } from '@/editor/useEditor'
+import { provideBlockSelection } from '@/editor/blockSelection'
 import { useWideScreen } from '@/composables/useWideScreen'
 import EditorTopBar from '@/editor/EditorTopBar.vue'
 import EditPanel from '@/editor/EditPanel.vue'
@@ -20,6 +21,7 @@ const router = useRouter()
 const editor = createEditor(props.site)
 const { draft, status, loadError, ownName, isStarter, isRestored, isDirty } = editor
 provide(DRAFT_KEY, draft)
+provideBlockSelection()
 useHead({ title: 'Edit your page · Framed', meta: [{ name: 'robots', content: 'noindex' }] })
 
 // Tailwind's lg breakpoint: below it there is no room for two columns.

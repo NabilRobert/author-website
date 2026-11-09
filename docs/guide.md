@@ -115,7 +115,10 @@ sequenceDiagram
    each block type has its form (`src/editor/block-forms/`). The draft is
    shared through `provide`/`inject` (`useDraft`).
 7. **Preview** (`src/editor/SitePreview.vue`): the same components as the
-   public site draw the draft, in the draft's colours and fonts.
+   public site draw the draft, in the draft's colours and fonts. Clicking a
+   block there selects it (`src/editor/blockSelection.ts`): the Pages tab
+   opens and scrolls to that block's form. Working in a form outlines its
+   block in the preview.
 8. **Saving** (`saveDraft`): checked with the schema first, so mistakes are
    listed right away with where they are (`src/editor/problems.ts`); the API
    checks again, refuses a save from an older copy (409), writes it, and
@@ -196,7 +199,12 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Box style**: any block's own box: fill colour, pattern, opacity (of the
   fill only; text stays solid), text colour and corners
   (`shared/theme.ts: boxStyleSchema`, `src/components/blocks/BlockBox.vue`).
-  A plain style draws no box.
+  A plain style draws no box. It can also set the block's own button and
+  button-text colours.
+- **Block selection**: the block the owner is working on, shared by the
+  preview and the forms (`src/editor/blockSelection.ts`). Each block's box
+  carries `data-block-id`, so a click in the preview knows which block it
+  hit.
 - **Content box**: the panel over a background picture or a strongly
   coloured pattern; its colour, opacity, corners and width (framed or all
   the way across) are in the Look tab (`theme.panel`).
@@ -274,6 +282,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Change a field's rules or its error message:** `shared/fields.ts` or the
   schema that uses it.
 - **Change the demo content:** `shared/demo-content.ts`.
+- **Change how a selected block looks:** the outline classes
+  (`BLOCK_OUTLINES`) in `src/editor/SitePreview.vue`, and the `data-selected:`
+  classes in `src/editor/tabs/PageBlocksEditor.vue`.
 - **Change a label or hint in the editor:** the form components in
   `src/editor/tabs/` and `src/editor/block-forms/`.
 - **Change an error message people see:** field rules in
