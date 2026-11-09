@@ -22,9 +22,12 @@ export const webAddress = z.url({
 })
 export const optionalWebAddress = z.union([z.literal(''), webAddress])
 
-/** A page on this site ("/books") or a full web address. */
+/**
+ * A page on this site ("/books") or a full web address. "//other.site" is
+ * refused: browsers read it as a link to another site.
+ */
 export const linkTarget = z.union([
-  z.string().regex(/^\/[a-z0-9\-/#]*$/, 'Enter a page on this site like /books, or a full web address.'),
+  z.string().regex(/^\/(?!\/)[a-z0-9\-/#]*$/, 'Enter a page on this site like /books, or a full web address.'),
   webAddress,
 ])
 

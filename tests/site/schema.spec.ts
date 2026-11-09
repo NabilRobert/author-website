@@ -68,6 +68,10 @@ describe('site content schema', () => {
     expect(withHeroButton('/contact').success).toBe(true)
   })
 
+  it('rejects a banner button starting with //, which browsers treat as another site (here 127.0.0.1)', () => {
+    expect(withHeroButton('//2130706433/books').success).toBe(false)
+  })
+
   it('rejects a javascript: banner button', () => {
     expect(withHeroButton('javascript:alert(1)').success).toBe(false)
   })
