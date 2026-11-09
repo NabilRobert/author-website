@@ -1,0 +1,33 @@
+@import 'tailwindcss';
+@import './theme.css';
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background: var(--color-paper);
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+    text-wrap-style: balance;
+  }
+  :is(p, li, blockquote) {
+    text-wrap-style: pretty;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}

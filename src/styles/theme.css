@@ -1,0 +1,104 @@
+/* Design tokens. These are the default theme (shared/theme.ts:
+   DEFAULT_THEME), shown until the content loads; the owner's own colours
+   and fonts then replace them (src/content/themeVariables.ts).
+   Default contrast on the background: text 15.3:1, accent 8.7:1. */
+@theme {
+  --color-*: initial;
+  --color-paper: #f7f2e8;
+  --color-ink: #1f1b16;
+  --color-accent: #7c2622;
+  --color-button: #7c2622;
+  --color-button-text: #fbf7ef;
+  /* Mixed from the text and background colours, so they follow any theme. */
+  --color-muted: color-mix(in srgb, #1f1b16 72%, #f7f2e8);
+  --color-line: color-mix(in srgb, #1f1b16 18%, #f7f2e8);
+  --color-paper-deep: color-mix(in srgb, #1f1b16 6%, #f7f2e8);
+  /* Typeset cards (a work without a picture): cream title text on each
+     colour is at least 9:1. */
+  --color-cream: #fbf7ef;
+  --color-ok: #24572f;
+  --color-card-1: #2e3b4e;
+  --color-card-2: #4a2c2a;
+  --color-card-3: #2f4a3a;
+  --color-card-4: #3d3350;
+
+  /* The editor's own colours, the same whatever theme the owner picks.
+     Contrast on panel white: text 17.7:1, muted 7.7:1, action 6.7:1,
+     danger 6.5:1. */
+  --color-panel: #ffffff;
+  --color-panel-back: #f4f4f5;
+  --color-panel-line: #d4d4d8;
+  --color-panel-text: #18181b;
+  --color-panel-muted: #52525b;
+  --color-action: #1d4ed8;
+  --color-danger: #b91c1c;
+  --color-notice: #fef3c7;
+
+  --font-heading: 'Fraunces Variable', Georgia, serif;
+  --font-body: 'Fraunces Variable', Georgia, serif;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Small letter-spaced capitals: labels, dates, kinds of news. */
+@utility small-caps {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+/* The page's width and side margins, shared by the header, main and footer.
+   Layout follows the width of the site's container, not the window
+   (Tailwind's @-prefixed variants), so the editor's preview lays out like a
+   real screen of the same width. */
+@utility page-width {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  @container (width >= 40rem) {
+    padding-inline: 2rem;
+  }
+}
+
+/* The site's background (pattern or picture) and, over a picture, a light
+   panel behind the content (src/content/backgroundStyle.ts). */
+@utility site-background {
+  /* The pattern, then the pattern's own base colour (if the owner picked
+     one) as a solid layer over the page colour. */
+  background-color: var(--color-paper);
+  background-image:
+    var(--site-background-image, none),
+    linear-gradient(var(--site-pattern-base, transparent), var(--site-pattern-base, transparent));
+  background-size: var(--site-background-size, auto), auto;
+  background-position: var(--site-background-position, center), center;
+}
+@utility site-panel {
+  width: min(var(--site-panel-max, 76rem), 100% - 2 * var(--site-panel-inset-x, 0px));
+  margin: var(--site-panel-inset-y, 0px) auto;
+  border-radius: var(--site-panel-radius, 0px);
+  background: var(--site-panel-background, transparent);
+}
+
+/* A block's box (src/components/blocks/BlockBox.vue, boxVariables): the
+   fill and pattern on their own layer, so opacity fades them, not the text. */
+@utility box-fill {
+  border-radius: var(--box-radius, 0px);
+  background-color: var(--box-colour, transparent);
+  background-image: var(--box-image, none);
+  background-size: var(--box-size, auto);
+  background-position: var(--box-position, center);
+  opacity: var(--box-opacity, 1);
+}
+
+/* Running text: comfortable measure and spacing between paragraphs. */
+@utility prose-text {
+  max-width: 38rem;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  & > p + p {
+    margin-top: 1em;
+  }
+}

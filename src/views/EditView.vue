@@ -1,0 +1,135 @@
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
+import { useHead } from '@unhead/vue'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import { Pane, Splitpanes } from 'splitpanes'
+import 'splitpanes/dist/splitpanes.css'
+import { createEditor, DRAFT_KEY } from '@/editor/useEditor'
+import { provideBlockSelection } from '@/editor/blockSelection'
+import { useWideScreen } from '@/composables/useWideScreen'
+import EditorTopBar from '@/editor/EditorTopBar.vue'
+import EditPanel from '@/editor/EditPanel.vue'
+import PreviewPanel from '@/editor/PreviewPanel.vue'
+import LayoutButtons from '@/editor/LayoutButtons.vue'
+
+// The editor: the Save bar on top, then the forms and a live preview of the
+// draft. On a wide screen they sit side by side with a divider to drag (all
+// the way to one side hides the other); on a narrow one they stack.
+const props = defineProps<{ site: string }>()
+const route = useRoute()
+const router = useRouter()
+const editor = createEditor(props.site)
+const { draft, status, loadError, ownName, isStarter, isRestored, isDirty } = editor
+provide(DRAFT_KEY, draft)
+provideBlockSelection()
+useHead({ title: 'Edit your page · Framed', meta: [{ name: 'robots', content: 'noindex' }] })
+
+// Tailwind's lg breakpoint: below it there is no room for two columns.
+const isWide = useWideScreen('64rem')
+// The forms' share of the width, in percent.
+const editorShare = ref(45)
+const previewPageId = ref('')
+
+// The divider between the forms and the preview: a wide bar with a grip,
+// blue on hover. Splitpanes draws it (class "splitpanes__splitter"), so it
+// is styled from the parent; matching on "splitter" avoids underscores,
+// which Tailwind's bracket syntax would read as spaces.
+const DIVIDER = [
+  '[&>[class*=splitter]]:relative [&>[class*=splitter]]:w-3 [&>[class*=splitter]]:cursor-col-resize',
+  '[&>[class*=splitter]]:bg-panel-line [&>[class*=splitter]:hover]:bg-action',
+  "[&>[class*=splitter]]:after:absolute [&>[class*=splitter]]:after:content-['']",
+  '[&>[class*=splitter]]:after:top-1/2 [&>[class*=splitter]]:after:left-1/2 [&>[class*=splitter]]:after:h-10',
+  '[&>[class*=splitter]]:after:w-1 [&>[class*=splitter]]:after:-translate-1/2',
+  '[&>[class*=splitter]]:after:rounded-full [&>[class*=splitter]]:after:bg-panel-muted',
+]
+
+// Preview the page the owner was viewing (?page=about, or ?work=lantern for
+// a work's own page), or the front page.
+watch(status, () => {
+  const { pages, works } = draft.value
+  const wantedWork = route.query.work ? works.find((work) => work.pageSlug === String(route.query.work)) : undefined
+  const wantedPage = pages.find((page) => page.slug === String(route.query.page ?? ''))
+  previewPageId.value ||= wantedWork?.id ?? wantedPage?.id ?? pages[0]?.id ?? ''
+})
+
+// "Done": back to the public page being previewed, as visitors see it.
+function finishEditing() {
+  const work = draft.value.works.find((candidate) => candidate.id === previewPageId.value && candidate.pageSlug)
+  const slug = draft.value.pages.find((page) => page.id === previewPageId.value)?.slug ?? ''
+  const path = work ? `/work/${work.pageSlug}` : slug ? `/${slug}` : ''
+  void router.push(`/${props.site}${path}`)
+}
+
+// Leaving the editor inside the app with unsaved changes asks first; they
+// are kept on this computer either way (src/editor/draftBackup.ts).
+onBeforeRouteLeave(() => {
+  if (!isDirty.value) return true
+  return window.confirm('You have changes that are not saved. Leave the editor anyway? They stay on this computer.')
+})
+
+// Leaving with unsaved changes asks first (the browser shows its own message).
+function warnBeforeLeaving(event: BeforeUnloadEvent) {
+  if (isDirty.value) event.preventDefault()
+}
+onMounted(() => {
+  void editor.load()
+  window.addEventListener('beforeunload', warnBeforeLeaving)
+})
+onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeaving))
+</script>
+
+<template>
+  <!-- The editor keeps its own plain font; only the preview uses the theme. -->
+  <div class="flex h-screen flex-col bg-panel-back font-sans text-panel-text [--font-heading:var(--font-sans)]">
+    <p v-if="status === 'loading'" class="p-8 text-lg">Loading your site…</p>
+    <div v-else-if="status === 'signed-out'" class="p-8 text-lg">
+      <p>Log in to edit your page.</p>
+      <RouterLink
+        :to="{ path: '/login', query: { next: `/${site}/edit` } }"
+        class="mt-4 inline-block rounded-md bg-action px-6 py-3 font-semibold text-panel"
+        >Log in</RouterLink
+      >
+    </div>
+    <div v-else-if="status === 'not-yours'" class="p-8 text-lg">
+      <p>framed.my.id/{{ site }} isn't your page, so you can't edit it.</p>
+      <RouterLink
+        :to="ownName ? `/${ownName}/edit` : '/login'"
+        class="mt-4 inline-block rounded-md bg-action px-6 py-3 font-semibold text-panel"
+        >{{ ownName ? 'Edit your own page' : 'Make your own page' }}</RouterLink
+      >
+    </div>
+    <p v-else-if="status === 'failed'" class="p-8 text-lg text-danger" role="alert">{{ loadError }}</p>
+    <template v-else>
+      <EditorTopBar :editor="editor" @done="finishEditing">
+        <LayoutButtons v-if="isWide" v-model="editorShare" />
+      </EditorTopBar>
+      <p v-if="isRestored" class="shrink-0 bg-notice px-4 py-3" role="status">
+        Your unsaved changes from last time are back. Press <strong>Save changes</strong> to publish them.
+      </p>
+      <p v-if="isStarter" class="shrink-0 bg-notice px-4 py-3">
+        Your site is new, so this is example content. Change it to your own, then press <strong>Save changes</strong>
+        to publish it.
+      </p>
+      <Splitpanes v-if="isWide" :class="DIVIDER" class="min-h-0 flex-1" @resized="editorShare = $event.panes[0]!.size">
+        <!-- Each pane scrolls in its own box: splitpanes' stylesheet sets
+             overflow: hidden on the pane itself, which wins over a Tailwind class.
+             `relative` keeps visually hidden (sr-only) inputs inside the box;
+             otherwise they stretch the whole page below the window. -->
+        <Pane :size="editorShare" :min-size="0">
+          <div class="relative h-full overflow-y-auto">
+            <EditPanel v-model:preview-page-id="previewPageId" :site="site" />
+          </div>
+        </Pane>
+        <Pane :size="100 - editorShare" :min-size="0">
+          <div class="relative h-full overflow-y-auto">
+            <PreviewPanel v-model:page-id="previewPageId" :content="draft" />
+          </div>
+        </Pane>
+      </Splitpanes>
+      <div v-else class="relative min-h-0 flex-1 overflow-y-auto">
+        <EditPanel v-model:preview-page-id="previewPageId" :site="site" />
+        <PreviewPanel v-model:page-id="previewPageId" :content="draft" />
+      </div>
+    </template>
+  </div>
+</template>

@@ -1,0 +1,23 @@
+# Cloudflare Pages settings for Framed: the built site, the API function's
+# bindings and public settings, and the database migrations. Only
+# placeholders for ids; secrets (BETTER_AUTH_SECRET, RESEND_API_KEY) are
+# encrypted settings on the Pages project, never in this file (README).
+name = "framed"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-11-01"
+# Better Auth uses AsyncLocalStorage.
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+SITE_URL = "https://framed.my.id"
+EMAIL_FROM = "Framed <login@framed.my.id>"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "framed"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "framed-images"

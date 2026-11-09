@@ -1,0 +1,8 @@
+# Security headers for every page Cloudflare Pages serves.
+# DENY framing stops another site from hiding the editor in a frame and
+# tricking the owner into clicking Save (clickjacking).
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
