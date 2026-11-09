@@ -122,7 +122,15 @@ export const demoContent: SiteContent = {
           backgroundColour: '',
           textColour: '',
         },
-        { id: id(102), style: plainBox(), type: 'works', heading: 'Latest work', show: 'newest' },
+        {
+          id: id(102),
+          style: plainBox(),
+          type: 'works',
+          heading: 'Latest work',
+          show: 'newest',
+          pickedWorkIds: [],
+          shape: '',
+        },
         { id: id(103), style: plainBox(), type: 'news', heading: 'Latest news', limit: 2 },
       ],
     },
@@ -131,7 +139,9 @@ export const demoContent: SiteContent = {
       slug: 'work',
       title: 'Work',
       showInMenu: true,
-      blocks: [{ id: id(201), style: plainBox(), type: 'works', heading: '', show: 'all' }],
+      blocks: [
+        { id: id(201), style: plainBox(), type: 'works', heading: '', show: 'all', pickedWorkIds: [], shape: '' },
+      ],
     },
     {
       id: id(3),
@@ -149,6 +159,7 @@ export const demoContent: SiteContent = {
           imageCrop: centredCrop(),
           imageDescription: '',
           imageSide: 'left',
+          imageShape: 'portrait',
         },
         {
           id: id(302),

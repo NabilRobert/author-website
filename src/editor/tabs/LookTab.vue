@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { contrastRatio, DEFAULT_THEME, FONTS, MIN_READABLE_CONTRAST, WORK_SHAPES } from '@shared/theme'
-import type { FontKey, WorkShape } from '@shared/theme'
+import { contrastRatio, DEFAULT_THEME, FONTS, MIN_READABLE_CONTRAST } from '@shared/theme'
+import type { FontKey } from '@shared/theme'
 import { useDraft } from '@/editor/useEditor'
 import ColourField from '@/editor/fields/ColourField.vue'
 import ChoiceField from '@/editor/fields/ChoiceField.vue'
 import PatternField from '@/editor/fields/PatternField.vue'
 import PanelFields from '@/editor/fields/PanelFields.vue'
+import { SHAPE_OPTIONS } from '@/editor/fields/shapeOptions'
 import ImageField from '@/editor/fields/ImageField.vue'
 
 // The site's colours and fonts, with a warning when text would be hard to
 // read on its background.
 const draft = useDraft()
 
-const SHAPE_OPTIONS = (Object.keys(WORK_SHAPES) as WorkShape[]).map((key) => ({ value: key, label: WORK_SHAPES[key] }))
 const FONT_OPTIONS = (Object.keys(FONTS) as FontKey[]).map((key) => ({ value: key, label: FONTS[key].name }))
 
 const hardToRead = computed(() => {

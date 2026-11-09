@@ -63,6 +63,7 @@ export const WORK_SHAPES = {
 } as const
 
 export type WorkShape = keyof typeof WORK_SHAPES
+export const workShapeSchema = z.enum(Object.keys(WORK_SHAPES) as [WorkShape, ...WorkShape[]])
 const fontKey = z.enum(Object.keys(FONTS) as [FontKey, ...FontKey[]])
 
 export const colour = z.string().regex(/^#[0-9a-f]{6}$/i, 'Pick a colour.')
@@ -147,7 +148,7 @@ export const themeSchema = z.object({
   // Added after the first saves, hence the defaults.
   backgroundPattern: patternSchema.default('none'),
   patternColours: patternColoursSchema.default(noPatternColours),
-  workShape: z.enum(Object.keys(WORK_SHAPES) as [WorkShape, ...WorkShape[]]).default('landscape'),
+  workShape: workShapeSchema.default('landscape'),
   // A picture behind the whole site; it replaces the pattern.
   backgroundImageKey: imageKey.default(null),
   panel: panelSchema.default(() => ({ ...DEFAULT_PANEL })),

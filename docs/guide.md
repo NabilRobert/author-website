@@ -203,6 +203,12 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   (`shared/theme.ts: boxStyleSchema`, `src/components/blocks/BlockBox.vue`).
   A plain style draws no box. It can also set the block's own button and
   button-text colours.
+- **Picture shape**: portrait, landscape, square or wide
+  (`shared/theme.ts: WORK_SHAPES`), drawn as Tailwind aspect classes
+  (`src/content/frames.ts`). The Look tab sets it for work; a works block
+  can override it, and a picture-and-text block picks its own.
+- **Picked works**: a works block set to "Only the ones I tick" shows the
+  works in its `pickedWorkIds`, in the Work tab's order.
 - **No colour**: a fill (the content box, part of a pattern, a banner) set
   to `transparent`, so whatever is behind shows through
   (`shared/theme.ts: NO_COLOUR`, `fillColour`). Text colours can't be
@@ -282,6 +288,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Change the default colours or fonts:** `DEFAULT_THEME` in
   `shared/theme.ts`, and the same values in `src/styles/theme.css` (shown
   before the content loads).
+- **Add a picture shape:** a name in `WORK_SHAPES` (`shared/theme.ts`) and
+  its classes in `WORK_SHAPE_CLASSES`, `WORK_COLUMN_CLASSES` and
+  `PICTURE_BESIDE_TEXT_CLASSES` (`src/content/frames.ts`).
 - **Add a background pattern:** a name in `BACKGROUND_PATTERNS`
   (`shared/theme.ts`) and its gradients in `PATTERNS`
   (`src/content/backgroundStyle.ts`).

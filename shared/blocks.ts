@@ -11,7 +11,7 @@
  * a name in `BLOCK_NAMES`, and add a component in src/components/blocks/.
  */
 import { z } from 'zod'
-import { boxStyleSchema, fillColour, optionalColour, plainBox } from './theme'
+import { boxStyleSchema, fillColour, optionalColour, plainBox, workShapeSchema } from './theme'
 import { imageCrop, imageKey, itemId, linkSchema, linkTarget, longText, requiredText, shortText } from './fields'
 
 // Every block's box (shared/theme.ts: boxStyleSchema); plain unless the
@@ -53,6 +53,8 @@ const imageTextBlock = z.object({
   // saves, hence the default.
   imageDescription: shortText.default(''),
   imageSide: z.enum(['left', 'right']),
+  // Added after the first saves, hence the default.
+  imageShape: workShapeSchema.default('portrait'),
 })
 
 const listBlock = z.object({
@@ -85,7 +87,12 @@ const booksBlock = z.object({
   style: blockStyle,
   type: z.literal('works'),
   heading: shortText,
-  show: z.enum(['all', 'newest']),
+  // 'picked' shows only the works in pickedWorkIds, in the Work tab's order.
+  show: z.enum(['all', 'newest', 'picked']),
+  // Added after the first saves, hence the defaults. A shape of '' follows
+  // the Look tab (theme.workShape).
+  pickedWorkIds: z.array(itemId).default([]),
+  shape: z.union([z.literal(''), workShapeSchema]).default(''),
 })
 
 const newsBlock = z.object({

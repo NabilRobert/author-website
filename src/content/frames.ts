@@ -5,7 +5,6 @@
  */
 export const FRAME_CLASSES = {
   photo: 'aspect-[4/5]',
-  picture: 'aspect-[4/5]',
   // The banner's real shape depends on the screen; this is a typical one.
   banner: 'aspect-[16/7]',
 } as const
@@ -18,6 +17,17 @@ export const WORK_SHAPE_CLASSES = {
   landscape: 'aspect-[4/3]',
   square: 'aspect-square',
   wide: 'aspect-video',
+} as const
+
+/**
+ * The picture-and-text block: how wide the picture's column is, per shape,
+ * with the picture on the left or the right of the text.
+ */
+export const PICTURE_BESIDE_TEXT_CLASSES = {
+  portrait: { left: '@3xl:grid-cols-[18rem_1fr]', right: '@3xl:grid-cols-[1fr_18rem]' },
+  square: { left: '@3xl:grid-cols-[20rem_1fr]', right: '@3xl:grid-cols-[1fr_20rem]' },
+  landscape: { left: '@3xl:grid-cols-[24rem_1fr]', right: '@3xl:grid-cols-[1fr_24rem]' },
+  wide: { left: '@3xl:grid-cols-[26rem_1fr]', right: '@3xl:grid-cols-[1fr_26rem]' },
 } as const
 
 /** How wide the picture column is beside a work's text, per shape. */

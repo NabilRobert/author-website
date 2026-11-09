@@ -7,9 +7,16 @@ import WorkEntry from '@/components/works/WorkEntry.vue'
 import WorkList from '@/components/works/WorkList.vue'
 import { useSitePath } from '@/content/sitePath'
 
-// The owner's work, from the Work tab: all of it, or only the newest.
+// The owner's work, from the Work tab: all of it, only the newest, or only
+// the ones the owner ticked; in the block's picture shape or the site's.
 const props = defineProps<{ block: BlockOf<'works'>; content: SiteContent }>()
 const sitePath = useSitePath()
+
+const shape = computed(() => props.block.shape || props.content.theme.workShape)
+const listedWorks = computed(() => {
+  if (props.block.show !== 'picked') return props.content.works
+  return props.content.works.filter((work) => props.block.pickedWorkIds.includes(work.id))
+})
 
 // The newest by date; an undated work counts as oldest.
 const newestWork = computed(() => [...props.content.works].sort((a, b) => b.date.localeCompare(a.date)).at(0))
@@ -24,12 +31,7 @@ const allWorkPage = computed(() =>
   <section>
     <BlockHeading :text="block.heading" />
     <template v-if="block.show === 'newest'">
-      <WorkEntry
-        v-if="newestWork"
-        :work="newestWork"
-        :owner-name="content.profile.name"
-        :shape="content.theme.workShape"
-      />
+      <WorkEntry v-if="newestWork" :work="newestWork" :owner-name="content.profile.name" :shape="shape" />
       <RouterLink
         v-if="allWorkPage"
         :to="sitePath(`/${allWorkPage.slug}`)"
@@ -37,6 +39,6 @@ const allWorkPage = computed(() =>
         >See all</RouterLink
       >
     </template>
-    <WorkList v-else :works="content.works" :owner-name="content.profile.name" :shape="content.theme.workShape" />
+    <WorkList v-else :works="listedWorks" :owner-name="content.profile.name" :shape="shape" />
   </section>
 </template>

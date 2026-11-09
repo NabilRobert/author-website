@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { FRAME_CLASSES } from '@/content/frames'
+import { WORK_SHAPE_CLASSES } from '@/content/frames'
+import { SHAPE_OPTIONS } from '@/editor/fields/shapeOptions'
 import type { BlockOf } from '@shared/blocks'
 import TextField from '@/editor/fields/TextField.vue'
 import ChoiceField from '@/editor/fields/ChoiceField.vue'
@@ -19,7 +20,7 @@ const SIDES = [
     <ImageField
       v-model="block.imageKey"
       v-model:crop="block.imageCrop"
-      :frame-class="FRAME_CLASSES.picture"
+      :frame-class="WORK_SHAPE_CLASSES[block.imageShape]"
       label="Picture"
     />
     <TextField
@@ -27,6 +28,7 @@ const SIDES = [
       label="What the picture shows"
       hint="Read aloud to visitors who can't see it, like “Mara at her desk by the window”."
     />
+    <ChoiceField v-model="block.imageShape" label="Shape of the picture" :options="SHAPE_OPTIONS" />
     <ChoiceField v-model="block.imageSide" label="Where the picture goes" :options="SIDES" />
   </div>
 </template>
