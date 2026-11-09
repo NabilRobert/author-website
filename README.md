@@ -70,8 +70,11 @@ these once, in order. Steps 2–4 run in this folder after `npx wrangler login`.
 2. **Database.** `npx wrangler d1 create frameddatabase` (done: its name and
    `database_id` are in `wrangler.toml`), then
    `npx wrangler d1 migrations apply DB --remote` to create the tables.
-3. **Picture storage.** `npx wrangler r2 bucket create framed-images`. Keep
-   it private; Framed serves pictures itself.
+3. **Picture storage (skipped for now).** Uploads of pictures and PDFs are
+   switched off: `wrangler.toml` has no storage binding, and the editor says
+   so. To turn them on with R2: enable R2 in the dashboard,
+   `npx wrangler r2 bucket create framed-images` (keep it private), and
+   uncomment the `[[r2_buckets]]` lines in `wrangler.toml`.
 4. **Login secret.** Make 32+ random characters (`openssl rand -base64 32`).
 5. **Resend.** Make a free account at resend.com, add `framed.my.id` as a
    sending domain (it shows the DNS records to add in Cloudflare), and

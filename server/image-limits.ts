@@ -45,7 +45,7 @@ export async function pruneUnusedImages(env: Env, siteId: string, content: SiteC
     .all<{ key: string }>()
   const unused = older.results.map((row) => row.key).filter((key) => !inUse.has(key))
   if (!unused.length) return
-  await env.IMAGES.delete(unused)
+  await env.IMAGES?.delete(unused)
   await env.DB.batch(unused.map((key) => env.DB.prepare('DELETE FROM images WHERE key = ?').bind(key)))
 }
 

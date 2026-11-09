@@ -110,7 +110,7 @@ describe('GET /api/images/<name>', () => {
   })
 
   it('serves only picture names, not other files in the bucket', async () => {
-    await api.env.IMAGES.put('images/notes.html', '<script>alert(1)</script>')
+    await api.env.IMAGES?.put('images/notes.html', '<script>alert(1)</script>')
     const response = await api.request('/api/images/notes.html')
     expect(response.status).toBe(404)
   })
@@ -157,5 +157,36 @@ describe('which pictures are in use', () => {
     expect(usedImageKeys(onWorkPage).has(key)).toBe(true)
     const inLayout = { ...demoContent, savedLayouts: [{ id: crypto.randomUUID(), name: 'Mine', blocks: [gallery] }] }
     expect(usedImageKeys(inLayout).has(key)).toBe(true)
+  })
+})
+
+describe('without picture storage (no IMAGES binding)', () => {
+  beforeEach(() => {
+    delete api.env.IMAGES
+  })
+
+  it('tells the editor that uploads are off', async () => {
+    expect(await (await api.request('/api/features')).json()).toEqual({ uploads: false })
+  })
+
+  it('refuses picture and file uploads with a clear message, storing nothing', async () => {
+    const response = await upload(fileOf(PNG_START, 'image/png'))
+    expect(response.status).toBe(503)
+    expect(await response.json()).toEqual({ error: 'Uploading pictures and files is switched off for now.' })
+    const form = new FormData()
+    form.set('file', new File(['%PDF-1.7'], 'cv.pdf', { type: 'application/pdf' }))
+    expect((await api.request('/api/me/files', { method: 'POST', body: form }, cookie)).status).toBe(503)
+    const rows = await api.db.prepare('SELECT COUNT(*) AS count FROM images').first<{ count: number }>()
+    expect(rows?.count).toBe(0)
+  })
+
+  it('still saves the site and deletes accounts', async () => {
+    const saved = await api.request(
+      '/api/me/content',
+      { method: 'PUT', body: JSON.stringify(demoContent), headers: { 'Content-Type': 'application/json' } },
+      cookie,
+    )
+    expect(saved.status).toBe(200)
+    expect((await api.request('/api/me', { method: 'DELETE' }, cookie)).ok).toBe(true)
   })
 })

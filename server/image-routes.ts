@@ -12,6 +12,7 @@ import { bodyLimit } from 'hono/body-limit'
 import { IMAGE_TYPES, isImageType, MAX_IMAGE_BYTES, TOO_BIG_MESSAGE, WRONG_TYPE_MESSAGE } from '../shared/images'
 import type { ImageType } from '../shared/images'
 import { requireSite } from './session'
+import { requireStorage } from './storage'
 import type { AppEnv } from './session'
 import { checkImageAllowance, recordImage } from './image-limits'
 export { pruneUnusedImages } from './image-limits'
@@ -27,6 +28,7 @@ export const imageUploadRoutes = new Hono<AppEnv>()
 imageUploadRoutes.post(
   '/images',
   requireSite,
+  requireStorage,
   bodyLimit({ maxSize: MAX_UPLOAD_BYTES, onError: (c) => c.json({ error: TOO_BIG_MESSAGE }, 413) }),
   async (c) => {
     const form = await c.req.formData().catch(() => null)
@@ -39,7 +41,7 @@ imageUploadRoutes.post(
     if (refusal) return c.json({ error: refusal }, 403)
 
     const key = `images/${crypto.randomUUID()}.${IMAGE_TYPES[file.type]}`
-    await c.env.IMAGES.put(key, bytes, { httpMetadata: { contentType: file.type } })
+    await c.var.storage.put(key, bytes, { httpMetadata: { contentType: file.type } })
     await recordImage(c.env.DB, c.var.site.id, key, bytes.length, new Date())
     return c.json({ key }, 201)
   },
@@ -48,10 +50,10 @@ imageUploadRoutes.post(
 /** Serving, public. */
 export const imageServeRoutes = new Hono<AppEnv>()
 
-imageServeRoutes.get('/images/:name', async (c) => {
+imageServeRoutes.get('/images/:name', requireStorage, async (c) => {
   const name = c.req.param('name')
   if (!IMAGE_NAME.test(name)) return c.json({ error: 'There is no such picture.' }, 404)
-  const image = await c.env.IMAGES.get(`images/${name}`)
+  const image = await c.var.storage.get(`images/${name}`)
   if (!image) return c.json({ error: 'There is no such picture.' }, 404)
   return c.body(image.body, 200, {
     'Content-Type': image.httpMetadata?.contentType ?? 'application/octet-stream',

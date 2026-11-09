@@ -11,6 +11,7 @@ import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { FILE_TOO_BIG_MESSAGE, FILE_TYPE, FILE_WRONG_TYPE_MESSAGE, MAX_FILE_BYTES } from '../shared/files'
 import { requireSite } from './session'
+import { requireStorage } from './storage'
 import type { AppEnv } from './session'
 import { checkImageAllowance, recordImage } from './image-limits'
 
@@ -27,6 +28,7 @@ export const fileUploadRoutes = new Hono<AppEnv>()
 fileUploadRoutes.post(
   '/files',
   requireSite,
+  requireStorage,
   bodyLimit({ maxSize: MAX_UPLOAD_BYTES, onError: (c) => c.json({ error: FILE_TOO_BIG_MESSAGE }, 413) }),
   async (c) => {
     const form = await c.req.formData().catch(() => null)
@@ -40,7 +42,7 @@ fileUploadRoutes.post(
     if (refusal) return c.json({ error: refusal }, 403)
 
     const key = `files/${crypto.randomUUID()}.pdf`
-    await c.env.IMAGES.put(key, bytes, { httpMetadata: { contentType: FILE_TYPE } })
+    await c.var.storage.put(key, bytes, { httpMetadata: { contentType: FILE_TYPE } })
     await recordImage(c.env.DB, c.var.site.id, key, bytes.length, new Date())
     return c.json({ key }, 201)
   },
@@ -49,10 +51,10 @@ fileUploadRoutes.post(
 /** Downloading, public. */
 export const fileServeRoutes = new Hono<AppEnv>()
 
-fileServeRoutes.get('/files/:name', async (c) => {
+fileServeRoutes.get('/files/:name', requireStorage, async (c) => {
   const name = c.req.param('name')
   if (!FILE_NAME.test(name)) return c.json({ error: 'There is no such file.' }, 404)
-  const file = await c.env.IMAGES.get(`files/${name}`)
+  const file = await c.var.storage.get(`files/${name}`)
   if (!file) return c.json({ error: 'There is no such file.' }, 404)
   return c.body(file.body, 200, {
     'Content-Type': FILE_TYPE,

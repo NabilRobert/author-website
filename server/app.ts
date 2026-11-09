@@ -16,6 +16,7 @@ import type { SendContactMessage, SendEmailCode } from './email'
 import { contactRoutes } from './contact-messages'
 import { visitCountRoutes } from './visits'
 import { guardSignUp, signUpRoutes } from './invites'
+import { featureRoutes } from './storage'
 import type { Env } from './env'
 import { secretProblem } from './env'
 import type { AppEnv } from './session'
@@ -61,6 +62,7 @@ export function createApp({
   app.post('/auth/sign-up/email', guardSignUp)
   app.on(['GET', 'POST'], '/auth/*', (c) => c.var.auth().handler(c.req.raw))
   app.route('/', signUpRoutes)
+  app.route('/', featureRoutes)
   app.route('/', publicRoutes)
   app.route('/', contactRoutes)
   app.route('/', visitCountRoutes)

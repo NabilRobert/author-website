@@ -13,7 +13,7 @@ export async function deleteAccount(env: Env, userId: string): Promise<void> {
   if (site) {
     const images = await env.DB.prepare('SELECT key FROM images WHERE site_id = ?').bind(site.id).all<{ key: string }>()
     const keys = images.results.map((image) => image.key)
-    if (keys.length) await env.IMAGES.delete(keys)
+    if (keys.length && env.IMAGES) await env.IMAGES.delete(keys)
   }
   const bySite = (table: string) => env.DB.prepare(`DELETE FROM ${table} WHERE site_id = ?`).bind(site?.id ?? '')
   await env.DB.batch([
