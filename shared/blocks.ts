@@ -130,6 +130,16 @@ const downloadsBlock = z.object({
   files: z.array(download).max(MAX_DOWNLOADS, `A downloads block can hold up to ${MAX_DOWNLOADS} files.`),
 })
 
+// A form visitors fill in; messages are emailed to the owner's login email
+// (server/contact-messages.ts).
+const contactFormBlock = z.object({
+  id: itemId,
+  style: blockStyle,
+  type: z.literal('contactForm'),
+  heading: shortText,
+  intro: longText,
+})
+
 const listBlock = z.object({
   id: itemId,
   style: blockStyle,
@@ -196,6 +206,7 @@ export const blockSchema = z.discriminatedUnion('type', [
   galleryBlock,
   videoBlock,
   downloadsBlock,
+  contactFormBlock,
   listBlock,
   quoteBlock,
   buttonsBlock,
@@ -219,6 +230,7 @@ export const BLOCK_NAMES: Record<BlockType, string> = {
   gallery: 'Picture gallery',
   video: 'Video',
   downloads: 'Downloads',
+  contactForm: 'Contact form',
   list: 'List',
   quote: 'Quote',
   buttons: 'Buttons',

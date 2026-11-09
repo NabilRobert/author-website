@@ -3,6 +3,7 @@
  *
  *   GET  /api/sites/<name>/content   someone's whole site, for their public pages
  *   POST /api/sites/<name>/report    report a page that breaks the rules
+ *   POST /api/sites/<name>/messages  a contact-form message (server/contact-messages.ts)
  */
 import { Hono } from 'hono'
 import { z } from 'zod'

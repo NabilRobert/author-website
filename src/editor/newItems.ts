@@ -27,6 +27,7 @@ const NEW_BLOCK_FIELDS: { [T in BlockType]: () => BlockFields[T] } = {
   text: () => ({ heading: '', body: 'Write here.' }),
   video: () => ({ heading: '', url: '', caption: '' }),
   downloads: () => ({ heading: 'Downloads', files: [] }),
+  contactForm: () => ({ heading: 'Get in touch', intro: 'Send me a message and I’ll get back to you.' }),
   gallery: () => ({ heading: '', pictures: [], columns: 3, imageShape: 'square', pictureCorners: 'soft' }),
   imageText: () => ({
     heading: '',

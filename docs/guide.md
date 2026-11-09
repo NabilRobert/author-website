@@ -232,6 +232,13 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   HTML (`server/link-preview-page.ts`, `server/link-previews.ts`).
   `public/_routes.json` keeps built files (`/assets/*`) away from functions,
   so they stay free and fast.
+- **Contact form**: a block visitors use to email the owner
+  (`ContactFormBlock.vue` → `POST /api/sites/<name>/messages`,
+  `server/contact-messages.ts`). Messages go to the owner's login email,
+  never the public contact email, and are not stored; a hidden trap field
+  catches bots, and a salted hash of the sender plus the time (kept a day)
+  limit it to 3 an hour per sender and 20 a day per site, inside Resend's
+  free allowance (`migrations/0007`).
 - **Downloads block**: PDFs to download, like a CV (`DownloadsBlock.vue`,
   `shared/files.ts`). They are uploaded to `POST /api/me/files` (PDF bytes
   checked, up to 10 MB), stored in R2 under `files/`, count towards the

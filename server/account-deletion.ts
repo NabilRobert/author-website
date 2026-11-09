@@ -6,7 +6,7 @@ import type { Env } from './env'
 import { findSiteByOwner } from './sites'
 import { SITE_CONTENT_TABLES } from './content-write'
 
-const SITE_RECORDS = ['images', 'reports']
+const SITE_RECORDS = ['images', 'reports', 'contact_messages']
 
 export async function deleteAccount(env: Env, userId: string): Promise<void> {
   const site = await findSiteByOwner(env.DB, userId)

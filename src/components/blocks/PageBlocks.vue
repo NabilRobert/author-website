@@ -8,6 +8,7 @@ import ImageTextBlock from '@/components/blocks/ImageTextBlock.vue'
 import GalleryBlock from '@/components/blocks/GalleryBlock.vue'
 import VideoBlock from '@/components/blocks/VideoBlock.vue'
 import DownloadsBlock from '@/components/blocks/DownloadsBlock.vue'
+import ContactFormBlock from '@/components/blocks/ContactFormBlock.vue'
 import ListBlock from '@/components/blocks/ListBlock.vue'
 import QuoteBlock from '@/components/blocks/QuoteBlock.vue'
 import ButtonsBlock from '@/components/blocks/ButtonsBlock.vue'
@@ -37,6 +38,7 @@ defineProps<{ blocks: Block[]; content: SiteContent; selectedBlockId?: string }>
       <GalleryBlock v-else-if="block.type === 'gallery'" :block="block" />
       <VideoBlock v-else-if="block.type === 'video'" :block="block" />
       <DownloadsBlock v-else-if="block.type === 'downloads'" :block="block" />
+      <ContactFormBlock v-else-if="block.type === 'contactForm'" :block="block" />
       <ListBlock v-else-if="block.type === 'list'" :block="block" />
       <QuoteBlock v-else-if="block.type === 'quote'" :block="block" />
       <ButtonsBlock v-else-if="block.type === 'buttons'" :block="block" />

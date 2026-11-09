@@ -7,6 +7,7 @@
 import { createMiddleware } from 'hono/factory'
 import type { Env } from './env'
 import type { Auth } from './auth'
+import type { SendContactMessage } from './email'
 import { findSiteByOwner } from './sites'
 import type { Site } from './sites'
 
@@ -15,6 +16,8 @@ export interface AppEnv {
   Variables: {
     /** Better Auth for this request, created on first use (server/app.ts). */
     auth: () => Auth
+    /** Emails a contact-form message (server/email.ts); tests pass one that keeps them. */
+    sendContactMessage: SendContactMessage
     user: { id: string; email: string }
     site: Site
   }

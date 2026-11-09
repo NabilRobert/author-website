@@ -27,7 +27,9 @@ useHead({ title: 'Privacy · Framed' })
       <p>
         No ads, no tracking, no selling or sharing your data. Codes are emailed through Resend, an email service. A
         video on a page loads from YouTube (without its tracking cookies) or Vimeo (with do-not-track) only when a
-        visitor presses play.
+        visitor presses play. A message sent through a page's contact form is emailed to the page's owner and not kept;
+        to stop floods of messages we keep a scrambled stand-in for the sender's internet address, and the time, for one
+        day.
       </p>
       <h2 class="text-xl font-semibold">Where it is kept</h2>
       <p>On Cloudflare's servers. Emailed codes are stored scrambled (hashed) and expire after 10 minutes.</p>

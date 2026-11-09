@@ -6,6 +6,7 @@ import ImageTextForm from '@/editor/block-forms/ImageTextForm.vue'
 import GalleryForm from '@/editor/block-forms/GalleryForm.vue'
 import VideoForm from '@/editor/block-forms/VideoForm.vue'
 import DownloadsForm from '@/editor/block-forms/DownloadsForm.vue'
+import ContactFormForm from '@/editor/block-forms/ContactFormForm.vue'
 import ListForm from '@/editor/block-forms/ListForm.vue'
 import QuoteForm from '@/editor/block-forms/QuoteForm.vue'
 import ButtonsForm from '@/editor/block-forms/ButtonsForm.vue'
@@ -26,6 +27,7 @@ const block = defineModel<Block>({ required: true })
   <GalleryForm v-else-if="block.type === 'gallery'" v-model="block" />
   <VideoForm v-else-if="block.type === 'video'" v-model="block" />
   <DownloadsForm v-else-if="block.type === 'downloads'" v-model="block" />
+  <ContactFormForm v-else-if="block.type === 'contactForm'" v-model="block" />
   <ListForm v-else-if="block.type === 'list'" v-model="block" />
   <QuoteForm v-else-if="block.type === 'quote'" v-model="block" />
   <ButtonsForm v-else-if="block.type === 'buttons'" v-model="block" />

@@ -11,8 +11,9 @@ import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { createAuth } from './auth'
 import type { Auth } from './auth'
-import { emailCodeSender } from './email'
-import type { SendEmailCode } from './email'
+import { contactMessageSender, emailCodeSender } from './email'
+import type { SendContactMessage, SendEmailCode } from './email'
+import { contactRoutes } from './contact-messages'
 import type { Env } from './env'
 import type { AppEnv } from './session'
 import { publicRoutes } from './public-routes'
@@ -23,9 +24,14 @@ import { meRoutes } from './me-routes'
 interface AppOptions {
   /** How emailed codes are sent; tests pass one that keeps them. */
   emailCodeSenderFor?: (env: Env) => SendEmailCode
+  /** How contact-form messages are sent; tests pass one that keeps them. */
+  contactMessageSenderFor?: (env: Env) => SendContactMessage
 }
 
-export function createApp({ emailCodeSenderFor = emailCodeSender }: AppOptions = {}) {
+export function createApp({
+  emailCodeSenderFor = emailCodeSender,
+  contactMessageSenderFor = contactMessageSender,
+}: AppOptions = {}) {
   const app = new Hono<AppEnv>().basePath('/api')
 
   // Better Auth starts setting itself up (reading the database) as soon as
@@ -34,10 +40,12 @@ export function createApp({ emailCodeSenderFor = emailCodeSender }: AppOptions =
   app.use('*', async (c, next) => {
     let auth: Auth | undefined
     c.set('auth', () => (auth ??= createAuth(c.env, emailCodeSenderFor(c.env))))
+    c.set('sendContactMessage', (message) => contactMessageSenderFor(c.env)(message))
     await next()
   })
   app.on(['GET', 'POST'], '/auth/*', (c) => c.var.auth().handler(c.req.raw))
   app.route('/', publicRoutes)
+  app.route('/', contactRoutes)
   app.route('/', imageServeRoutes)
   app.route('/', fileServeRoutes)
   app.route('/me', meRoutes)

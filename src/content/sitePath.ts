@@ -14,6 +14,11 @@ export function provideSiteName(name: string): void {
   provide(SITE_NAME, name)
 }
 
+/** The name of the site being shown, or '' outside one (the editor's preview). */
+export function useSiteName(): string {
+  return inject(SITE_NAME, '')
+}
+
 /** "/work" → "/alex/work", "/" → "/alex"; other links are unchanged. */
 export function useSitePath(): (path: string) => string {
   const name = inject(SITE_NAME, '')

@@ -52,6 +52,11 @@ defineProps<{ type: BlockType }>()
           <rect x="22" :y="row * 12 - 1" :width="48 - row * 6" height="3" />
         </template>
       </template>
+      <template v-else-if="type === 'contactForm'">
+        <rect x="8" y="6" width="64" height="7" rx="1" />
+        <rect x="8" y="17" width="64" height="15" rx="1" />
+        <rect x="8" y="36" width="20" height="7" rx="3.5" class="fill-action" />
+      </template>
       <template v-else-if="type === 'list'">
         <template v-for="row in 3" :key="row">
           <circle cx="12" :cy="6 + row * 9" r="2" class="fill-panel-muted" />
