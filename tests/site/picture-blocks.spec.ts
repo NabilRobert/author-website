@@ -5,10 +5,12 @@ import { createMemoryHistory } from 'vue-router'
 import { createAppRouter } from '@/router'
 import WorksBlock from '@/components/blocks/WorksBlock.vue'
 import ImageTextBlock from '@/components/blocks/ImageTextBlock.vue'
+import HeroBlock from '@/components/blocks/HeroBlock.vue'
+import PressKitBlock from '@/components/blocks/PressKitBlock.vue'
 import WorksForm from '@/editor/block-forms/WorksForm.vue'
 import { DRAFT_KEY } from '@/editor/useEditor'
 import { blockSchema } from '@shared/blocks'
-import type { BlockOf } from '@shared/blocks'
+import type { BlockOf, BlockType } from '@shared/blocks'
 import { demoContent } from '@shared/demo-content'
 import { centredCrop } from '@shared/fields'
 import { plainBox } from '@shared/theme'
@@ -16,9 +18,14 @@ import { plainBox } from '@shared/theme'
 const [lantern, harbour, tidewater] = demoContent.works
 const IMAGE = 'images/0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e01.jpg'
 
+// A block as saved before any picture options, plus `changes`; the schema
+// fills in the defaults.
+function blockOf<T extends BlockType>(type: T, fields: object): BlockOf<T> {
+  return blockSchema.parse({ id: lantern!.id, style: plainBox(), type, ...fields }) as BlockOf<T>
+}
+
 function worksBlock(changes: Partial<BlockOf<'works'>>): BlockOf<'works'> {
-  const base = { id: lantern!.id, style: plainBox(), type: 'works' as const, heading: '', show: 'all' as const }
-  return { ...base, pickedWorkIds: [], shape: '', ...changes }
+  return blockOf('works', { heading: '', show: 'all', ...changes })
 }
 
 function mountWorks(block: BlockOf<'works'>) {
@@ -27,9 +34,8 @@ function mountWorks(block: BlockOf<'works'>) {
 }
 
 function imageTextBlock(changes: Partial<BlockOf<'imageText'>>): BlockOf<'imageText'> {
-  const base = { id: lantern!.id, style: plainBox(), type: 'imageText' as const, heading: '', body: 'Words' }
   const picture = { imageKey: IMAGE, imageCrop: centredCrop(), imageDescription: '' }
-  return { ...base, ...picture, imageSide: 'left', imageShape: 'portrait', ...changes }
+  return blockOf('imageText', { heading: '', body: 'Words', ...picture, imageSide: 'left', ...changes })
 }
 
 describe('a works block', () => {
@@ -40,14 +46,13 @@ describe('a works block', () => {
   })
 
   it('draws its pictures in its own shape instead of the Look tab’s', () => {
-    const block = mountWorks(worksBlock({ shape: 'square' }))
-    expect(block.find('.aspect-square').exists()).toBe(true)
+    const block = mountWorks(worksBlock({ pictureShape: 'square', pictureCorners: 'round' }))
+    expect(block.find('.aspect-square').classes()).toContain('rounded-full')
     expect(block.find('.aspect-\\[4\\/3\\]').exists()).toBe(false)
   })
 
   it('loads a block saved before picking and shapes existed', () => {
-    const saved = { id: harbour!.id, style: plainBox(), type: 'works', heading: '', show: 'all' }
-    expect(blockSchema.parse(saved)).toMatchObject({ pickedWorkIds: [], shape: '' })
+    expect(worksBlock({})).toMatchObject({ pickedWorkIds: [], pictureShape: '', pictureCorners: 'soft' })
   })
 })
 
@@ -76,9 +81,35 @@ describe('a picture and text block', () => {
     expect(block.find('section').classes()).toContain('@3xl:grid-cols-[1fr_18rem]')
   })
 
-  it('loads a block saved before shapes existed as a portrait picture', () => {
-    const { imageShape, ...saved } = imageTextBlock({})
-    expect(imageShape).toBe('portrait')
-    expect(blockSchema.parse(saved)).toMatchObject({ imageShape: 'portrait' })
+  it('draws the picture with the chosen corners', () => {
+    const block = mount(ImageTextBlock, { props: { block: imageTextBlock({ pictureCorners: 'sharp' }) } })
+    expect(block.find('.aspect-\\[2\\/3\\]').classes()).toContain('rounded-none')
+  })
+
+  it('loads a block saved before shapes existed as a portrait picture with slightly rounded corners', () => {
+    expect(imageTextBlock({})).toMatchObject({ imageShape: 'portrait', pictureCorners: 'soft' })
+  })
+})
+
+describe('a banner', () => {
+  const words = { heading: 'Hi', subheading: '', buttonLabel: '', buttonUrl: '', backgroundColour: '', textColour: '' }
+  const banner = { ...words, imageKey: null, imageCrop: centredCrop() }
+
+  it('fits its words unless the owner gives it a shape', () => {
+    const fitted = mount(HeroBlock, { props: { block: blockOf('hero', banner), isPageTitle: true } })
+    expect(fitted.find('section').classes().join(' ')).not.toContain('aspect-')
+    const wide = blockOf('hero', { ...banner, bannerShape: 'wide', pictureCorners: 'rounded' })
+    const shaped = mount(HeroBlock, { props: { block: wide, isPageTitle: true } })
+    expect(shaped.find('section').classes()).toEqual(expect.arrayContaining(['aspect-video', 'rounded-3xl']))
+  })
+})
+
+describe('a press kit', () => {
+  it('frames the photo and the pictures of work in their own shapes', () => {
+    const content = { ...demoContent, profile: { ...demoContent.profile, photoKey: IMAGE } }
+    const block = blockOf('pressKit', { heading: '', photoShape: 'square', pictureShape: 'wide' })
+    const kit = mount(PressKitBlock, { props: { block, content } })
+    expect(kit.find('a[download] .aspect-square').exists()).toBe(true)
+    expect(kit.findAll('li .aspect-video')).toHaveLength(demoContent.works.length)
   })
 })

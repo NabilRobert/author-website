@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { WORK_SHAPE_CLASSES } from '@/content/frames'
-import { SHAPE_OPTIONS } from '@/editor/fields/shapeOptions'
+import { CORNER_OPTIONS, SHAPE_OPTIONS } from '@/editor/fields/pictureOptions'
 import type { BlockOf } from '@shared/blocks'
 import TextField from '@/editor/fields/TextField.vue'
 import ChoiceField from '@/editor/fields/ChoiceField.vue'
@@ -29,6 +29,7 @@ const SIDES = [
       hint="Read aloud to visitors who can't see it, like “Mara at her desk by the window”."
     />
     <ChoiceField v-model="block.imageShape" label="Shape of the picture" :options="SHAPE_OPTIONS" />
+    <ChoiceField v-model="block.pictureCorners" label="Corners of the picture" :options="CORNER_OPTIONS" />
     <ChoiceField v-model="block.imageSide" label="Where the picture goes" :options="SIDES" />
   </div>
 </template>

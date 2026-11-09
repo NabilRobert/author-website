@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ImageCrop } from '@shared/fields'
-import type { WorkShape } from '@shared/theme'
-import { WORK_SHAPE_CLASSES } from '@/content/frames'
+import type { PictureCorners, WorkShape } from '@shared/theme'
+import { PICTURE_CORNER_CLASSES, WORK_SHAPE_CLASSES } from '@/content/frames'
 import FramedImage from '@/components/ui/FramedImage.vue'
 
-// A work's picture in the site's chosen shape: the uploaded image, or, until
+// A work's picture in the chosen shape and corners: the uploaded image, or, until
 // there is one, a plain typeset card (title and owner's name on a colour
 // block) so the page never shows a broken or empty box.
 const props = defineProps<{
@@ -14,9 +14,15 @@ const props = defineProps<{
   imageKey: string | null
   imageCrop: ImageCrop
   shape: WorkShape
+  corners: PictureCorners
 }>()
 
 const TYPESET_COLOURS = ['bg-card-1', 'bg-card-2', 'bg-card-3', 'bg-card-4']
+
+// A round card would cut off words in its corners, so they move to the middle.
+const typesetLayout = computed(() =>
+  props.corners === 'round' ? 'items-center justify-center gap-2 text-center' : 'justify-between',
+)
 
 // The same title always gets the same colour.
 const typesetColour = computed(() => {
@@ -27,15 +33,19 @@ const typesetColour = computed(() => {
 </script>
 
 <template>
-  <div v-if="imageKey" :class="WORK_SHAPE_CLASSES[shape]" class="w-full overflow-hidden rounded-sm shadow-md">
+  <div
+    v-if="imageKey"
+    :class="[WORK_SHAPE_CLASSES[shape], PICTURE_CORNER_CLASSES[corners]]"
+    class="w-full overflow-hidden shadow-md"
+  >
     <FramedImage :image-key="imageKey" :crop="imageCrop" :alt="title" />
   </div>
   <div
     v-else
     role="img"
     :aria-label="title"
-    :class="[typesetColour, WORK_SHAPE_CLASSES[shape]]"
-    class="flex w-full flex-col justify-between rounded-sm p-[10%] text-cream shadow-md"
+    :class="[typesetColour, typesetLayout, WORK_SHAPE_CLASSES[shape], PICTURE_CORNER_CLASSES[corners]]"
+    class="flex w-full flex-col p-[10%] text-cream shadow-md"
   >
     <span class="text-[clamp(1rem,2.4cqw,1.6rem)] leading-tight font-semibold">{{ title }}</span>
     <span class="small-caps opacity-90">{{ ownerName }}</span>

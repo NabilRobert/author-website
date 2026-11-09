@@ -20,6 +20,8 @@ const NEW_BLOCK_FIELDS: { [T in BlockType]: () => BlockFields[T] } = {
     buttonUrl: '',
     backgroundColour: '',
     textColour: '',
+    bannerShape: '',
+    pictureCorners: 'soft',
   }),
   text: () => ({ heading: '', body: 'Write here.' }),
   imageText: () => ({
@@ -30,14 +32,15 @@ const NEW_BLOCK_FIELDS: { [T in BlockType]: () => BlockFields[T] } = {
     imageDescription: '',
     imageSide: 'left',
     imageShape: 'portrait',
+    pictureCorners: 'soft',
   }),
   list: () => ({ heading: '', numbered: false, items: ['First item'] }),
   quote: () => ({ quote: 'The quote.', source: '' }),
   buttons: () => ({ heading: '', links: [{ label: 'Button', url: '/' }] }),
-  works: () => ({ heading: 'Work', show: 'all', pickedWorkIds: [], shape: '' }),
+  works: () => ({ heading: 'Work', show: 'all', pickedWorkIds: [], pictureShape: '', pictureCorners: 'soft' }),
   news: () => ({ heading: 'News and events', limit: 3 }),
   contact: () => ({ heading: 'Get in touch' }),
-  pressKit: () => ({ heading: 'Press kit' }),
+  pressKit: () => ({ heading: 'Press kit', photoShape: 'portrait', pictureShape: '', pictureCorners: 'soft' }),
 }
 
 export function newBlock<T extends BlockType>(type: T): BlockOf<T> {

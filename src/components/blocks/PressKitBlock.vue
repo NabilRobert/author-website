@@ -5,10 +5,12 @@ import { imageUrl } from '@/content/format'
 import BlockHeading from '@/components/ui/BlockHeading.vue'
 import WorkPicture from '@/components/works/WorkPicture.vue'
 import FramedImage from '@/components/ui/FramedImage.vue'
+import { PICTURE_CORNER_CLASSES, WORK_SHAPE_CLASSES } from '@/content/frames'
 
 // For journalists, clients and event organisers: a photo and pictures of
 // the work to download (the whole original files, not the crops), and a
-// short bio to copy.
+// short bio to copy. The photo and the pictures of work each take the
+// block's shapes; both take its corners.
 defineProps<{ block: BlockOf<'pressKit'>; content: SiteContent }>()
 </script>
 
@@ -22,7 +24,10 @@ defineProps<{ block: BlockOf<'pressKit'>; content: SiteContent }>()
     <section v-if="content.profile.photoKey">
       <h3 class="mb-3 text-2xl font-semibold">Profile photo</h3>
       <a :href="imageUrl(content.profile.photoKey)" download class="inline-block">
-        <span class="block aspect-[4/5] w-48 overflow-hidden rounded-sm shadow-md">
+        <span
+          class="block w-48 overflow-hidden shadow-md"
+          :class="[WORK_SHAPE_CLASSES[block.photoShape], PICTURE_CORNER_CLASSES[block.pictureCorners]]"
+        >
           <FramedImage
             :image-key="content.profile.photoKey"
             :crop="content.profile.photoCrop"
@@ -41,7 +46,8 @@ defineProps<{ block: BlockOf<'pressKit'>; content: SiteContent }>()
             :owner-name="content.profile.name"
             :image-key="work.imageKey"
             :image-crop="work.imageCrop"
-            :shape="content.theme.workShape"
+            :shape="block.pictureShape || content.theme.workShape"
+            :corners="block.pictureCorners"
           />
           <a
             v-if="work.imageKey"

@@ -64,6 +64,16 @@ export const WORK_SHAPES = {
 
 export type WorkShape = keyof typeof WORK_SHAPES
 export const workShapeSchema = z.enum(Object.keys(WORK_SHAPES) as [WorkShape, ...WorkShape[]])
+
+/** The corners of a picture (or a banner), from square to a circle. */
+export const PICTURE_CORNERS = {
+  sharp: 'Sharp',
+  soft: 'Slightly rounded',
+  rounded: 'Rounded',
+  round: 'Round (a circle on a square picture)',
+} as const
+export type PictureCorners = keyof typeof PICTURE_CORNERS
+export const pictureCornersSchema = z.enum(Object.keys(PICTURE_CORNERS) as [PictureCorners, ...PictureCorners[]])
 const fontKey = z.enum(Object.keys(FONTS) as [FontKey, ...FontKey[]])
 
 export const colour = z.string().regex(/^#[0-9a-f]{6}$/i, 'Pick a colour.')

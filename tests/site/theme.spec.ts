@@ -49,6 +49,8 @@ describe('HeroBlock', () => {
     buttonUrl: '',
     backgroundColour: '#123456',
     textColour: '#fefefe',
+    bannerShape: '',
+    pictureCorners: 'soft',
   }
 
   it('uses the banner own colours when the owner picked them', async () => {

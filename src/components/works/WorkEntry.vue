@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Work } from '@shared/schema'
-import type { WorkShape } from '@shared/theme'
+import type { PictureCorners, WorkShape } from '@shared/theme'
 import { formatDate, paragraphs } from '@/content/format'
 import { WORK_COLUMN_CLASSES } from '@/content/frames'
 import WorkPicture from '@/components/works/WorkPicture.vue'
@@ -8,7 +8,7 @@ import LinkButtons from '@/components/ui/LinkButtons.vue'
 
 // One work in full: picture, title and the line under it, date,
 // description, its links and what people said about it.
-defineProps<{ work: Work; ownerName: string; shape: WorkShape }>()
+defineProps<{ work: Work; ownerName: string; shape: WorkShape; corners: PictureCorners }>()
 </script>
 
 <template>
@@ -20,6 +20,7 @@ defineProps<{ work: Work; ownerName: string; shape: WorkShape }>()
         :image-key="work.imageKey"
         :image-crop="work.imageCrop"
         :shape="shape"
+        :corners="corners"
       />
     </div>
     <div>

@@ -121,6 +121,8 @@ export const demoContent: SiteContent = {
           buttonUrl: '/work',
           backgroundColour: '',
           textColour: '',
+          bannerShape: '',
+          pictureCorners: 'soft',
         },
         {
           id: id(102),
@@ -129,7 +131,8 @@ export const demoContent: SiteContent = {
           heading: 'Latest work',
           show: 'newest',
           pickedWorkIds: [],
-          shape: '',
+          pictureShape: '',
+          pictureCorners: 'soft',
         },
         { id: id(103), style: plainBox(), type: 'news', heading: 'Latest news', limit: 2 },
       ],
@@ -140,7 +143,16 @@ export const demoContent: SiteContent = {
       title: 'Work',
       showInMenu: true,
       blocks: [
-        { id: id(201), style: plainBox(), type: 'works', heading: '', show: 'all', pickedWorkIds: [], shape: '' },
+        {
+          id: id(201),
+          style: plainBox(),
+          type: 'works',
+          heading: '',
+          show: 'all',
+          pickedWorkIds: [],
+          pictureShape: '',
+          pictureCorners: 'soft',
+        },
       ],
     },
     {
@@ -160,6 +172,7 @@ export const demoContent: SiteContent = {
           imageDescription: '',
           imageSide: 'left',
           imageShape: 'portrait',
+          pictureCorners: 'soft',
         },
         {
           id: id(302),
@@ -191,7 +204,15 @@ export const demoContent: SiteContent = {
       title: 'Press',
       showInMenu: true,
       blocks: [
-        { id: id(501), style: plainBox(), type: 'pressKit', heading: 'For journalists, clients and organisers' },
+        {
+          id: id(501),
+          style: plainBox(),
+          type: 'pressKit',
+          heading: 'For journalists, clients and organisers',
+          photoShape: 'portrait',
+          pictureShape: '',
+          pictureCorners: 'soft',
+        },
       ],
     },
     {

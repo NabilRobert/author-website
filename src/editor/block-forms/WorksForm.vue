@@ -3,10 +3,10 @@ import type { BlockOf } from '@shared/blocks'
 import { useDraft } from '@/editor/useEditor'
 import TextField from '@/editor/fields/TextField.vue'
 import ChoiceField from '@/editor/fields/ChoiceField.vue'
-import { SHAPE_OPTIONS } from '@/editor/fields/shapeOptions'
+import { CORNER_OPTIONS, WORK_SHAPE_OPTIONS } from '@/editor/fields/pictureOptions'
 
 // Which works the block shows (all, the newest, or the ones ticked here)
-// and the shape of their pictures.
+// and the shape and corners of their pictures.
 const block = defineModel<BlockOf<'works'>>({ required: true })
 const draft = useDraft()
 const SHOW = [
@@ -14,7 +14,6 @@ const SHOW = [
   { value: 'newest' as const, label: 'Only the newest (by date)' },
   { value: 'picked' as const, label: 'Only the ones I tick' },
 ]
-const SHAPES = [{ value: '' as const, label: 'Same as the Look tab' }, ...SHAPE_OPTIONS]
 </script>
 
 <template>
@@ -33,6 +32,7 @@ const SHAPES = [{ value: '' as const, label: 'Same as the Look tab' }, ...SHAPE_
         {{ work.title || 'Untitled' }}
       </label>
     </fieldset>
-    <ChoiceField v-model="block.shape" label="Shape of the pictures" :options="SHAPES" />
+    <ChoiceField v-model="block.pictureShape" label="Shape of the pictures" :options="WORK_SHAPE_OPTIONS" />
+    <ChoiceField v-model="block.pictureCorners" label="Corners of the pictures" :options="CORNER_OPTIONS" />
   </div>
 </template>

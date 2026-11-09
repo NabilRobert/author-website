@@ -9,6 +9,7 @@ import ButtonsForm from '@/editor/block-forms/ButtonsForm.vue'
 import WorksForm from '@/editor/block-forms/WorksForm.vue'
 import NewsForm from '@/editor/block-forms/NewsForm.vue'
 import HeadingOnlyForm from '@/editor/block-forms/HeadingOnlyForm.vue'
+import PressKitForm from '@/editor/block-forms/PressKitForm.vue'
 
 // The form for one block, picked by its type (the editor's twin of
 // src/components/blocks/PageBlocks.vue).
@@ -24,5 +25,6 @@ const block = defineModel<Block>({ required: true })
   <ButtonsForm v-else-if="block.type === 'buttons'" v-model="block" />
   <WorksForm v-else-if="block.type === 'works'" v-model="block" />
   <NewsForm v-else-if="block.type === 'news'" v-model="block" />
+  <PressKitForm v-else-if="block.type === 'pressKit'" v-model="block" />
   <HeadingOnlyForm v-else v-model="block" />
 </template>

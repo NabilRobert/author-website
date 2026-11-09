@@ -11,12 +11,18 @@
  * a name in `BLOCK_NAMES`, and add a component in src/components/blocks/.
  */
 import { z } from 'zod'
-import { boxStyleSchema, fillColour, optionalColour, plainBox, workShapeSchema } from './theme'
+import { boxStyleSchema, fillColour, optionalColour, pictureCornersSchema, plainBox, workShapeSchema } from './theme'
 import { imageCrop, imageKey, itemId, linkSchema, linkTarget, longText, requiredText, shortText } from './fields'
 
 // Every block's box (shared/theme.ts: boxStyleSchema); plain unless the
 // owner styles it, and plain for blocks saved before boxes existed.
 const blockStyle = boxStyleSchema.default(plainBox)
+
+// Picture shapes and corners were added after the first saves, hence the
+// defaults. 'soft' corners are how pictures looked before the choice existed.
+const pictureCorners = pictureCornersSchema.default('soft')
+// '' follows the Look tab's shape for pictures of work (theme.workShape).
+const workPictureShape = z.union([z.literal(''), workShapeSchema]).default('')
 
 const heroBlock = z.object({
   id: itemId,
@@ -31,6 +37,9 @@ const heroBlock = z.object({
   // '' uses the site's colours.
   backgroundColour: fillColour,
   textColour: optionalColour,
+  // '' lets the banner fit its words; a shape gives it that shape instead.
+  bannerShape: z.union([z.literal(''), workShapeSchema]).default(''),
+  pictureCorners,
 })
 
 const textBlock = z.object({
@@ -53,8 +62,8 @@ const imageTextBlock = z.object({
   // saves, hence the default.
   imageDescription: shortText.default(''),
   imageSide: z.enum(['left', 'right']),
-  // Added after the first saves, hence the default.
   imageShape: workShapeSchema.default('portrait'),
+  pictureCorners,
 })
 
 const listBlock = z.object({
@@ -89,10 +98,10 @@ const booksBlock = z.object({
   heading: shortText,
   // 'picked' shows only the works in pickedWorkIds, in the Work tab's order.
   show: z.enum(['all', 'newest', 'picked']),
-  // Added after the first saves, hence the defaults. A shape of '' follows
-  // the Look tab (theme.workShape).
+  // Added after the first saves, hence the default.
   pickedWorkIds: z.array(itemId).default([]),
-  shape: z.union([z.literal(''), workShapeSchema]).default(''),
+  pictureShape: workPictureShape,
+  pictureCorners,
 })
 
 const newsBlock = z.object({
@@ -105,7 +114,16 @@ const newsBlock = z.object({
 })
 
 const contactBlock = z.object({ id: itemId, style: blockStyle, type: z.literal('contact'), heading: shortText })
-const pressKitBlock = z.object({ id: itemId, style: blockStyle, type: z.literal('pressKit'), heading: shortText })
+const pressKitBlock = z.object({
+  id: itemId,
+  style: blockStyle,
+  type: z.literal('pressKit'),
+  heading: shortText,
+  photoShape: workShapeSchema.default('portrait'),
+  // The pictures of work.
+  pictureShape: workPictureShape,
+  pictureCorners,
+})
 
 export const blockSchema = z.discriminatedUnion('type', [
   heroBlock,

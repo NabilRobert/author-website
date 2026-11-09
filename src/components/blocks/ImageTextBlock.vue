@@ -3,10 +3,10 @@ import type { BlockOf } from '@shared/blocks'
 import { paragraphs } from '@/content/format'
 import FramedImage from '@/components/ui/FramedImage.vue'
 import BlockHeading from '@/components/ui/BlockHeading.vue'
-import { PICTURE_BESIDE_TEXT_CLASSES, WORK_SHAPE_CLASSES } from '@/content/frames'
+import { PICTURE_BESIDE_TEXT_CLASSES, PICTURE_CORNER_CLASSES, WORK_SHAPE_CLASSES } from '@/content/frames'
 
-// A picture beside text, on the left or the right, in the shape the owner
-// picked. On a phone the picture goes above the text.
+// A picture beside text, on the left or the right, in the shape and
+// corners the owner picked. On a phone the picture goes above the text.
 defineProps<{ block: BlockOf<'imageText'> }>()
 </script>
 
@@ -17,9 +17,10 @@ defineProps<{ block: BlockOf<'imageText'> }>()
   >
     <div
       v-if="block.imageKey"
-      class="w-full overflow-hidden rounded-sm shadow-md"
+      class="w-full overflow-hidden shadow-md"
       :class="[
         WORK_SHAPE_CLASSES[block.imageShape],
+        PICTURE_CORNER_CLASSES[block.pictureCorners],
         block.imageShape === 'portrait' ? 'max-w-72' : 'max-w-md',
         { '@3xl:order-2': block.imageSide === 'right' },
       ]"

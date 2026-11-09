@@ -19,6 +19,25 @@ export const WORK_SHAPE_CLASSES = {
   wide: 'aspect-video',
 } as const
 
+/** Picture (and banner) corners, per choice (shared/theme.ts: PICTURE_CORNERS). */
+export const PICTURE_CORNER_CLASSES = {
+  sharp: 'rounded-none',
+  soft: 'rounded-sm',
+  rounded: 'rounded-3xl',
+  round: 'rounded-full',
+} as const
+
+/**
+ * A banner given a shape: tall shapes are kept narrow and centred, or they
+ * would be taller than the screen. Words that don't fit make it taller.
+ */
+export const BANNER_SHAPE_CLASSES = {
+  portrait: 'mx-auto max-w-md aspect-[2/3]',
+  square: 'mx-auto max-w-xl aspect-square',
+  landscape: 'aspect-[4/3]',
+  wide: 'aspect-video',
+} as const
+
 /**
  * The picture-and-text block: how wide the picture's column is, per shape,
  * with the picture on the left or the right of the text.

@@ -3,11 +3,12 @@ import { computed } from 'vue'
 import type { BlockOf } from '@shared/blocks'
 import FramedImage from '@/components/ui/FramedImage.vue'
 import SiteLink from '@/components/ui/SiteLink.vue'
+import { BANNER_SHAPE_CLASSES, PICTURE_CORNER_CLASSES } from '@/content/frames'
 
 // A big banner: heading, a line under it, an optional button, its own
 // colours if the owner picked them, and an optional background picture
-// (dimmed so the words stay readable). At the top of a page its heading is
-// the page's title (h1).
+// (dimmed so the words stay readable), in the shape and corners the owner
+// picked. At the top of a page its heading is the page's title (h1).
 const props = defineProps<{ block: BlockOf<'hero'>; isPageTitle: boolean }>()
 
 // The owner's colours arrive as CSS variables; the Tailwind classes below
@@ -22,12 +23,16 @@ const colourClasses = computed(() => {
   const text = textColour ? 'text-(--hero-text)' : imageKey ? 'text-cream' : ''
   return [background, text]
 })
+const frameClasses = computed(() => {
+  const { bannerShape, pictureCorners } = props.block
+  return [bannerShape ? BANNER_SHAPE_CLASSES[bannerShape] : '', PICTURE_CORNER_CLASSES[pictureCorners]]
+})
 </script>
 
 <template>
   <section
-    class="relative overflow-hidden rounded-sm px-6 py-16 text-center @2xl:py-24"
-    :class="colourClasses"
+    class="relative flex flex-col justify-center overflow-hidden px-6 py-16 text-center @2xl:py-24"
+    :class="[colourClasses, frameClasses]"
     :style="colourVariables"
   >
     <div v-if="block.imageKey" class="absolute inset-0 overflow-hidden opacity-45">

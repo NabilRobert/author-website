@@ -7,7 +7,7 @@ import ColourField from '@/editor/fields/ColourField.vue'
 import ChoiceField from '@/editor/fields/ChoiceField.vue'
 import PatternField from '@/editor/fields/PatternField.vue'
 import PanelFields from '@/editor/fields/PanelFields.vue'
-import { SHAPE_OPTIONS } from '@/editor/fields/shapeOptions'
+import { SHAPE_OPTIONS } from '@/editor/fields/pictureOptions'
 import ImageField from '@/editor/fields/ImageField.vue'
 
 // The site's colours and fonts, with a warning when text would be hard to
