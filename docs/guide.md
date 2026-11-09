@@ -116,6 +116,8 @@ sequenceDiagram
 A picture uploaded but never saved stays in R2 unused. At this size that's
 harmless.
 
+### Colours, fonts and the menu
+
 The site's colours and fonts come from `content.theme`:
 `src/composables/useSiteTheme.ts` turns them into CSS variables
 (`src/content/themeVariables.ts`) on the page and loads the chosen fonts
@@ -134,7 +136,7 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Slug**: the part of the address after the `/`. The front page's is
   empty. `edit` and `api` are kept for the site itself.
 - **Content document**: everything on the site as one object
-  (`SiteContent`): author, books, news, pages and `updatedAt`.
+  (`SiteContent`): author, theme, books, news, pages and `updatedAt`.
 - **Zod schema**: a description of the content's shape that can also check
   it. The same schema checks the editor's draft and the API's input, and
   its messages are what the owner sees.
@@ -207,6 +209,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Add a field to a block:** give it a `.default(…)` in
   `shared/blocks.ts`. Blocks are stored as JSON, so sites saved before the
   field existed don't have it; without a default they would fail to load.
+- **Deploy or change the Cloudflare setup:** the checklist at the end of
+  the README; bindings live in `wrangler.toml`, security headers in
+  `public/_headers`.
 - **Change the database tables:** add a new numbered file in `migrations/`
   (never edit one that has been applied), then update
   `server/content-read.ts` and `server/content-write.ts`.
