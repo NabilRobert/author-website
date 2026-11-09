@@ -1,15 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
-import { createHead } from '@unhead/vue/client'
-import { createMemoryHistory } from 'vue-router'
-import { createAppRouter } from '@/router'
-import EditView from '@/views/EditView.vue'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises } from '@vue/test-utils'
 import { demoContent } from '@shared/demo-content'
-import { fakeApi, json } from '../fake-api'
+import { openEditor, startEachTestFresh } from './open-editor'
+import type { Editor } from './open-editor'
 
-// Each test starts without the draft backup an earlier one left (src/editor/draftBackup.ts).
-beforeEach(() => localStorage.clear())
-afterEach(() => vi.unstubAllGlobals())
+startEachTestFresh()
 
 function pretendScreenIsWide() {
   const query = { matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }
@@ -17,22 +12,6 @@ function pretendScreenIsWide() {
     'matchMedia',
     vi.fn(() => query),
   )
-}
-
-async function openEditor() {
-  fakeApi({
-    'GET /api/me': json({ email: 'mara@example.com', site: { name: 'mara' } }),
-    'GET /api/me/content': json({ ...demoContent, updatedAt: 'saved' }),
-  })
-  const router = createAppRouter(createMemoryHistory())
-  await router.push('/mara/edit')
-  const wrapper = mount(EditView, {
-    props: { site: 'mara' },
-    global: { plugins: [router, createHead()] },
-    attachTo: document.body,
-  })
-  await flushPromises()
-  return wrapper
 }
 
 describe('the editor page', () => {
@@ -54,7 +33,7 @@ describe('the editor page', () => {
   })
 
   // Opens "+ Add a page" and picks the layout whose card starts with `name`.
-  async function addPageFromLayout(editor: Awaited<ReturnType<typeof openEditor>>, name: string) {
+  async function addPageFromLayout(editor: Editor, name: string) {
     const buttons = () => editor.findAll('button')
     await buttons()
       .find((button) => button.text() === '+ Add a page')!
@@ -147,120 +126,6 @@ describe('the Works tab', () => {
     await moveDown.trigger('click')
     const titles = editor.findAll('[data-work-title]').map((title) => title.text())
     expect(titles).toEqual(['Harbour Library', 'Lantern', 'Tidewater Market', 'Ferry Posters'])
-    editor.unmount()
-  })
-})
-
-describe('saving a page as a layout', () => {
-  const clickButton = async (editor: Awaited<ReturnType<typeof openEditor>>, text: string) =>
-    editor
-      .findAll('button')
-      .find((button) => button.text().startsWith(text))!
-      .trigger('click')
-
-  it('offers the saved layout when adding a page, with copies of its blocks', async () => {
-    const editor = await openEditor()
-    const homeBlockIds = demoContent.pages[0]!.blocks.map((block) => block.id)
-    await clickButton(editor, 'Save as a layout')
-    await clickButton(editor, 'Save layout')
-    expect(editor.text()).toContain('Saved “Home layout”')
-    await clickButton(editor, '+ Add a page')
-    await clickButton(editor, 'Home layout')
-    const newBlocks = editor.findAll('section[aria-label^="Block "]')
-    expect(newBlocks).toHaveLength(homeBlockIds.length)
-    const newIds = newBlocks.map((block) => block.attributes('data-block-form'))
-    expect(newIds.some((id) => homeBlockIds.includes(id!))).toBe(false)
-    editor.unmount()
-  })
-
-  it('removes a saved layout from the picker after asking', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
-    const editor = await openEditor()
-    await clickButton(editor, 'Save as a layout')
-    await clickButton(editor, 'Save layout')
-    await clickButton(editor, '+ Add a page')
-    await editor.find('button[aria-label="Remove the layout Home layout"]').trigger('click')
-    expect(editor.find('button[aria-label="Remove the layout Home layout"]').exists()).toBe(false)
-    vi.restoreAllMocks()
-    editor.unmount()
-  })
-})
-
-describe('adding a project in the Pages tab', () => {
-  async function addProject(editor: Awaited<ReturnType<typeof openEditor>>, layout: string) {
-    const button = (text: string) => editor.findAll('button').find((candidate) => candidate.text().startsWith(text))!
-    await button('+ Add a project').trigger('click')
-    await button(layout).trigger('click')
-  }
-
-  it('makes a new work with a page from the layout, and opens it', async () => {
-    const editor = await openEditor()
-    await addProject(editor, 'Case study')
-    expect(editor.find('section[aria-label="Edit"] h2').text()).toBe('Your pages')
-    expect(editor.text()).toContain('“New project”')
-    expect(editor.findAll('section[aria-label^="Block "]')).toHaveLength(3)
-    expect(editor.find('section[aria-label="Preview"] h1').text()).toBe('New project')
-    editor.unmount()
-  })
-
-  it("gives a new project's address its title, until the address is changed", async () => {
-    const editor = await openEditor()
-    await addProject(editor, 'Just the details')
-    const field = (label: string) =>
-      editor.find(
-        `#${editor
-          .findAll('label')
-          .find((candidate) => candidate.text() === label)!
-          .attributes('for')}`,
-      )
-    await field('Title').setValue('Harbour Ferry')
-    expect((field('Its address').element as HTMLInputElement).value).toBe('harbour-ferry')
-    editor.unmount()
-  })
-})
-
-describe('editing a work in the Pages tab', () => {
-  async function openLantern() {
-    const editor = await openEditor()
-    await editor
-      .findAll('button')
-      .find((button) => button.text().includes('/work/lantern'))!
-      .trigger('click')
-    return editor
-  }
-  const addressBox = (editor: Awaited<ReturnType<typeof openEditor>>) =>
-    editor.findAll('label').find((label) => label.text() === 'Its address')!
-
-  it('keeps the address when it is emptied, so the work never has none', async () => {
-    const editor = await openLantern()
-    const input = editor.find(`#${addressBox(editor).attributes('for')}`)
-    await input.setValue('')
-    expect(editor.text()).toContain('/work/lantern')
-    await input.setValue('lantern-app')
-    expect(editor.text()).toContain('/work/lantern-app')
-    editor.unmount()
-  })
-
-  it('turns its page off, which the preview says and the list shows', async () => {
-    const editor = await openLantern()
-    const showPage = editor.findAll('label').find((label) => label.text().startsWith('Show a page'))!
-    const checkbox = showPage.find('input[type="checkbox"]')
-    await checkbox.setValue(false)
-    expect(editor.find('section[aria-label="Preview"]').text()).toContain("Visitors can't see this page")
-    expect(editor.text()).toContain('Lantern (no page)')
-    editor.unmount()
-  })
-
-  it('removes the work after asking, and goes back to the front page', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
-    const editor = await openLantern()
-    await editor
-      .findAll('button')
-      .find((button) => button.text() === 'Remove this work')!
-      .trigger('click')
-    expect(editor.text()).not.toContain('/work/lantern')
-    expect(editor.find('button[aria-pressed="true"]').text()).toContain('Home')
-    vi.restoreAllMocks()
     editor.unmount()
   })
 })
