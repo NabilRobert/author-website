@@ -232,6 +232,12 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   HTML (`server/link-preview-page.ts`, `server/link-previews.ts`).
   `public/_routes.json` keeps built files (`/assets/*`) away from functions,
   so they stay free and fast.
+- **Visit counts**: views per page per day, kept 90 days, shown to the owner
+  in the editor's Visits tab (`server/visits.ts`, `VisitsTab.vue`). A page
+  counts itself once shown (`src/content/countVisit.ts`), except for its
+  owner and the editor's preview. Only the number is stored: no cookies,
+  nothing about the visitor (`migrations/0008`). Anyone could send extra
+  counts, so they are a rough guide.
 - **Contact form**: a block visitors use to email the owner
   (`ContactFormBlock.vue` → `POST /api/sites/<name>/messages`,
   `server/contact-messages.ts`). Messages go to the owner's login email,

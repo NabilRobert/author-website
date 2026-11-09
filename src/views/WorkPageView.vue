@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useSiteContent } from '@/content/useSiteContent'
 import { usePageHead } from '@/composables/usePageHead'
+import { useCountVisit } from '@/content/countVisit'
 import WorkPage from '@/components/works/WorkPage.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 
@@ -13,6 +14,7 @@ const work = computed(() =>
   content.value.works.find((candidate) => candidate.showPage && candidate.pageSlug === props.workSlug),
 )
 usePageHead(() => work.value?.title)
+useCountVisit(() => work.value !== undefined)
 </script>
 
 <template>

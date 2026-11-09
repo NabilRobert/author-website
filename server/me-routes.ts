@@ -17,6 +17,7 @@ import type { AppEnv } from './session'
 import { contentRoutes } from './content-routes'
 import { imageUploadRoutes } from './image-routes'
 import { fileUploadRoutes } from './file-routes'
+import { visitStatsRoutes } from './visits'
 import { deleteAccount } from './account-deletion'
 
 export const meRoutes = new Hono<AppEnv>()
@@ -49,3 +50,4 @@ meRoutes.delete('/', async (c) => {
 meRoutes.route('/', contentRoutes)
 meRoutes.route('/', imageUploadRoutes)
 meRoutes.route('/', fileUploadRoutes)
+meRoutes.route('/', visitStatsRoutes)

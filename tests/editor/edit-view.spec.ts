@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { demoContent } from '@shared/demo-content'
+import { json } from '../fake-api'
 import { openEditor, startEachTestFresh } from './open-editor'
 import type { Editor } from './open-editor'
 
@@ -225,6 +226,30 @@ describe('the Help tab', () => {
     expect(topics).toContain('Change something on your page')
     expect(topics).toContain('Show your work, each with its own page')
     expect(editor.text()).toContain('Everything is saved.')
+    editor.unmount()
+  })
+})
+
+describe('the Visits tab', () => {
+  it('shows the totals and names the most-visited pages', async () => {
+    const days = Array.from({ length: 30 }, (_, index) => ({
+      day: `2026-10-${String(index + 1).padStart(2, '0')}`,
+      count: index >= 25 ? 2 : 1,
+    }))
+    const pages = [
+      { path: '/work/lantern', count: 20 },
+      { path: '/', count: 15 },
+    ]
+    const editor = await openEditor({ 'GET /api/me/visits': json({ days, pages }) })
+    await editor
+      .findAll('[role="tab"]')
+      .find((tab) => tab.text() === 'Visits')!
+      .trigger('click')
+    await flushPromises()
+    expect(editor.find('[data-total="7"]').text()).toBe('12')
+    expect(editor.find('[data-total="30"]').text()).toBe('35')
+    const rows = editor.findAll('[data-page-visits]').map((row) => row.text().replace(/\s+/g, ' '))
+    expect(rows).toEqual(['Lantern /work/lantern20', 'Home /15'])
     editor.unmount()
   })
 })

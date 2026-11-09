@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useSiteContent } from '@/content/useSiteContent'
 import { usePageHead } from '@/composables/usePageHead'
+import { useCountVisit } from '@/content/countVisit'
 import SectionHeading from '@/components/ui/SectionHeading.vue'
 import PageBlocks from '@/components/blocks/PageBlocks.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
@@ -15,6 +16,7 @@ const page = computed(() => content.value.pages.find((candidate) => candidate.sl
 const startsWithBanner = computed(() => page.value?.blocks[0]?.type === 'hero')
 
 usePageHead(() => (page.value && page.value.slug ? page.value.title : undefined))
+useCountVisit(() => page.value !== undefined)
 </script>
 
 <template>

@@ -88,6 +88,17 @@ async function readError(response: Response): Promise<ErrorBody> {
   return ((await response.json().catch(() => null)) ?? {}) as ErrorBody
 }
 
+export interface VisitStats {
+  days: { day: string; count: number }[]
+  pages: { path: string; count: number }[]
+}
+
+/** The site's visit counts (server/visits.ts), or null if they couldn't be fetched. */
+export async function fetchVisits(): Promise<VisitStats | null> {
+  const response = await fetch('/api/me/visits').catch(() => null)
+  return response?.ok ? ((await response.json()) as VisitStats) : null
+}
+
 export type UploadResult = { isUploaded: true; key: string } | { isUploaded: false; message: string }
 
 /** Sends one picture to R2 through the API; the key goes into the draft. */

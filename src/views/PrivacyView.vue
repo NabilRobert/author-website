@@ -29,7 +29,8 @@ useHead({ title: 'Privacy · Framed' })
         video on a page loads from YouTube (without its tracking cookies) or Vimeo (with do-not-track) only when a
         visitor presses play. A message sent through a page's contact form is emailed to the page's owner and not kept;
         to stop floods of messages we keep a scrambled stand-in for the sender's internet address, and the time, for one
-        day.
+        day. For each page's owner we count views per page per day, for 90 days: only the number, with no cookies and
+        nothing about who visited.
       </p>
       <h2 class="text-xl font-semibold">Where it is kept</h2>
       <p>On Cloudflare's servers. Emailed codes are stored scrambled (hashed) and expire after 10 minutes.</p>

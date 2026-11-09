@@ -79,6 +79,7 @@ const HOW_TOS: HowTo[] = [
       'The Page menu above the preview shows any page, including your work’s pages.',
       'Unsaved changes are kept on this computer if you close the tab; they come back next time.',
       'Done takes you to your page as visitors see it.',
+      'The Visits tab shows how many people looked at your pages in the last 30 days (your own visits don’t count).',
     ],
   },
   {

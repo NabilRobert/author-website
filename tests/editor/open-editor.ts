@@ -11,16 +11,19 @@ import { createAppRouter } from '@/router'
 import EditView from '@/views/EditView.vue'
 import { demoContent } from '@shared/demo-content'
 import { fakeApi, json } from '../fake-api'
+import type { FakeAnswer } from '../fake-api'
 
 export function startEachTestFresh() {
   beforeEach(() => localStorage.clear())
   afterEach(() => vi.unstubAllGlobals())
 }
 
-export async function openEditor() {
+/** `moreAnswers` adds API answers a test needs beyond loading the editor. */
+export async function openEditor(moreAnswers: Record<string, FakeAnswer> = {}) {
   fakeApi({
     'GET /api/me': json({ email: 'mara@example.com', site: { name: 'mara' } }),
     'GET /api/me/content': json({ ...demoContent, updatedAt: 'saved' }),
+    ...moreAnswers,
   })
   const router = createAppRouter(createMemoryHistory())
   await router.push('/mara/edit')

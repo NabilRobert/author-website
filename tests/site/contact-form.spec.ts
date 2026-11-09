@@ -50,7 +50,7 @@ describe('a contact form', () => {
   it("sends the visitor's message to the site and thanks them", async () => {
     const { page, api } = await openContactPage(json({ ok: true }, 201))
     await fillAndSend(page)
-    const sent = api.calls.find((call) => call.method === 'POST')!
+    const sent = api.calls.find((call) => call.path === '/api/sites/mara/messages')!
     expect(JSON.parse(String(sent.init!.body))).toEqual({
       name: 'Sam Visitor',
       email: 'sam@example.org',
@@ -72,7 +72,7 @@ describe('a contact form', () => {
     await page.find('form').trigger('submit')
     await flushPromises()
     expect(page.find('[role="alert"]').text()).toBe('Add your name.')
-    expect(api.calls.some((call) => call.method === 'POST')).toBe(false)
+    expect(api.calls.some((call) => call.path === '/api/sites/mara/messages')).toBe(false)
   })
 
   it("never sends from the editor's preview", async () => {

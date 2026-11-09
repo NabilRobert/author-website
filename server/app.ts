@@ -14,6 +14,7 @@ import type { Auth } from './auth'
 import { contactMessageSender, emailCodeSender } from './email'
 import type { SendContactMessage, SendEmailCode } from './email'
 import { contactRoutes } from './contact-messages'
+import { visitCountRoutes } from './visits'
 import type { Env } from './env'
 import type { AppEnv } from './session'
 import { publicRoutes } from './public-routes'
@@ -46,6 +47,7 @@ export function createApp({
   app.on(['GET', 'POST'], '/auth/*', (c) => c.var.auth().handler(c.req.raw))
   app.route('/', publicRoutes)
   app.route('/', contactRoutes)
+  app.route('/', visitCountRoutes)
   app.route('/', imageServeRoutes)
   app.route('/', fileServeRoutes)
   app.route('/me', meRoutes)
