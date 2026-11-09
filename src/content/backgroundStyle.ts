@@ -68,7 +68,9 @@ const NO_BACKGROUND = {
   '--site-background-position': 'center',
   '--site-pattern-base': 'transparent',
   '--site-panel-background': 'transparent',
-  '--site-panel-inset': '0px',
+  '--site-panel-inset-x': '0px',
+  '--site-panel-inset-y': '0px',
+  '--site-panel-max': '76rem',
   '--site-panel-radius': '0px',
 }
 
@@ -77,6 +79,8 @@ const NO_BACKGROUND = {
 const AUTOMATIC_SHARES = [9, 6, 6]
 const CLEAR_BY_DEFAULT: Partial<Record<BackgroundPattern, number[]>> = { argyle: [1] }
 const ROUNDED_RADIUS = '1.5rem'
+// The gap between the content box and the edges of the page.
+const PANEL_GAP = 'clamp(0.75rem, 4cqw, 3rem)'
 
 /** A pattern's layers as three CSS values (image, size, position). */
 export function patternCss(pattern: BackgroundPattern, paints: Paints) {
@@ -133,7 +137,11 @@ function panelVariables(theme: Theme): Record<string, string> {
   const { colour, opacity, corners, width } = theme.panel
   return {
     '--site-panel-background': `color-mix(in srgb, ${colour || theme.backgroundColour} ${opacity}%, transparent)`,
-    '--site-panel-inset': width === 'full' ? '0px' : 'clamp(0.75rem, 4cqw, 3rem)',
+    // "All the way across" means edge to edge, left to right; the gap above
+    // and below stays, as it does when framed.
+    '--site-panel-inset-x': width === 'full' ? '0px' : PANEL_GAP,
+    '--site-panel-inset-y': PANEL_GAP,
+    '--site-panel-max': width === 'full' ? '100%' : '76rem',
     '--site-panel-radius': corners === 'sharp' ? '0px' : ROUNDED_RADIUS,
   }
 }
@@ -167,6 +175,8 @@ export function boxVariables(style: BoxStyle): Record<string, string> {
     '--box-opacity': String(style.opacity / 100),
     '--box-radius': style.corners === 'sharp' ? '0px' : ROUNDED_RADIUS,
     ...(style.text ? boxTextVariables(style.text) : {}),
+    ...(style.button ? { '--color-button': style.button } : {}),
+    ...(style.buttonText ? { '--color-button-text': style.buttonText } : {}),
   }
 }
 

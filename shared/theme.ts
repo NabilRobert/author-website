@@ -94,6 +94,10 @@ export const boxStyleSchema = z.object({
   corners: cornersSchema,
   pattern: patternSchema,
   patternColours: patternColoursSchema,
+  // Buttons inside the box; '' keeps the site's. Added after the first
+  // boxes, hence the defaults.
+  button: optionalColour.default(''),
+  buttonText: optionalColour.default(''),
 })
 export type BoxStyle = z.infer<typeof boxStyleSchema>
 export const plainBox = (): BoxStyle => ({
@@ -103,9 +107,14 @@ export const plainBox = (): BoxStyle => ({
   corners: 'rounded',
   pattern: 'none',
   patternColours: noPatternColours(),
+  button: '',
+  buttonText: '',
 })
 
-export const PANEL_WIDTHS = { framed: 'Framed, with the background around it', full: 'All the way across' } as const
+export const PANEL_WIDTHS = {
+  framed: 'Framed, with the background around it',
+  full: 'Edge to edge, left to right',
+} as const
 export type PanelWidth = keyof typeof PANEL_WIDTHS
 
 /**

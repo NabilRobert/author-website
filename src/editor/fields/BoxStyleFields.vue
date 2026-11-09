@@ -8,7 +8,8 @@ import ChoiceField from '@/editor/fields/ChoiceField.vue'
 import PatternField from '@/editor/fields/PatternField.vue'
 
 // A block's box: fill colour, pattern, how see-through the fill is, text
-// colour and corners. With no fill and no pattern there is no box.
+// and button colours, and corners. With no fill and no pattern there is no
+// box (the text and button colours still apply).
 const box = defineModel<BoxStyle>({ required: true })
 const draft = useDraft()
 
@@ -20,6 +21,13 @@ const CORNER_OPTIONS = (Object.keys(CORNERS) as Corners[]).map((key) => ({ value
     <div class="grid gap-4 sm:grid-cols-2">
       <ColourField v-model="box.background" label="Box colour" can-be-empty empty-name="no box" />
       <ColourField v-model="box.text" label="Text colour" can-be-empty empty-name="the site's text colour" />
+      <ColourField v-model="box.button" label="Button colour" can-be-empty empty-name="the site's buttons" />
+      <ColourField
+        v-model="box.buttonText"
+        label="Button text colour"
+        can-be-empty
+        empty-name="the site's button text"
+      />
     </div>
     <PatternField
       v-model:pattern="box.pattern"

@@ -76,8 +76,8 @@
   background-position: var(--site-background-position, center), center;
 }
 @utility site-panel {
-  width: min(76rem, 100% - 2 * var(--site-panel-inset, 0px));
-  margin: var(--site-panel-inset, 0px) auto;
+  width: min(var(--site-panel-max, 76rem), 100% - 2 * var(--site-panel-inset-x, 0px));
+  margin: var(--site-panel-inset-y, 0px) auto;
   border-radius: var(--site-panel-radius, 0px);
   background: var(--site-panel-background, transparent);
 }

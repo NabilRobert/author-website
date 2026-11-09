@@ -130,13 +130,17 @@ describe('the content box', () => {
     const panel = { colour: '#112233', opacity: 60, corners: 'sharp' as const, width: 'full' as const }
     const variables = backgroundVariables({ ...pictured, panel })
     expect(variables['--site-panel-background']).toBe('color-mix(in srgb, #112233 60%, transparent)')
-    expect(variables['--site-panel-inset']).toBe('0px')
+    // Edge to edge, left to right, keeping the gap above and below.
+    expect(variables['--site-panel-inset-x']).toBe('0px')
+    expect(variables['--site-panel-max']).toBe('100%')
+    expect(variables['--site-panel-inset-y']).not.toBe('0px')
     expect(variables['--site-panel-radius']).toBe('0px')
   })
 
   it('is framed and rounded by default', () => {
     const variables = backgroundVariables(pictured)
-    expect(variables['--site-panel-inset']).not.toBe('0px')
+    expect(variables['--site-panel-inset-x']).not.toBe('0px')
+    expect(variables['--site-panel-max']).toBe('76rem')
     expect(variables['--site-panel-radius']).toBe('1.5rem')
   })
 
