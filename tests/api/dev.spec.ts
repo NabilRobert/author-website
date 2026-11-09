@@ -28,6 +28,29 @@ describe('GET /api/dev/test-login', () => {
     expect((await api.request('/api/dev/test-login')).status).toBe(404)
   })
 
+  it.each(['TRUE', '1', 'yes', ''])(
+    'does not exist when the setting is %j rather than exactly "true"',
+    async (value) => {
+      const response = await api.app.request(
+        'http://localhost:8788/api/dev/test-login',
+        {},
+        { ...api.env, LOCAL_DEV_TEST_LOGIN: value },
+      )
+      expect(response.status).toBe(404)
+    },
+  )
+
+  it('does not exist on a deployed site, even if a request claims to be for localhost', async () => {
+    // The Host header comes from the request; SITE_URL comes from the deploy config.
+    const deployed = { ...withTestLogin(), SITE_URL: 'https://framed.my.id' }
+    const response = await api.app.request('http://localhost:8788/api/dev/test-login', {}, deployed)
+    expect(response.status).toBe(404)
+  })
+
+  it('hides every /api/dev address, not only the test login', async () => {
+    expect((await api.request('/api/dev/anything-added-later')).status).toBe(404)
+  })
+
   it('does not exist on a real domain, even with the setting on', async () => {
     const response = await api.app.request('https://framed.my.id/api/dev/test-login', {}, withTestLogin())
     expect(response.status).toBe(404)

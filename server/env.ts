@@ -16,8 +16,8 @@ export interface Env {
   LOCAL_DEV_PRINT_CODES?: string
   /**
    * "true" turns on /api/dev/test-login (one-click login as the local test
-   * user, server/dev-routes.ts). Local .dev.vars only; it also refuses any
-   * host but localhost.
+   * user, server/dev-routes.ts). Local .dev.vars only, never on a deployed
+   * site; it also refuses unless SITE_URL and the request are localhost.
    */
   LOCAL_DEV_TEST_LOGIN?: string
 }
