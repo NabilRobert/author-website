@@ -1,26 +1,25 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { app } from '../../server/app'
-import type { Env } from '../../server/env'
 import { MAX_IMAGE_BYTES } from '../../shared/images'
-import { createTestDatabase } from './test-database'
+import { MAX_IMAGES_PER_SITE } from '../../server/image-limits'
+import { demoContent } from '../../shared/demo-content'
+import { createTestApp } from './test-app'
+import type { TestApp } from './test-app'
 
 // The first bytes of real files of each type, padded out.
 const PNG_START = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 const JPEG_START = [0xff, 0xd8, 0xff, 0xe0]
 const WEBP_START = [0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]
 
-let env: Env
-let dispose: () => Promise<void>
+let api: TestApp
+let cookie: string
 
 beforeEach(async () => {
-  const bindings = await createTestDatabase()
-  dispose = bindings.dispose
-  // Local development mode: the sign-in check is covered in admin.spec.ts.
-  env = { DB: bindings.db, IMAGES: bindings.images, LOCAL_DEV_NO_LOGIN: 'true' }
+  api = await createTestApp()
+  cookie = await api.signUp('mara@example.com', 'mara')
 })
 afterEach(async () => {
-  await dispose()
+  await api.dispose()
 })
 
 function fileOf(start: number[], type: string, size = 1024, name = 'picture') {
@@ -29,10 +28,10 @@ function fileOf(start: number[], type: string, size = 1024, name = 'picture') {
   return new File([bytes], name, { type })
 }
 
-function upload(file: File | null, host = 'http://localhost:5173') {
+function upload(file: File | null, loginCookie = cookie) {
   const form = new FormData()
   if (file) form.set('image', file)
-  return app.request(`${host}/api/admin/images`, { method: 'POST', body: form }, env)
+  return api.request('/api/me/images', { method: 'POST', body: form }, loginCookie)
 }
 
 async function uploadedKey(file: File): Promise<string> {
@@ -41,7 +40,7 @@ async function uploadedKey(file: File): Promise<string> {
   return ((await response.json()) as { key: string }).key
 }
 
-describe('POST /api/admin/images', () => {
+describe('POST /api/me/images', () => {
   it.each([
     ['PNG', PNG_START, 'image/png', 'png'],
     ['JPG', JPEG_START, 'image/jpeg', 'jpg'],
@@ -74,16 +73,28 @@ describe('POST /api/admin/images', () => {
     expect(await response.json()).toEqual({ error: 'Choose a picture to upload.' })
   })
 
-  it('refuses an upload that is not signed in', async () => {
-    env = { ...env, LOCAL_DEV_NO_LOGIN: undefined, ACCESS_TEAM_DOMAIN: 'team.example', ACCESS_AUD: 'aud' }
-    expect((await upload(fileOf(PNG_START, 'image/png'), 'https://author.example')).status).toBe(401)
+  it('refuses an upload without a login', async () => {
+    expect((await upload(fileOf(PNG_START, 'image/png'), '')).status).toBe(401)
+  })
+
+  it('refuses an upload past the site picture limit', async () => {
+    const site = await api.db.prepare("SELECT id FROM sites WHERE name = 'mara'").first<{ id: string }>()
+    const rows = Array.from({ length: MAX_IMAGES_PER_SITE }, (_, index) =>
+      api.db
+        .prepare('INSERT INTO images (key, site_id, bytes, created_at) VALUES (?, ?, 10, ?)')
+        .bind(`images/old-${index}.png`, site!.id, new Date().toISOString()),
+    )
+    await api.db.batch(rows)
+    const response = await upload(fileOf(PNG_START, 'image/png'))
+    expect(response.status).toBe(403)
+    expect(((await response.json()) as { error: string }).error).toContain('the most it can hold')
   })
 })
 
 describe('GET /api/images/<name>', () => {
   it('serves an uploaded picture with its type and a long cache', async () => {
     const key = await uploadedKey(fileOf(PNG_START, 'image/png', 2048))
-    const response = await app.request(`/api/${key}`, {}, env)
+    const response = await api.request(`/api/${key}`)
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('image/png')
     expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable')
@@ -92,13 +103,36 @@ describe('GET /api/images/<name>', () => {
   })
 
   it('answers 404 for a picture that does not exist', async () => {
-    const response = await app.request('/api/images/00000000-0000-4000-8000-000000000000.png', {}, env)
+    const response = await api.request('/api/images/00000000-0000-4000-8000-000000000000.png')
     expect(response.status).toBe(404)
   })
 
   it('serves only picture names, not other files in the bucket', async () => {
-    await env.IMAGES.put('images/notes.html', '<script>alert(1)</script>')
-    const response = await app.request('/api/images/notes.html', {}, env)
+    await api.env.IMAGES.put('images/notes.html', '<script>alert(1)</script>')
+    const response = await api.request('/api/images/notes.html')
     expect(response.status).toBe(404)
+  })
+})
+
+describe('pictures nobody uses', () => {
+  it('are deleted after a save once they are a day old, keeping the ones in use', async () => {
+    const used = await uploadedKey(fileOf(PNG_START, 'image/png'))
+    const unused = await uploadedKey(fileOf(PNG_START, 'image/png'))
+    await api.db.prepare("UPDATE images SET created_at = '2000-01-01T00:00:00.000Z'").run()
+    const author = { ...demoContent.author, photoKey: used }
+    const init = {
+      method: 'PUT',
+      body: JSON.stringify({ ...demoContent, author }),
+      headers: { 'Content-Type': 'application/json' },
+    }
+    expect((await api.request('/api/me/content', init, cookie)).status).toBe(200)
+    expect((await api.request(`/api/${used}`)).status).toBe(200)
+    expect((await api.request(`/api/${unused}`)).status).toBe(404)
+  })
+
+  it('are all deleted with the account', async () => {
+    const key = await uploadedKey(fileOf(PNG_START, 'image/png'))
+    await api.request('/api/me', { method: 'DELETE' }, cookie)
+    expect((await api.request(`/api/${key}`)).status).toBe(404)
   })
 })

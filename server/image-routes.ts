@@ -1,7 +1,7 @@
 /**
  * Pictures, stored in R2 under `images/<random id>.<jpg|png|webp>`:
  *
- *   POST /api/admin/images     upload one (signed-in owner only)
+ *   POST /api/me/images        upload one to my site, within its limits
  *   GET  /api/images/<name>    serve one to anyone
  *
  * The bucket is never public; pictures are served through here. Because a
@@ -11,18 +11,22 @@ import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { IMAGE_TYPES, isImageType, MAX_IMAGE_BYTES, TOO_BIG_MESSAGE, WRONG_TYPE_MESSAGE } from '../shared/images'
 import type { ImageType } from '../shared/images'
-import type { Env } from './env'
+import { requireSite } from './session'
+import type { AppEnv } from './session'
+import { checkImageAllowance, recordImage } from './image-limits'
+export { pruneUnusedImages } from './image-limits'
 
 const IMAGE_NAME = /^[a-z0-9-]+\.(jpg|png|webp)$/
 // Room for the multipart wrapping around a picture at the size limit.
 const MAX_UPLOAD_BYTES = MAX_IMAGE_BYTES + 64 * 1024
 const ONE_YEAR_CACHE = 'public, max-age=31536000, immutable'
 
-/** Uploading, mounted under /api/admin behind the sign-in check. */
-export const imageUploadRoutes = new Hono<{ Bindings: Env }>()
+/** Uploading, mounted under /api/me behind the login check. */
+export const imageUploadRoutes = new Hono<AppEnv>()
 
 imageUploadRoutes.post(
   '/images',
+  requireSite,
   bodyLimit({ maxSize: MAX_UPLOAD_BYTES, onError: (c) => c.json({ error: TOO_BIG_MESSAGE }, 413) }),
   async (c) => {
     const form = await c.req.formData().catch(() => null)
@@ -31,15 +35,18 @@ imageUploadRoutes.post(
     if (file.size > MAX_IMAGE_BYTES) return c.json({ error: TOO_BIG_MESSAGE }, 413)
     const bytes = new Uint8Array(await file.arrayBuffer())
     if (!isImageType(file.type) || !startsLike(file.type, bytes)) return c.json({ error: WRONG_TYPE_MESSAGE }, 415)
+    const refusal = await checkImageAllowance(c.env.DB, c.var.site.id, bytes.length)
+    if (refusal) return c.json({ error: refusal }, 403)
 
     const key = `images/${crypto.randomUUID()}.${IMAGE_TYPES[file.type]}`
     await c.env.IMAGES.put(key, bytes, { httpMetadata: { contentType: file.type } })
+    await recordImage(c.env.DB, c.var.site.id, key, bytes.length, new Date())
     return c.json({ key }, 201)
   },
 )
 
 /** Serving, public. */
-export const imageServeRoutes = new Hono<{ Bindings: Env }>()
+export const imageServeRoutes = new Hono<AppEnv>()
 
 imageServeRoutes.get('/images/:name', async (c) => {
   const name = c.req.param('name')

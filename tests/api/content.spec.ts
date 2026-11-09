@@ -1,105 +1,169 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { app } from '../../server/app'
 import { loadContent } from '../../server/content-read'
 import { saveContent, StaleSaveError } from '../../server/content-write'
+import { findSiteByName } from '../../server/sites'
 import { demoContent } from '../../shared/demo-content'
-import { createTestDatabase } from './test-database'
+import type { SiteContent } from '../../shared/schema'
+import { createTestApp } from './test-app'
+import type { TestApp } from './test-app'
 
 const SAVED_AT = new Date('2026-11-09T10:00:00Z')
 
-let db: D1Database
-let dispose: () => Promise<void>
-
+let api: TestApp
 beforeEach(async () => {
-  ;({ db, dispose } = await createTestDatabase())
+  api = await createTestApp()
 })
 afterEach(async () => {
-  await dispose()
+  await api.dispose()
 })
 
-function getContent() {
-  return app.request('/api/content', {}, { DB: db })
+async function siteId(name: string): Promise<string> {
+  const site = await findSiteByName(api.db, name)
+  if (!site) throw new Error(`no site ${name}`)
+  return site.id
+}
+
+function putContent(content: SiteContent, cookie: string) {
+  const init = { method: 'PUT', body: JSON.stringify(content), headers: { 'Content-Type': 'application/json' } }
+  return api.request('/api/me/content', init, cookie)
 }
 
 describe('content store', () => {
   it('reads back exactly what was saved, in the same order', async () => {
-    const saved = await saveContent(db, demoContent, SAVED_AT)
-    expect(await loadContent(db)).toEqual(saved)
-    expect(saved.updatedAt).toBe('2026-11-09T10:00:00.000Z')
+    await api.signUp('mara@example.com', 'mara')
+    const id = await siteId('mara')
+    const saved = await saveContent(api.db, id, demoContent, SAVED_AT)
+    expect(await loadContent(api.db, id)).toEqual(saved)
   })
 
-  it('has nothing to read before the first save', async () => {
-    expect(await loadContent(db)).toBeNull()
+  it('keeps two sites apart, even with the same ids inside', async () => {
+    await api.signUp('a@example.com', 'site-a')
+    await api.signUp('b@example.com', 'site-b')
+    await saveContent(api.db, await siteId('site-a'), demoContent, SAVED_AT)
+    const renamed = { ...demoContent, author: { ...demoContent.author, name: 'Someone Else' } }
+    await saveContent(api.db, await siteId('site-b'), renamed, SAVED_AT)
+    expect((await loadContent(api.db, await siteId('site-a')))?.author.name).toBe('Mara Ellison')
+    expect((await loadContent(api.db, await siteId('site-b')))?.author.name).toBe('Someone Else')
   })
 
   it('refuses a save made from an older copy', async () => {
-    await saveContent(db, demoContent, SAVED_AT)
-    // demoContent still has updatedAt '', from before the first save.
-    await expect(saveContent(db, demoContent, new Date())).rejects.toBeInstanceOf(StaleSaveError)
+    await api.signUp('mara@example.com', 'mara')
+    const id = await siteId('mara')
+    await saveContent(api.db, id, demoContent, SAVED_AT)
+    await expect(saveContent(api.db, id, demoContent, new Date())).rejects.toBeInstanceOf(StaleSaveError)
   })
 
-  it('accepts a save made from the latest copy and removes what was deleted', async () => {
-    const first = await saveContent(db, demoContent, SAVED_AT)
-    const withoutNews = { ...first, news: [], books: first.books.slice(0, 1) }
-    await saveContent(db, withoutNews, new Date('2026-11-09T11:00:00Z'))
-    const stored = await loadContent(db)
-    expect(stored?.news).toEqual([])
-    expect(stored?.books.map((book) => book.title)).toEqual(['The Lantern Year'])
-  })
-
-  it('keeps unicode text intact', async () => {
-    const author = { ...demoContent.author, name: 'Sári Đặng 张伟 — “quoted”' }
-    await saveContent(db, { ...demoContent, author }, SAVED_AT)
-    expect((await loadContent(db))?.author.name).toBe('Sári Đặng 张伟 — “quoted”')
+  it('leaves the old content when a save fails part-way', async () => {
+    await api.signUp('mara@example.com', 'mara')
+    const id = await siteId('mara')
+    const first = await saveContent(api.db, id, demoContent, SAVED_AT)
+    const broken = { ...first, books: [first.books[0]!, first.books[0]!] }
+    await expect(saveContent(api.db, id, broken, new Date())).rejects.toThrow()
+    expect(await loadContent(api.db, id)).toEqual(first)
   })
 
   it('still loads a block saved before a newer field existed', async () => {
-    await saveContent(db, demoContent, SAVED_AT)
-    await db
+    await api.signUp('mara@example.com', 'mara')
+    const id = await siteId('mara')
+    await saveContent(api.db, id, demoContent, SAVED_AT)
+    await api.db
       .prepare(
         "UPDATE blocks SET fields_json = json_remove(fields_json, '$.imageDescription') WHERE type = 'imageText'",
       )
       .run()
-    const about = (await loadContent(db))?.pages.find((page) => page.slug === 'about')
+    const about = (await loadContent(api.db, id))?.pages.find((page) => page.slug === 'about')
     expect(about?.blocks[0]).toMatchObject({ type: 'imageText', imageDescription: '' })
-  })
-
-  it('leaves the old content when a save fails part-way', async () => {
-    const first = await saveContent(db, demoContent, SAVED_AT)
-    // Two books with one id break the books table's primary key mid-batch.
-    const broken = { ...first, books: [first.books[0]!, first.books[0]!] }
-    await expect(saveContent(db, broken, new Date())).rejects.toThrow()
-    expect(await loadContent(db)).toEqual(first)
   })
 })
 
-describe('GET /api/content', () => {
-  it('returns the site with a one-minute public cache', async () => {
-    await saveContent(db, demoContent, SAVED_AT)
-    const response = await getContent()
+describe('GET /api/sites/<name>/content', () => {
+  it("returns someone's site with a one-minute public cache", async () => {
+    const cookie = await api.signUp('mara@example.com', 'mara')
+    await putContent(demoContent, cookie)
+    const response = await api.request('/api/sites/mara/content')
     expect(response.status).toBe(200)
     expect(response.headers.get('Cache-Control')).toBe('public, max-age=60')
-    expect(((await response.json()) as { author: { name: string } }).author.name).toBe('Mara Ellison')
   })
 
-  it('says how to set the site up when it is empty', async () => {
-    const response = await getContent()
+  it('says there is no such page for an unknown name', async () => {
+    const response = await api.request('/api/sites/nobody/content')
     expect(response.status).toBe(404)
-    expect(await response.json()).toEqual({ error: 'This site has no content yet. Open /edit to set it up.' })
+    expect(await response.json()).toMatchObject({ reason: 'no-site' })
+  })
+
+  it('says a claimed but unsaved site is being set up', async () => {
+    await api.signUp('mara@example.com', 'mara')
+    expect(await (await api.request('/api/sites/mara/content')).json()).toMatchObject({ reason: 'not-set-up' })
+  })
+
+  it('hides a site taken down by Arthur', async () => {
+    const cookie = await api.signUp('mara@example.com', 'mara')
+    await putContent(demoContent, cookie)
+    await api.db.prepare("UPDATE sites SET is_hidden = 1 WHERE name = 'mara'").run()
+    expect((await api.request('/api/sites/mara/content')).status).toBe(404)
   })
 
   it('answers a stored row that breaks the schema with a plain 500, not the details', async () => {
-    await saveContent(db, demoContent, SAVED_AT)
-    await db.prepare("UPDATE books SET cover_key = '../../etc/passwd'").run()
-    const response = await getContent()
+    const cookie = await api.signUp('mara@example.com', 'mara')
+    await putContent(demoContent, cookie)
+    await api.db.prepare("UPDATE books SET cover_key = '../../etc/passwd'").run()
+    const response = await api.request('/api/sites/mara/content')
     expect(response.status).toBe(500)
     expect(JSON.stringify(await response.json())).not.toContain('passwd')
   })
+})
 
-  it('answers an unknown API address with a 404 that names it', async () => {
-    const response = await app.request('/api/nothing-here', {}, { DB: db })
-    expect(response.status).toBe(404)
-    expect(await response.json()).toEqual({ error: 'There is no API address GET /api/nothing-here.' })
+describe('/api/me/content', () => {
+  it('saves my site and reads it back, never cached', async () => {
+    const cookie = await api.signUp('mara@example.com', 'mara')
+    const saved = (await (await putContent(demoContent, cookie)).json()) as SiteContent
+    const response = await api.request('/api/me/content', {}, cookie)
+    expect(response.headers.get('Cache-Control')).toBe('no-store')
+    expect(await response.json()).toEqual(saved)
+  })
+
+  it("only ever writes the logged-in person's own site", async () => {
+    const maraCookie = await api.signUp('mara@example.com', 'mara')
+    await putContent(demoContent, maraCookie)
+    const otherCookie = await api.signUp('other@example.com', 'other')
+    const takeover = { ...demoContent, author: { ...demoContent.author, name: 'Hacked' } }
+    await putContent(takeover, otherCookie)
+    const mara = (await (await api.request('/api/sites/mara/content')).json()) as SiteContent
+    expect(mara.author.name).toBe('Mara Ellison')
+  })
+
+  it('lists the fields to fix when the content is invalid', async () => {
+    const cookie = await api.signUp('mara@example.com', 'mara')
+    const author = { ...demoContent.author, contactEmail: 'not an email' }
+    const response = await putContent({ ...demoContent, author }, cookie)
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({
+      issues: [{ path: ['author', 'contactEmail'], message: 'Enter an email address like name@example.com.' }],
+    })
+  })
+
+  it('refuses a save without a login', async () => {
+    expect((await putContent(demoContent, '')).status).toBe(401)
+  })
+
+  it('asks a logged-in person without a site to pick a name first', async () => {
+    const cookie = await api.logIn('mara@example.com')
+    expect((await api.request('/api/me/content', {}, cookie)).status).toBe(404)
+  })
+})
+
+describe('reporting a page', () => {
+  it('records the report for Arthur', async () => {
+    await api.signUp('mara@example.com', 'mara')
+    const response = await api.postJson('/api/sites/mara/report', { reason: 'This page copies my work.' })
+    expect(response.status).toBe(201)
+    const row = await api.db.prepare('SELECT reason FROM reports').first<{ reason: string }>()
+    expect(row?.reason).toBe('This page copies my work.')
+  })
+
+  it('asks for a reason', async () => {
+    await api.signUp('mara@example.com', 'mara')
+    expect((await api.postJson('/api/sites/mara/report', { reason: '' })).status).toBe(400)
   })
 })

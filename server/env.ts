@@ -1,16 +1,17 @@
-/** The Cloudflare bindings and settings the API uses (wrangler.toml, .dev.vars). */
+/** The Cloudflare bindings and settings the API uses (wrangler.toml, .dev.vars, secrets). */
 export interface Env {
-  /** The site's content (D1). */
+  /** Everyone's accounts and sites (D1). */
   DB: D1Database
-  /** Uploaded images: covers, photos, banner pictures (R2). */
+  /** Uploaded pictures (R2). */
   IMAGES: R2Bucket
-  /** The Cloudflare Access team domain, like "myteam.cloudflareaccess.com". */
-  ACCESS_TEAM_DOMAIN?: string
-  /** The Access application's audience tag (AUD), from its settings page. */
-  ACCESS_AUD?: string
-  /**
-   * "true" lets the editor save without signing in, but only on
-   * localhost: for local development, set in .dev.vars, never in production.
-   */
-  LOCAL_DEV_NO_LOGIN?: string
+  /** The site's own address, like "https://framed.my.id"; login cookies are set for it. */
+  SITE_URL: string
+  /** Signs login sessions (secret; at least 32 random characters). */
+  BETTER_AUTH_SECRET: string
+  /** Sends the login codes (secret, from resend.com). */
+  RESEND_API_KEY?: string
+  /** The sender of login codes, like "Framed <login@framed.my.id>". */
+  EMAIL_FROM?: string
+  /** "true" prints login codes in the terminal instead of emailing them: local development only. */
+  LOCAL_DEV_PRINT_CODES?: string
 }

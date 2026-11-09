@@ -1,6 +1,7 @@
 /**
- * Reads the site's content from D1 and puts it back together as one
- * document (shared/schema.ts: SiteContent).
+ * Reads one site's content from D1 and puts it back together as one
+ * document (shared/schema.ts: SiteContent). Every query is limited to that
+ * site's rows.
  *
  * All the selects go in one D1 batch: one round trip, and every table is
  * read from the same moment.
@@ -83,17 +84,18 @@ export class StoredContentError extends Error {}
  * Checks the result against the schema, so a bad row is caught here rather
  * than breaking a page.
  */
-export async function loadContent(db: D1Database): Promise<SiteContent | null> {
+export async function loadContent(db: D1Database, siteId: string): Promise<SiteContent | null> {
+  const query = (sql: string) => db.prepare(sql).bind(siteId)
   const [author, theme, socialLinks, books, buyLinks, reviews, news, pages, blocks] = await db.batch([
-    db.prepare('SELECT * FROM author WHERE id = 1'),
-    db.prepare('SELECT * FROM theme WHERE id = 1'),
-    db.prepare('SELECT label, url FROM social_links ORDER BY position'),
-    db.prepare('SELECT * FROM books ORDER BY position'),
-    db.prepare('SELECT book_id, label, url FROM buy_links ORDER BY book_id, position'),
-    db.prepare('SELECT book_id, quote, source FROM reviews ORDER BY book_id, position'),
-    db.prepare('SELECT * FROM news ORDER BY position'),
-    db.prepare('SELECT * FROM pages ORDER BY position'),
-    db.prepare('SELECT page_id, id, type, fields_json FROM blocks ORDER BY page_id, position'),
+    query('SELECT * FROM author WHERE site_id = ?'),
+    query('SELECT * FROM theme WHERE site_id = ?'),
+    query('SELECT label, url FROM social_links WHERE site_id = ? ORDER BY position'),
+    query('SELECT * FROM books WHERE site_id = ? ORDER BY position'),
+    query('SELECT book_id, label, url FROM buy_links WHERE site_id = ? ORDER BY book_id, position'),
+    query('SELECT book_id, quote, source FROM reviews WHERE site_id = ? ORDER BY book_id, position'),
+    query('SELECT * FROM news WHERE site_id = ? ORDER BY position'),
+    query('SELECT * FROM pages WHERE site_id = ? ORDER BY position'),
+    query('SELECT page_id, id, type, fields_json FROM blocks WHERE site_id = ? ORDER BY page_id, position'),
   ])
   const authorRow = rowsOf<AuthorRow>(author)[0]
   if (!authorRow) return null

@@ -1,5 +1,9 @@
 # Local settings for `npm run dev:api` (wrangler pages dev).
 # Copy this file to .dev.vars; .dev.vars is not committed.
 
-# Lets the editor save without Cloudflare Access, on localhost only.
-LOCAL_DEV_NO_LOGIN=true
+# The local address, so login cookies work on it.
+SITE_URL=http://localhost:8788
+# Any 32+ characters will do locally. Production uses its own secret.
+BETTER_AUTH_SECRET=local-only-secret-change-me-0123456789
+# Print login codes in the terminal instead of emailing them.
+LOCAL_DEV_PRINT_CODES=true
