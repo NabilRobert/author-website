@@ -3,12 +3,14 @@
  * (functions/api/[[path]].ts), so every request to /api/* lands here.
  *
  * Public:  GET /api/content         the whole site, for the public pages
+ *          GET /api/images/<name>    a picture (server/image-routes.ts)
  * Editor:  /api/admin/*             signed-in owner only (server/admin-routes.ts)
  */
 import { Hono } from 'hono'
 import type { Env } from './env'
 import { loadContent } from './content-read'
 import { adminRoutes } from './admin-routes'
+import { imageServeRoutes } from './image-routes'
 
 // Visitors may see a saved change up to a minute late; in return, most
 // page views are served from cache instead of reading the database.
@@ -25,6 +27,7 @@ app.get('/content', async (c) => {
   return c.json(content)
 })
 
+app.route('/', imageServeRoutes)
 app.route('/admin', adminRoutes)
 
 app.notFound((c) => c.json({ error: `There is no API address ${c.req.method} ${c.req.path}.` }, 404))

@@ -15,6 +15,7 @@ let privateKey: CryptoKey
 let otherPrivateKey: CryptoKey
 let publicJwk: Record<string, unknown>
 let db: D1Database
+let images: R2Bucket
 let dispose: () => Promise<void>
 
 beforeAll(async () => {
@@ -25,7 +26,7 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
-  ;({ db, dispose } = await createTestDatabase())
+  ;({ db, images, dispose } = await createTestDatabase())
   // Access's public keys, as https://<team>/cdn-cgi/access/certs serves them.
   vi.stubGlobal(
     'fetch',
@@ -49,7 +50,7 @@ function accessToken({ key = privateKey, audience = AUD, issuer = `https://${TEA
     .sign(key)
 }
 
-const productionEnv = (): Env => ({ DB: db, ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD })
+const productionEnv = (): Env => ({ DB: db, IMAGES: images, ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD })
 
 async function request(path: string, init: RequestInit, env: Env, host = 'https://author.example') {
   return app.request(`${host}${path}`, init, env)
@@ -91,13 +92,13 @@ describe('editor API sign-in check', () => {
 
   it('fails closed when Access is not configured', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    const response = await request('/api/admin/content', {}, { DB: db })
+    const response = await request('/api/admin/content', {}, { DB: db, IMAGES: images })
     expect(response.status).toBe(503)
   })
 
   it('allows editing without sign-in only on localhost with the local-dev setting', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    const localEnv = { DB: db, LOCAL_DEV_NO_LOGIN: 'true' }
+    const localEnv = { DB: db, IMAGES: images, LOCAL_DEV_NO_LOGIN: 'true' }
     await saveContent(db, demoContent, new Date())
     expect((await request('/api/admin/content', {}, localEnv, 'http://localhost:5173')).status).toBe(200)
     expect((await request('/api/admin/content', {}, localEnv, 'https://author.example')).status).toBe(503)

@@ -2,6 +2,8 @@
 export interface Env {
   /** The site's content (D1). */
   DB: D1Database
+  /** Uploaded images: covers, photos, banner pictures (R2). */
+  IMAGES: R2Bucket
   /** The Cloudflare Access team domain, like "myteam.cloudflareaccess.com". */
   ACCESS_TEAM_DOMAIN?: string
   /** The Access application's audience tag (AUD), from its settings page. */

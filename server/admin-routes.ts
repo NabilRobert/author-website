@@ -3,6 +3,7 @@
  *
  *   GET /api/admin/content   the content to edit, never cached
  *   PUT /api/admin/content   save the whole site
+ *   POST /api/admin/images   upload a picture (server/image-routes.ts)
  */
 import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
@@ -11,6 +12,7 @@ import type { Env } from './env'
 import { requireOwner } from './access'
 import { loadContent } from './content-read'
 import { saveContent, StaleSaveError } from './content-write'
+import { imageUploadRoutes } from './image-routes'
 
 // The whole site as JSON is a few tens of kilobytes; this leaves room to
 // spare and stops an oversized request before it is read.
@@ -19,6 +21,7 @@ const MAX_SAVE_BYTES = 1024 * 1024
 export const adminRoutes = new Hono<{ Bindings: Env }>()
 
 adminRoutes.use('*', requireOwner)
+adminRoutes.route('/', imageUploadRoutes)
 
 adminRoutes.get('/content', async (c) => {
   c.header('Cache-Control', 'no-store')
