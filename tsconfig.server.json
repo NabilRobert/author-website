@@ -14,5 +14,5 @@
     "noUncheckedIndexedAccess": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["server/**/*.ts", "functions/**/*.ts", "shared/**/*.ts", "tests/api/**/*.ts"]
+  "include": ["server/**/*.ts", "functions/**/*.ts", "shared/**/*.ts", "tests/api/**/*.ts", "scripts/**/*.ts"]
 }

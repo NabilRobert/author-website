@@ -22,12 +22,13 @@ Better Auth; codes are sent with Resend's free tier. No passwords exist.
 npm install
 cp .dev.vars.example .dev.vars   # local settings: login codes print in the terminal
 npm run db:migrate:local         # create the tables in a local D1 (once)
+npm run db:seed:test             # optional: a test page at http://localhost:8788/test (local only)
 npm run dev:api                  # site and API on http://localhost:8788
 npm run check                    # types, lint, format, tests and build (what CI runs)
 ```
 
 Open http://localhost:8788/login, type any email, and copy the code from
-the terminal. For live reloading while changing the site, also run
+the terminal. To edit the test page, log in as `test@framed.local`. For live reloading while changing the site, also run
 `npm run dev` (http://localhost:5173, with `/api` passed to port 8788).
 
 ## Layout
@@ -44,7 +45,7 @@ the terminal. For live reloading while changing the site, also run
 | `src/editor/` | The editor: its state and API calls, tabs, a form per block type, fields, cropper, preview |
 | `src/content/` | Loading a site, its links (`sitePath.ts`), theme and background as CSS variables, formatting |
 | `tests/` | Vitest specs: `api/` on a real local D1 and R2 (Miniflare), `site/`, `editor/` and `auth/` for the pages |
-| `scripts/` | `print-auth-tables.mjs`: regenerates Better Auth's table SQL after an upgrade |
+| `scripts/` | `seed-test-site.ts`: the local test page; `print-auth-tables.mjs`: regenerates Better Auth's table SQL after an upgrade |
 | `docs/guide.md` | How a request flows through the code, a glossary, and where to change things |
 
 ## Setup checklist (Arthur)
