@@ -24,6 +24,7 @@ const isWide = useWideScreen('64rem')
 // The forms' share of the width, in percent.
 const editorShare = ref(45)
 const previewPageId = ref('')
+const isLocalTestPage = props.site === 'test' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
 
 // The divider between the forms and the preview: a wide bar with a grip,
 // blue on hover. Splitpanes draws it (class "splitpanes__splitter"), so it
@@ -63,6 +64,14 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
         class="mt-4 inline-block rounded-md bg-action px-6 py-3 font-semibold text-panel"
         >Log in</RouterLink
       >
+      <!-- Local development only: the server answers this address only on
+           localhost with LOCAL_DEV_TEST_LOGIN on (server/dev-routes.ts). -->
+      <a
+        v-if="isLocalTestPage"
+        href="/api/dev/test-login"
+        class="mt-4 ml-3 inline-block rounded-md border border-action px-6 py-3 font-semibold text-action"
+        >Open as the test user (local only)</a
+      >
     </div>
     <div v-else-if="status === 'not-yours'" class="p-8 text-lg">
       <p>framed.my.id/{{ site }} isn't your page, so you can't edit it.</p>
@@ -70,6 +79,12 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
         :to="ownName ? `/${ownName}/edit` : '/login'"
         class="mt-4 inline-block rounded-md bg-action px-6 py-3 font-semibold text-panel"
         >{{ ownName ? 'Edit your own page' : 'Make your own page' }}</RouterLink
+      >
+      <a
+        v-if="isLocalTestPage"
+        href="/api/dev/test-login"
+        class="mt-4 ml-3 inline-block rounded-md border border-action px-6 py-3 font-semibold text-action"
+        >Open as the test user (local only)</a
       >
     </div>
     <p v-else-if="status === 'failed'" class="p-8 text-lg text-danger" role="alert">{{ loadError }}</p>

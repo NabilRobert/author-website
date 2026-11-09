@@ -6,6 +6,7 @@
  *   /api/sites/...     anyone: a site's content, reporting a page (server/public-routes.ts)
  *   /api/images/...    anyone: pictures (server/image-routes.ts)
  *   /api/me/...        the logged-in person's own site (server/me-routes.ts)
+ *   /api/dev/...       local development only (server/dev-routes.ts)
  */
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
@@ -18,6 +19,7 @@ import type { AppEnv } from './session'
 import { publicRoutes } from './public-routes'
 import { imageServeRoutes } from './image-routes'
 import { meRoutes } from './me-routes'
+import { devRoutes } from './dev-routes'
 
 interface AppOptions {
   /** How login codes are sent; tests pass one that keeps them. */
@@ -39,6 +41,8 @@ export function createApp({ loginCodeSenderFor = loginCodeSender }: AppOptions =
   app.route('/', publicRoutes)
   app.route('/', imageServeRoutes)
   app.route('/me', meRoutes)
+  // Local development only; answers 404 everywhere else (server/dev-routes.ts).
+  app.route('/dev', devRoutes)
 
   app.notFound((c) => c.json({ error: `There is no API address ${c.req.method} ${c.req.path}.` }, 404))
   // Details go to the Cloudflare logs; the browser gets a message a person

@@ -28,7 +28,9 @@ npm run check                    # types, lint, format, tests and build (what CI
 ```
 
 Open http://localhost:8788/login, type any email, and copy the code from
-the terminal. To edit the test page, log in as `test@framed.local`. For live reloading while changing the site, also run
+the terminal. To edit the test page, open http://localhost:8788/api/dev/test-login
+(local only: it logs you in as `test@framed.local` and opens `/test/edit`;
+it answers only on localhost with `LOCAL_DEV_TEST_LOGIN=true` in `.dev.vars`). For live reloading while changing the site, also run
 `npm run dev` (http://localhost:5173, with `/api` passed to port 8788).
 
 ## Layout
