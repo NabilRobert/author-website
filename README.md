@@ -24,15 +24,12 @@ at sign-up and reset a forgotten password.
 npm install
 cp .dev.vars.example .dev.vars   # local settings: emailed codes print in the terminal
 npm run db:migrate:local         # create the tables in a local D1 (once)
-npm run db:seed:test             # optional: a test page at http://localhost:8788/test (local only)
 npm run dev:api                  # site and API on http://localhost:8788
 npm run check                    # types, lint, format, tests and build (what CI runs)
 ```
 
 Open http://localhost:8788/login and sign up with any email and a
-password; the code that confirms the email is printed in the terminal. Or
-log in as the **test account**: `test@framed.local`, password
-`framed-local-test` (local database only; it owns the page at `/test`).
+password; the code that confirms the email is printed in the terminal.
 Once logged in, your own page shows an **Edit this page** button; the
 editor's **Done** brings you back.
 
@@ -57,7 +54,7 @@ editor's **Done** brings you back.
 | `src/editor/` | The editor: its state and API calls, tabs, a form per block type, fields, cropper, preview |
 | `src/content/` | Loading a site, its links (`sitePath.ts`), theme and background as CSS variables, formatting |
 | `tests/` | Vitest specs: `api/` on a real local D1 and R2 (Miniflare), `site/`, `editor/` and `auth/` for the pages |
-| `scripts/` | `seed-test-site.ts`: the local test account and its page; `print-auth-tables.mjs`: regenerates Better Auth's table SQL after an upgrade |
+| `scripts/` | `seed-test-site.ts`: a local example page at `/test`; `print-auth-tables.mjs`: regenerates Better Auth's table SQL after an upgrade |
 | `docs/guide.md` | How a request flows through the code, a glossary, and where to change things |
 
 ## Setup checklist (Arthur)
