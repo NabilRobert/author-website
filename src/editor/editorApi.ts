@@ -10,6 +10,13 @@ import type { SaveProblem } from '@/editor/problems'
 const API = '/api/admin/content'
 const NO_CONNECTION =
   "Couldn't reach the site. Check your internet connection and try again. Your changes are still here."
+const SIGNED_OUT =
+  'Your sign-in has expired. Reload this page to sign in again; your unsaved changes are kept on this computer and will come back.'
+
+// Marks requests as coming from the page. Without it, Cloudflare Access
+// answers a request with an expired sign-in by redirecting to its login
+// page, which the editor can't show; with it, Access answers 401.
+const FROM_THE_PAGE = { 'X-Requested-With': 'XMLHttpRequest' }
 
 export type LoadResult =
   | { kind: 'loaded'; content: SiteContent }
@@ -30,7 +37,7 @@ interface ErrorBody {
 }
 
 export async function fetchDraft(): Promise<LoadResult> {
-  const response = await fetch(API, { cache: 'no-store' }).catch(() => null)
+  const response = await fetch(API, { cache: 'no-store', headers: FROM_THE_PAGE }).catch(() => null)
   if (!response) return { kind: 'failed', message: NO_CONNECTION }
   if (response.status === 401) return { kind: 'signed-out' }
   if (response.status === 404) return { kind: 'empty' }
@@ -39,9 +46,10 @@ export async function fetchDraft(): Promise<LoadResult> {
 }
 
 export async function sendDraft(content: SiteContent): Promise<SaveResult> {
-  const request = { method: 'PUT', body: JSON.stringify(content), headers: { 'Content-Type': 'application/json' } }
-  const response = await fetch(API, request).catch(() => null)
+  const headers = { ...FROM_THE_PAGE, 'Content-Type': 'application/json' }
+  const response = await fetch(API, { method: 'PUT', body: JSON.stringify(content), headers }).catch(() => null)
   if (!response) return { isSaved: false, text: NO_CONNECTION, problems: [] }
+  if (response.status === 401) return { isSaved: false, text: SIGNED_OUT, problems: [] }
   if (!response.ok) {
     const error = await readError(response)
     return problemsResult(error.error ?? 'Saving failed. Try again in a minute.', error.issues ?? [], content)
@@ -66,8 +74,11 @@ export type UploadResult = { isUploaded: true; key: string } | { isUploaded: fal
 export async function uploadImage(file: File): Promise<UploadResult> {
   const form = new FormData()
   form.set('image', file)
-  const response = await fetch('/api/admin/images', { method: 'POST', body: form }).catch(() => null)
+  const response = await fetch('/api/admin/images', { method: 'POST', body: form, headers: FROM_THE_PAGE }).catch(
+    () => null,
+  )
   if (!response) return { isUploaded: false, message: NO_CONNECTION }
+  if (response.status === 401) return { isUploaded: false, message: SIGNED_OUT }
   if (!response.ok) {
     const message = (await readError(response)).error ?? 'The upload failed. Try again in a minute.'
     return { isUploaded: false, message }

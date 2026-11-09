@@ -99,6 +99,14 @@ sequenceDiagram
    first, so mistakes are listed right away, each with where it is
    (`src/editor/problems.ts`). Then `sendDraft` sends it; the API checks
    it again, refuses a save from an older copy (409), and writes it.
+7. **Short sign-ins** (the owner signs in for each editing visit; README,
+   step 7): every unsaved change is also kept in the browser
+   (`src/editor/draftBackup.ts`). If the sign-in expires mid-edit, the save
+   is refused with "Your sign-in has expired"; after signing in again the
+   editor brings the changes back, unless the site was saved elsewhere in
+   between. The editor's requests carry `X-Requested-With`, which makes
+   Access answer an expired sign-in with 401 instead of a login redirect the
+   editor couldn't show.
 
 ### Pictures
 
@@ -169,6 +177,11 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   checks its signature, issuer, audience and expiry.
 - **Fail closed**: when something is missing or wrong, refuse rather than
   allow. The editor's API refuses all saves if Access isn't configured.
+- **Session**: how long a sign-in lasts before Access asks for a new
+  email code (set in Cloudflare, README step 7). "Sign out" in the editor
+  ends it at once.
+- **Draft backup**: a copy of unsaved changes in the browser's
+  `localStorage`, brought back after a reload or a new sign-in.
 - **Draft**: the editor's working copy of the content; nothing changes on
   the site until it is saved.
 - **Stale save**: a save made from an older copy than the one stored; the

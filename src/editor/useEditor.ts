@@ -4,13 +4,14 @@
  * EditView creates it once and shares the draft with the tabs through
  * provide/inject (useDraft).
  */
-import { computed, inject, ref } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import type { InjectionKey, Ref } from 'vue'
 import { siteContentSchema } from '@shared/schema'
 import type { SiteContent } from '@shared/schema'
 import { demoContent } from '@shared/demo-content'
 import { fetchDraft, problemsResult, sendDraft } from '@/editor/editorApi'
 import type { SaveResult } from '@/editor/editorApi'
+import { clearBackup, keepBackup, takeBackup } from '@/editor/draftBackup'
 
 export type EditorStatus = 'loading' | 'ready' | 'signed-out' | 'failed'
 
@@ -33,6 +34,7 @@ export function createEditor() {
   const isSaving = ref(false)
   const lastSave = ref<SaveResult | null>(null)
   const isDirty = computed(() => JSON.stringify(draft.value) !== savedCopy.value)
+  const backup = useDraftBackup(draft, isDirty, status)
 
   function keepAsSaved(content: SiteContent) {
     draft.value = content
@@ -44,7 +46,9 @@ export function createEditor() {
     if (result.kind === 'loaded') keepAsSaved(result.content)
     if (result.kind === 'empty') isStarter.value = true
     if (result.kind === 'failed') loadError.value = result.message
-    status.value = result.kind === 'loaded' || result.kind === 'empty' ? 'ready' : result.kind
+    const isReady = result.kind === 'loaded' || result.kind === 'empty'
+    if (isReady) backup.restore(result.kind === 'loaded' ? result.content : null)
+    status.value = isReady ? 'ready' : result.kind
   }
 
   async function save(): Promise<void> {
@@ -62,7 +66,34 @@ export function createEditor() {
     }
   }
 
-  return { draft, status, loadError, isStarter, isSaving, isDirty, lastSave, load, save }
+  const { isRestored } = backup
+  return { draft, status, loadError, isStarter, isRestored, isSaving, isDirty, lastSave, load, save }
+}
+
+/**
+ * Keeps every unsaved change backed up in the browser and drops the backup
+ * once all is saved (src/editor/draftBackup.ts). `restore` brings back a
+ * backup from an earlier visit, if it was made from the same saved version.
+ */
+function useDraftBackup(draft: Ref<SiteContent>, isDirty: Ref<boolean>, status: Ref<EditorStatus>) {
+  const isRestored = ref(false)
+
+  function restore(saved: SiteContent | null) {
+    const backup = takeBackup(saved)
+    if (backup) draft.value = backup
+    isRestored.value = backup !== null
+  }
+
+  watch(
+    draft,
+    () => {
+      if (status.value !== 'ready') return
+      if (isDirty.value) keepBackup(draft.value)
+      else clearBackup()
+    },
+    { deep: true },
+  )
+  return { isRestored, restore }
 }
 
 export type Editor = ReturnType<typeof createEditor>

@@ -13,7 +13,7 @@ import LookTab from '@/editor/tabs/LookTab.vue'
 // The editor: tabs of forms on the left, a live preview of the draft on the
 // right (below on a phone), and the Save button on top.
 const editor = createEditor()
-const { draft, status, loadError, isStarter, isDirty } = editor
+const { draft, status, loadError, isStarter, isRestored, isDirty } = editor
 provide(DRAFT_KEY, draft)
 useHead({ title: 'Edit your site', meta: [{ name: 'robots', content: 'noindex' }] })
 
@@ -54,6 +54,9 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
     <p v-else-if="status === 'failed'" class="p-8 text-lg text-danger" role="alert">{{ loadError }}</p>
     <template v-else>
       <EditorTopBar :editor="editor" />
+      <p v-if="isRestored" class="bg-notice px-4 py-3" role="status">
+        Your unsaved changes from last time are back. Press <strong>Save changes</strong> to publish them.
+      </p>
       <p v-if="isStarter" class="bg-notice px-4 py-3">
         Your site is new, so this is example content. Change it to your own, then press <strong>Save changes</strong>
         to publish it.

@@ -77,8 +77,14 @@ this folder after `npx wrangler login`.
    Self-hosted. Name it "Author site editor". Add two public hostnames on
    the brother's domain: path `edit` and path `api/admin`. Policy: **Allow**,
    Include → Emails → the brother's email and Arthur's. Login method:
-   One-time PIN only. Save, then copy the **Application Audience (AUD) tag**
-   from its Overview.
+   One-time PIN only. **Session Duration: 1 hour**, so each editing visit
+   needs a fresh email code. Save, then copy the **Application Audience
+   (AUD) tag** from its Overview.
+   Also set Zero Trust → Access settings → **global session duration to 15
+   minutes** (the shortest). Otherwise Access quietly signs him back in for
+   24 hours after the editor's session ends. Unsaved changes survive an
+   expired sign-in: the editor keeps them in his browser and brings them
+   back after he signs in again.
 8. **Secrets.** Pages project → Settings → Variables and Secrets →
    Production → add two, both **Encrypt**:
    - `ACCESS_TEAM_DOMAIN`: your team domain, like `yourteam.cloudflareaccess.com`
