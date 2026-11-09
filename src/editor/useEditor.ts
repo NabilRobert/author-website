@@ -11,6 +11,7 @@ import { demoContent } from '@shared/demo-content'
 import { fetchDraft, saveDraft } from '@/editor/editorApi'
 import type { SaveResult } from '@/editor/editorApi'
 import { clearBackup, keepBackup, takeBackup } from '@/editor/draftBackup'
+import { useUndoHistory } from '@/editor/undoHistory'
 
 export type EditorStatus = 'loading' | 'ready' | 'signed-out' | 'not-yours' | 'failed'
 
@@ -37,10 +38,12 @@ export function createEditor(site: string) {
   const lastSave = ref<SaveResult | null>(null)
   const isDirty = computed(() => JSON.stringify(draft.value) !== savedCopy.value)
   const backup = useDraftBackup(site, draft, isDirty, status)
+  const history = useUndoHistory(draft)
 
   function keepAsSaved(content: SiteContent) {
     draft.value = content
     savedCopy.value = JSON.stringify(content)
+    history.startFrom(content)
   }
 
   async function load(): Promise<void> {
@@ -65,7 +68,8 @@ export function createEditor(site: string) {
   }
 
   const { isRestored } = backup
-  return { site, draft, status, loadError, ownName, isStarter, isRestored, isSaving, isDirty, lastSave, load, save }
+  const state = { site, draft, status, loadError, ownName, isStarter, isRestored, isSaving, isDirty, lastSave }
+  return { ...state, load, save, history }
 }
 
 /**

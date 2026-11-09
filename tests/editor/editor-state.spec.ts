@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 import { createEditor } from '@/editor/useEditor'
+import { UNDO_PAUSE_MS } from '@/editor/undoHistory'
 import { demoContent } from '@shared/demo-content'
 import { fakeApi, json, offline } from '../fake-api'
 import type { FakeAnswer } from '../fake-api'
@@ -104,5 +106,58 @@ describe('saving', () => {
     await editor.save()
     expect(editor.lastSave.value?.text).toContain('Your changes are still here.')
     expect(editor.draft.value.profile.name).toBe('New Name')
+  })
+})
+
+describe('undo and redo', () => {
+  const originalName = savedContent.profile.name
+  // Lets the editor close the current step, as a pause in typing does.
+  const pause = () => new Promise((resolve) => setTimeout(resolve, UNDO_PAUSE_MS + 50))
+
+  it('takes back a change and puts it back again', async () => {
+    const editor = await loadedEditor()
+    editor.draft.value.profile.name = 'New Name'
+    await nextTick()
+    expect(editor.history.canUndo.value).toBe(true)
+    editor.history.undo()
+    expect(editor.draft.value.profile.name).toBe(originalName)
+    expect(editor.history.canRedo.value).toBe(true)
+    editor.history.redo()
+    expect(editor.draft.value.profile.name).toBe('New Name')
+  })
+
+  it('undoes one pause-separated step at a time', async () => {
+    const editor = await loadedEditor()
+    editor.draft.value.profile.name = 'First'
+    await pause()
+    editor.draft.value.profile.name = 'Second'
+    await pause()
+    editor.history.undo()
+    expect(editor.draft.value.profile.name).toBe('First')
+  })
+
+  it('does not count loading the site as something to undo', async () => {
+    const editor = await loadedEditor()
+    await pause()
+    expect(editor.history.canUndo.value).toBe(false)
+  })
+
+  it('starts again after saving, so the saved version is never undone', async () => {
+    const editor = await loadedEditor()
+    editor.draft.value.profile.name = 'New Name'
+    const newer = { ...savedContent, profile: { ...savedContent.profile, name: 'New Name' }, updatedAt: 'later' }
+    api({ 'PUT /api/me/content': json(newer) })
+    await editor.save()
+    await pause()
+    expect(editor.history.canUndo.value).toBe(false)
+  })
+
+  it('forgets what was undone once something new is changed', async () => {
+    const editor = await loadedEditor()
+    editor.draft.value.profile.name = 'New Name'
+    editor.history.undo()
+    editor.draft.value.profile.bioShort = 'Another change'
+    await pause()
+    expect(editor.history.canRedo.value).toBe(false)
   })
 })

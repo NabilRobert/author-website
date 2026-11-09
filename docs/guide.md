@@ -118,7 +118,9 @@ sequenceDiagram
    public site draw the draft, in the draft's colours and fonts. Clicking a
    block there selects it (`src/editor/blockSelection.ts`): the Pages tab
    opens and scrolls to that block's form. Working in a form outlines its
-   block in the preview.
+   block in the preview. **Undo** and **Redo** in the top bar step through
+   the edits (`src/editor/undoHistory.ts`); a short pause in editing closes
+   one step.
 8. **Saving** (`saveDraft`): checked with the schema first, so mistakes are
    listed right away with where they are (`src/editor/problems.ts`); the API
    checks again, refuses a save from an older copy (409), writes it, and
@@ -201,6 +203,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   (`shared/theme.ts: boxStyleSchema`, `src/components/blocks/BlockBox.vue`).
   A plain style draws no box. It can also set the block's own button and
   button-text colours.
+- **Undo history**: copies of the draft, one per pause in editing, that
+  Undo and Redo step through (`src/editor/undoHistory.ts`). It starts again
+  on every load and save, so a saved version is never undone.
 - **Block selection**: the block the owner is working on, shared by the
   preview and the forms (`src/editor/blockSelection.ts`). Each block's box
   carries `data-block-id`, so a click in the preview knows which block it

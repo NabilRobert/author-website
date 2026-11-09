@@ -5,10 +5,11 @@ import { authClient } from '@/auth/authClient'
 import { forgetAccount } from '@/auth/useAccount'
 
 // The bar along the top of the editor: whether there are unsaved changes,
-// the Save button, and what happened on the last save.
+// Undo and Redo, the Save button, and what happened on the last save.
 const props = defineProps<{ editor: Editor }>()
 const emit = defineEmits<{ done: [] }>()
 const { isDirty, isSaving, lastSave } = props.editor
+const { canUndo, canRedo, undo, redo } = props.editor.history
 const router = useRouter()
 
 async function logOut() {
@@ -29,6 +30,24 @@ async function logOut() {
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <slot />
+        <div class="flex gap-1" role="group" aria-label="Undo and redo">
+          <button
+            type="button"
+            :disabled="!canUndo"
+            class="rounded-md border border-panel-line px-4 py-3 disabled:opacity-50"
+            @click="undo"
+          >
+            ↶ Undo
+          </button>
+          <button
+            type="button"
+            :disabled="!canRedo"
+            class="rounded-md border border-panel-line px-4 py-3 disabled:opacity-50"
+            @click="redo"
+          >
+            Redo ↷
+          </button>
+        </div>
         <button type="button" class="rounded-md border border-panel-line px-4 py-3" @click="emit('done')">Done</button>
         <button type="button" class="rounded-md border border-panel-line px-4 py-3" @click="logOut">Log out</button>
         <button
