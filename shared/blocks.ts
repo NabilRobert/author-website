@@ -12,7 +12,7 @@
  */
 import { z } from 'zod'
 import { optionalColour } from './theme'
-import { imageKey, itemId, linkSchema, linkTarget, longText, requiredText, shortText } from './fields'
+import { imageCrop, imageKey, itemId, linkSchema, linkTarget, longText, requiredText, shortText } from './fields'
 
 const heroBlock = z.object({
   id: itemId,
@@ -20,6 +20,7 @@ const heroBlock = z.object({
   heading: requiredText('Add a heading for the banner.'),
   subheading: shortText,
   imageKey,
+  imageCrop,
   buttonLabel: shortText,
   buttonUrl: z.union([z.literal(''), linkTarget]),
   // '' uses the site's colours.
@@ -40,6 +41,7 @@ const imageTextBlock = z.object({
   heading: shortText,
   body: longText,
   imageKey,
+  imageCrop,
   // Read aloud to visitors who can't see the picture. Added after the first
   // saves, hence the default.
   imageDescription: shortText.default(''),

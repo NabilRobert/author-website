@@ -43,6 +43,7 @@ describe('HeroBlock', () => {
     heading: 'Welcome',
     subheading: '',
     imageKey: null,
+    imageCrop: { x: 50, y: 50, zoom: 1 },
     buttonLabel: '',
     buttonUrl: '',
     backgroundColour: '#123456',

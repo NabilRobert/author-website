@@ -11,6 +11,7 @@ import { blockSchema } from './blocks'
 import { themeSchema } from './theme'
 import {
   calendarDate,
+  imageCrop,
   imageKey,
   itemId,
   linkSchema,
@@ -39,6 +40,7 @@ export const authorSchema = z.object({
   bioShort: longText,
   // The headshot offered in the press kit.
   photoKey: imageKey,
+  photoCrop: imageCrop,
   contactEmail: z.union([z.literal(''), z.email('Enter an email address like name@example.com.')]),
   newsletterUrl: optionalWebAddress,
   socialLinks: z.array(linkSchema.extend({ url: webAddress })),
@@ -53,6 +55,7 @@ export const bookSchema = z.object({
   publishedOn: z.union([z.literal(''), calendarDate]),
   blurb: longText,
   coverKey: imageKey,
+  coverCrop: imageCrop,
   buyLinks: z.array(linkSchema.extend({ url: webAddress })),
   reviews: z.array(reviewSchema),
 })

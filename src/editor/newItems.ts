@@ -4,6 +4,7 @@
  */
 import type { BlockOf, BlockType } from '@shared/blocks'
 import type { Book, NewsItem, Page } from '@shared/schema'
+import { centredCrop } from '@shared/fields'
 
 type BlockFields = { [T in BlockType]: Omit<BlockOf<T>, 'id' | 'type'> }
 
@@ -13,13 +14,21 @@ const NEW_BLOCK_FIELDS: { [T in BlockType]: () => BlockFields[T] } = {
     heading: 'Your heading',
     subheading: '',
     imageKey: null,
+    imageCrop: centredCrop(),
     buttonLabel: '',
     buttonUrl: '',
     backgroundColour: '',
     textColour: '',
   }),
   text: () => ({ heading: '', body: 'Write here.' }),
-  imageText: () => ({ heading: '', body: '', imageKey: null, imageDescription: '', imageSide: 'left' }),
+  imageText: () => ({
+    heading: '',
+    body: '',
+    imageKey: null,
+    imageCrop: centredCrop(),
+    imageDescription: '',
+    imageSide: 'left',
+  }),
   list: () => ({ heading: '', numbered: false, items: ['First item'] }),
   quote: () => ({ quote: 'The quote.', source: '' }),
   buttons: () => ({ heading: '', links: [{ label: 'Button', url: '/' }] }),
@@ -45,6 +54,7 @@ export function newBook(): Book {
     publishedOn: '',
     blurb: '',
     coverKey: null,
+    coverCrop: centredCrop(),
     buyLinks: [],
     reviews: [],
   }

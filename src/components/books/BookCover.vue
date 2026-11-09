@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { imageUrl } from '@/content/format'
+import type { ImageCrop } from '@shared/fields'
+import FramedImage from '@/components/ui/FramedImage.vue'
 
 // A book's cover: the uploaded image, or, until there is one, a plain
 // typeset cover (title and author on a colour block) so the page never
 // shows a broken or empty box.
-const props = defineProps<{ title: string; authorName: string; coverKey: string | null }>()
+const props = defineProps<{ title: string; authorName: string; coverKey: string | null; coverCrop: ImageCrop }>()
 
 const TYPESET_COLOURS = ['bg-cover-1', 'bg-cover-2', 'bg-cover-3', 'bg-cover-4']
 
@@ -18,13 +19,9 @@ const typesetColour = computed(() => {
 </script>
 
 <template>
-  <img
-    v-if="coverKey"
-    :src="imageUrl(coverKey)"
-    :alt="`Cover of ${title}`"
-    class="aspect-[2/3] w-full rounded-sm object-cover shadow-md"
-    loading="lazy"
-  />
+  <div v-if="coverKey" class="aspect-[2/3] w-full overflow-hidden rounded-sm shadow-md">
+    <FramedImage :image-key="coverKey" :crop="coverCrop" :alt="`Cover of ${title}`" />
+  </div>
   <div
     v-else
     role="img"

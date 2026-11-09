@@ -12,7 +12,12 @@ defineProps<{ book: Book; authorName: string }>()
 <template>
   <article class="grid gap-6 @2xl:grid-cols-[12rem_1fr] @2xl:gap-10">
     <div class="w-40 @2xl:w-full">
-      <BookCover :title="book.title" :author-name="authorName" :cover-key="book.coverKey" />
+      <BookCover
+        :title="book.title"
+        :author-name="authorName"
+        :cover-key="book.coverKey"
+        :cover-crop="book.coverCrop"
+      />
     </div>
     <div>
       <p v-if="seriesLabel(book)" class="small-caps mb-2 text-accent">{{ seriesLabel(book) }}</p>

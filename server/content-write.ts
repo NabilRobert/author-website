@@ -44,10 +44,18 @@ function authorStatements(db: D1Database, content: SiteContent): D1PreparedState
   const { author } = content
   const authorRow = db
     .prepare(
-      `INSERT INTO author (id, name, bio_short, photo_key, contact_email, newsletter_url, updated_at)
-       VALUES (1, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO author (id, name, bio_short, photo_key, photo_crop, contact_email, newsletter_url, updated_at)
+       VALUES (1, ?, ?, ?, ?, ?, ?, ?)`,
     )
-    .bind(author.name, author.bioShort, author.photoKey, author.contactEmail, author.newsletterUrl, content.updatedAt)
+    .bind(
+      author.name,
+      author.bioShort,
+      author.photoKey,
+      JSON.stringify(author.photoCrop),
+      author.contactEmail,
+      author.newsletterUrl,
+      content.updatedAt,
+    )
   const links = author.socialLinks.map((link, position) =>
     db.prepare('INSERT INTO social_links (position, label, url) VALUES (?, ?, ?)').bind(position, link.label, link.url),
   )
@@ -77,8 +85,8 @@ function themeStatement(db: D1Database, theme: Theme): D1PreparedStatement {
 function bookStatements(db: D1Database, book: Book, position: number): D1PreparedStatement[] {
   const bookRow = db
     .prepare(
-      `INSERT INTO books (id, position, title, series_name, series_position, published_on, blurb, cover_key)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO books (id, position, title, series_name, series_position, published_on, blurb, cover_key, cover_crop)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       book.id,
@@ -89,6 +97,7 @@ function bookStatements(db: D1Database, book: Book, position: number): D1Prepare
       book.publishedOn,
       book.blurb,
       book.coverKey,
+      JSON.stringify(book.coverCrop),
     )
   const links = book.buyLinks.map((link, linkPosition) =>
     db

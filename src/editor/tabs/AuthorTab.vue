@@ -20,6 +20,8 @@ const draft = useDraft()
     />
     <ImageField
       v-model="draft.author.photoKey"
+      v-model:crop="draft.author.photoCrop"
+      shape="photo"
       label="Author photo"
       hint="Offered for download in the press kit. Use a photo you have the rights to share."
     />

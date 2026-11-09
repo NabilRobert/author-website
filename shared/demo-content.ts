@@ -5,6 +5,7 @@
  */
 import type { SiteContent } from './schema'
 import { DEFAULT_THEME } from './theme'
+import { centredCrop } from './fields'
 
 // Fixed ids so the demo is the same on every load; any valid UUID works.
 const id = (n: number) => `a1000000-0000-4000-8000-${String(n).padStart(12, '0')}`
@@ -18,6 +19,7 @@ export const demoContent: SiteContent = {
     bioShort:
       'Mara Ellison writes literary fiction set on small islands and in large families. She is the author of the Saltmarsh trilogy and the novel The Lantern Year.',
     photoKey: null,
+    photoCrop: centredCrop(),
     contactEmail: 'hello@example.com',
     newsletterUrl: 'https://example.com/newsletter',
     socialLinks: [
@@ -36,6 +38,7 @@ export const demoContent: SiteContent = {
       blurb:
         'For one year, the lighthouse keeper’s daughter keeps a lantern lit for a brother who left without a word. Then a letter arrives with the wrong name on it.',
       coverKey: null,
+      coverCrop: centredCrop(),
       buyLinks: [
         { label: 'Bookshop', url: 'https://example.com/buy/lantern-year' },
         { label: 'E-book', url: 'https://example.com/ebook/lantern-year' },
@@ -50,6 +53,7 @@ export const demoContent: SiteContent = {
       publishedOn: '2022-05-04',
       blurb: 'Three sisters inherit a house that floods twice a day. None of them wants it. All of them move in.',
       coverKey: null,
+      coverCrop: centredCrop(),
       buyLinks: [{ label: 'Bookshop', url: 'https://example.com/buy/low-tide-house' }],
       reviews: [{ quote: 'A house you will not want to leave.', source: 'Another placeholder review' }],
     },
@@ -61,6 +65,7 @@ export const demoContent: SiteContent = {
       publishedOn: '2023-09-21',
       blurb: 'The middle sister takes the last ferry out and misses the first one back.',
       coverKey: null,
+      coverCrop: centredCrop(),
       buyLinks: [{ label: 'Bookshop', url: 'https://example.com/buy/between-two-ferries' }],
       reviews: [],
     },
@@ -72,6 +77,7 @@ export const demoContent: SiteContent = {
       publishedOn: '2024-10-02',
       blurb: 'Everyone comes home for the wedding. Not everyone is invited.',
       coverKey: null,
+      coverCrop: centredCrop(),
       buyLinks: [{ label: 'Bookshop', url: 'https://example.com/buy/salt-wedding' }],
       reviews: [],
     },
@@ -109,6 +115,7 @@ export const demoContent: SiteContent = {
           heading: 'Mara Ellison',
           subheading: 'Quiet novels about loud families.',
           imageKey: null,
+          imageCrop: centredCrop(),
           buttonLabel: 'See the books',
           buttonUrl: '/books',
           backgroundColour: '',
@@ -137,6 +144,7 @@ export const demoContent: SiteContent = {
           heading: 'About Mara',
           body: ABOUT_TEXT,
           imageKey: null,
+          imageCrop: centredCrop(),
           imageDescription: '',
           imageSide: 'left',
         },

@@ -4,9 +4,10 @@ import type { SiteContent } from '@shared/schema'
 import { imageUrl } from '@/content/format'
 import BlockHeading from '@/components/ui/BlockHeading.vue'
 import BookCover from '@/components/books/BookCover.vue'
+import FramedImage from '@/components/ui/FramedImage.vue'
 
-// For journalists and event organisers: a headshot and covers to download,
-// and a short bio to copy.
+// For journalists and event organisers: a headshot and covers to download
+// (the whole original files, not the crops), and a short bio to copy.
 defineProps<{ block: BlockOf<'pressKit'>; content: SiteContent }>()
 </script>
 
@@ -20,11 +21,13 @@ defineProps<{ block: BlockOf<'pressKit'>; content: SiteContent }>()
     <section v-if="content.author.photoKey">
       <h3 class="mb-3 text-2xl font-semibold">Author photo</h3>
       <a :href="imageUrl(content.author.photoKey)" download class="inline-block">
-        <img
-          :src="imageUrl(content.author.photoKey)"
-          :alt="`Photo of ${content.author.name}`"
-          class="w-48 rounded-sm shadow-md"
-        />
+        <span class="block aspect-[4/5] w-48 overflow-hidden rounded-sm shadow-md">
+          <FramedImage
+            :image-key="content.author.photoKey"
+            :crop="content.author.photoCrop"
+            :alt="`Photo of ${content.author.name}`"
+          />
+        </span>
         <span class="mt-2 block font-sans text-accent underline">Download photo</span>
       </a>
     </section>
@@ -32,7 +35,12 @@ defineProps<{ block: BlockOf<'pressKit'>; content: SiteContent }>()
       <h3 class="mb-3 text-2xl font-semibold">Covers</h3>
       <ul class="grid grid-cols-2 gap-6 @2xl:grid-cols-4">
         <li v-for="book in content.books" :key="book.id">
-          <BookCover :title="book.title" :author-name="content.author.name" :cover-key="book.coverKey" />
+          <BookCover
+            :title="book.title"
+            :author-name="content.author.name"
+            :cover-key="book.coverKey"
+            :cover-crop="book.coverCrop"
+          />
           <a
             v-if="book.coverKey"
             :href="imageUrl(book.coverKey)"

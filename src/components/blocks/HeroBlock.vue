@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { BlockOf } from '@shared/blocks'
-import { imageUrl } from '@/content/format'
+import FramedImage from '@/components/ui/FramedImage.vue'
 import SiteLink from '@/components/ui/SiteLink.vue'
 
 // A big banner: heading, a line under it, an optional button, its own
@@ -22,12 +22,9 @@ const colours = computed(() => ({
     :class="block.imageKey ? 'bg-ink text-cream' : 'bg-paper-deep'"
     :style="colours"
   >
-    <img
-      v-if="block.imageKey"
-      :src="imageUrl(block.imageKey)"
-      alt=""
-      class="absolute inset-0 h-full w-full object-cover opacity-45"
-    />
+    <div v-if="block.imageKey" class="absolute inset-0 overflow-hidden opacity-45">
+      <FramedImage :image-key="block.imageKey" :crop="block.imageCrop" alt="" eager />
+    </div>
     <div class="relative">
       <component :is="isPageTitle ? 'h1' : 'h2'" class="text-5xl font-semibold @2xl:text-7xl">{{
         block.heading

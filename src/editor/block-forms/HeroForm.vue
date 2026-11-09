@@ -19,6 +19,8 @@ const block = defineModel<BlockOf<'hero'>>({ required: true })
     />
     <ImageField
       v-model="block.imageKey"
+      v-model:crop="block.imageCrop"
+      shape="banner"
       label="Background picture"
       hint="Optional. It is dimmed so the words stay readable."
     />

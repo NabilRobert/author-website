@@ -7,11 +7,14 @@
  */
 import { siteContentSchema } from '../shared/schema'
 import type { Book, NewsItem, Page, SiteContent } from '../shared/schema'
+import { centredCrop } from '../shared/fields'
+import type { ImageCrop } from '../shared/fields'
 
 interface AuthorRow {
   name: string
   bio_short: string
   photo_key: string | null
+  photo_crop: string | null
   contact_email: string
   newsletter_url: string
   updated_at: string
@@ -39,6 +42,7 @@ interface BookRow {
   published_on: string
   blurb: string
   cover_key: string | null
+  cover_crop: string | null
 }
 interface BookLinkRow extends LinkRow {
   book_id: string
@@ -98,6 +102,7 @@ export async function loadContent(db: D1Database): Promise<SiteContent | null> {
       name: authorRow.name,
       bioShort: authorRow.bio_short,
       photoKey: authorRow.photo_key,
+      photoCrop: readCrop(authorRow.photo_crop),
       contactEmail: authorRow.contact_email,
       newsletterUrl: authorRow.newsletter_url,
       socialLinks: rowsOf<LinkRow>(socialLinks),
@@ -109,6 +114,12 @@ export async function loadContent(db: D1Database): Promise<SiteContent | null> {
     updatedAt: authorRow.updated_at,
   }
   return parseStored(document)
+}
+
+// Stored as JSON; NULL (saved before cropping existed) means centred. The
+// schema check of the whole document validates the shape.
+function readCrop(json: string | null): ImageCrop {
+  return json ? (JSON.parse(json) as ImageCrop) : centredCrop()
 }
 
 function rowsOf<Row>(result: D1Result | undefined): Row[] {
@@ -140,6 +151,7 @@ function assembleBooks(books: BookRow[], buyLinks: BookLinkRow[], reviews: Revie
     publishedOn: row.published_on,
     blurb: row.blurb,
     coverKey: row.cover_key,
+    coverCrop: readCrop(row.cover_crop),
     buyLinks: buyLinks.filter((link) => link.book_id === row.id).map(({ label, url }) => ({ label, url })),
     reviews: reviews.filter((review) => review.book_id === row.id).map(({ quote, source }) => ({ quote, source })),
   }))

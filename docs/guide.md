@@ -121,6 +121,16 @@ sequenceDiagram
 4. Visitors load it from `GET /api/images/<id>.png`, cached for a year (a
    key is never reused, so the picture behind it never changes).
 
+**Cropping.** A picture is never cut. Each use of it keeps a crop: a focus
+point (x and y, in percent) and a zoom (`shared/fields.ts: imageCrop`).
+`src/components/ui/FramedImage.vue` fills its frame with the picture,
+keeping the focus point in view and zooming around it. In the editor,
+`src/editor/fields/ImageCropper.vue` shows the same picture in a frame of
+the same shape (`src/content/frames.ts`): dragging or the arrow keys move
+the focus point, a slider sets the zoom. Because only these three numbers
+are stored, one crop fits a frame of any size (the banner changes shape
+with the screen), and the press kit still offers the whole original.
+
 A picture uploaded but never saved stays in R2 unused. At this size that's
 harmless.
 
@@ -202,6 +212,8 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   API refuses it (409) so it can't undo newer changes.
 - **R2**: Cloudflare's file storage, here for pictures. The bucket is
   private; pictures are served through the API.
+- **Crop (focus point and zoom)**: how a picture sits in its frame; the
+  file itself is never changed.
 - **Magic bytes**: the first bytes every file of a type starts with (a PNG
   starts `89 50 4E 47`). The API checks them so a renamed file is refused.
 - **Image key**: the name an uploaded image is stored under, like

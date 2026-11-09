@@ -15,6 +15,8 @@ const book = defineModel<Book>({ required: true })
     <TextField v-model="book.title" label="Title" />
     <ImageField
       v-model="book.coverKey"
+      v-model:crop="book.coverCrop"
+      shape="cover"
       label="Cover"
       hint="Until you add one, the site shows a plain cover with the title."
     />

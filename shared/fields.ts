@@ -40,6 +40,22 @@ export const imageKey = z
   .regex(/^images\/[a-z0-9-]+\.(jpg|png|webp)$/, 'That image could not be found. Upload it again.')
   .nullable()
 
+/**
+ * How a picture sits in its frame: the point to keep in view (x and y, in
+ * percent of the picture) and how far to zoom in. The file itself is never
+ * cut, so the same picture fits frames of any shape, and the press kit
+ * still offers the whole original.
+ */
+export const imageCropSchema = z.object({
+  x: z.number().min(0).max(100),
+  y: z.number().min(0).max(100),
+  zoom: z.number().min(1).max(3),
+})
+export type ImageCrop = z.infer<typeof imageCropSchema>
+export const centredCrop = (): ImageCrop => ({ x: 50, y: 50, zoom: 1 })
+/** A crop that defaults to centred, for pictures saved before cropping existed. */
+export const imageCrop = imageCropSchema.default(centredCrop)
+
 /** A stable id for a list item, so the editor can reorder items safely. */
 export const itemId = z.uuid()
 
