@@ -226,6 +226,12 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   with new ids, stored in the `blocks` table under the layout's id
   (`migrations/0005`), and visitors never receive them
   (`server/public-routes.ts`).
+- **Link preview**: the title, description and picture LinkedIn, WhatsApp
+  or X show for a shared page. Those sites don't run JavaScript, so
+  `functions/_middleware.ts` writes the `<meta>` tags into each site page's
+  HTML (`server/link-preview-page.ts`, `server/link-previews.ts`).
+  `public/_routes.json` keeps built files (`/assets/*`) away from functions,
+  so they stay free and fast.
 - **Video block**: a YouTube or Vimeo link (`shared/videos.ts:
   parseVideoUrl`). Until a visitor presses play it is only a button on our
   site; then the player loads from youtube-nocookie.com or Vimeo with
