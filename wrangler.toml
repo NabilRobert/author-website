@@ -16,8 +16,8 @@ SIGN_UP_MODE = "invite"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "framed"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_name = "frameddatabase"
+database_id = "c57218ea-d56f-4325-8baf-93ded646ebe2"
 migrations_dir = "migrations"
 
 [[r2_buckets]]
