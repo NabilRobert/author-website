@@ -24,9 +24,9 @@ const TYPES = Object.keys(BLOCK_NAMES) as BlockType[]
 </script>
 
 <template>
-  <fieldset>
+  <fieldset class="@container">
     <legend class="mb-3 text-lg font-semibold">Add a block to this page</legend>
-    <div class="grid gap-3 sm:grid-cols-2">
+    <div class="grid gap-3 @lg:grid-cols-2">
       <button
         v-for="type in TYPES"
         :key="type"

@@ -7,6 +7,8 @@ import { blockSchema } from '@shared/blocks'
 import { BLOCK_NAMES } from '@shared/blocks'
 import type { BlockType } from '@shared/blocks'
 import { demoContent } from '@shared/demo-content'
+import { pageSchema } from '@shared/schema'
+import { PAGE_TEMPLATES, WORK_PAGE_TEMPLATES } from '@/editor/pageTemplates'
 
 describe('slugify', () => {
   it('turns a page name into an address', () => {
@@ -64,5 +66,28 @@ describe('BlockThumbnail', () => {
     const sketch = mount(BlockThumbnail, { props: { type } })
     expect(sketch.find('svg[aria-hidden="true"]').exists()).toBe(true)
     expect(sketch.findAll('rect, circle, path').length).toBeGreaterThan(1)
+  })
+})
+
+describe('page layouts', () => {
+  it.each(PAGE_TEMPLATES.map((template) => [template.name, template] as const))(
+    'the %s layout makes a page that can be saved as it is',
+    (_name, template) => {
+      const page = { ...newPage(template.title, []), blocks: template.blocks() }
+      expect(pageSchema.safeParse(page).success).toBe(true)
+    },
+  )
+
+  it.each(WORK_PAGE_TEMPLATES.map((template) => [template.name, template] as const))(
+    'the %s layout for a work makes blocks that can be saved as they are',
+    (_name, template) => {
+      for (const block of template.blocks()) expect(blockSchema.safeParse(block).success).toBe(true)
+    },
+  )
+
+  it('gives every block a new id each time, so two pages from one layout never share blocks', () => {
+    const project = PAGE_TEMPLATES.find((template) => template.key === 'project')!
+    const firstIds = project.blocks().map((block) => block.id)
+    expect(project.blocks().some((block) => firstIds.includes(block.id))).toBe(false)
   })
 })

@@ -51,12 +51,38 @@ describe('the editor page', () => {
     editor.unmount()
   })
 
-  it('adds a page, shows it in the menu preview, and selects it', async () => {
+  // Opens "+ Add a page" and picks the layout whose card starts with `name`.
+  async function addPageFromLayout(editor: Awaited<ReturnType<typeof openEditor>>, name: string) {
+    const buttons = () => editor.findAll('button')
+    await buttons()
+      .find((button) => button.text() === '+ Add a page')!
+      .trigger('click')
+    await buttons()
+      .find((button) => button.text().startsWith(name))!
+      .trigger('click')
+  }
+
+  it('adds a blank page, shows it in the menu preview, and selects it', async () => {
     const editor = await openEditor()
-    const addPage = editor.findAll('button').find((button) => button.text() === '+ Add a page')
-    await addPage!.trigger('click')
+    await addPageFromLayout(editor, 'Blank')
     expect(editor.find('section[aria-label="Preview"] nav').text()).toContain('New page')
     expect(editor.text()).toContain('This page is empty.')
+    editor.unmount()
+  })
+
+  it("adds a page from a layout, with that layout's blocks", async () => {
+    const editor = await openEditor()
+    await addPageFromLayout(editor, 'Project')
+    const blockNames = editor.findAll('section[aria-label^="Block "]').map((block) => block.attributes('aria-label'))
+    expect(blockNames).toEqual([
+      'Block 1: Big banner',
+      'Block 2: Text',
+      'Block 3: Picture gallery',
+      'Block 4: Text',
+      'Block 5: Quote',
+      'Block 6: Buttons',
+    ])
+    expect(editor.find('section[aria-label="Preview"] nav').text()).toContain('Project')
     editor.unmount()
   })
 

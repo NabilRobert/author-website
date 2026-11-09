@@ -215,6 +215,10 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   Every block with a picture has both: the banner (whose shape can also
   "fit the words"), picture and text, works and the press kit. The Look
   tab's shape is the default for pictures of work.
+- **Page layout (template)**: a ready-made stack of blocks with starting
+  text, picked when adding a page (`src/editor/pageTemplates.ts`,
+  `TemplatePicker.vue`). Only a starting point: the page isn't linked to it
+  afterwards.
 - **Gallery block**: a grid of uploaded pictures in one shape, each with a
   caption (`GalleryBlock.vue`, `GalleryForm.vue`); its pictures count as in
   use when unused ones are tidied (`server/image-limits.ts`).
@@ -308,6 +312,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Change the default colours or fonts:** `DEFAULT_THEME` in
   `shared/theme.ts`, and the same values in `src/styles/theme.css` (shown
   before the content loads).
+- **Add or change a page layout:** `PAGE_TEMPLATES` (site pages) or
+  `WORK_PAGE_TEMPLATES` (a work's own page) in `src/editor/pageTemplates.ts`;
+  a test checks every layout makes blocks that can be saved.
 - **Add a picture shape:** a name in `WORK_SHAPES` (`shared/theme.ts`) and
   its classes in `WORK_SHAPE_CLASSES`, `WORK_COLUMN_CLASSES`,
   `PICTURE_BESIDE_TEXT_CLASSES` and `BANNER_SHAPE_CLASSES`

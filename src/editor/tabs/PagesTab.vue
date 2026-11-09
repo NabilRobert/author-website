@@ -1,26 +1,31 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { MAX_PAGES } from '@shared/schema'
 import { useDraft } from '@/editor/useEditor'
 import { moveItem, newPage } from '@/editor/newItems'
 import ItemControls from '@/editor/fields/ItemControls.vue'
 import PageSettings from '@/editor/tabs/PageSettings.vue'
 import PageBlocksEditor from '@/editor/tabs/PageBlocksEditor.vue'
+import TemplatePicker from '@/editor/tabs/TemplatePicker.vue'
+import { PAGE_TEMPLATES } from '@/editor/pageTemplates'
+import type { PageTemplate } from '@/editor/pageTemplates'
 
 // Pages: pick a page, change its settings and blocks, add, reorder or
-// remove pages. The page picked here is the one the preview shows.
+// remove pages. A new page starts from a layout (src/editor/pageTemplates.ts).
+// The page picked here is the one the preview shows.
 const draft = useDraft()
 const selectedPageId = defineModel<string>('pageId', { required: true })
 
 const selectedIndex = computed(() => draft.value.pages.findIndex((page) => page.id === selectedPageId.value))
 
-function addPage() {
-  const page = newPage(
-    'New page',
-    draft.value.pages.map((existing) => existing.slug),
-  )
+const isChoosingLayout = ref(false)
+
+function addPage(template: PageTemplate) {
+  const takenSlugs = draft.value.pages.map((existing) => existing.slug)
+  const page = { ...newPage(template.title, takenSlugs), blocks: template.blocks() }
   draft.value.pages.push(page)
   selectedPageId.value = page.id
+  isChoosingLayout.value = false
 }
 
 function removeSelectedPage() {
@@ -49,13 +54,21 @@ function removeSelectedPage() {
           <button
             type="button"
             class="rounded-md border-2 border-action px-4 py-2 font-semibold text-action"
-            @click="addPage"
+            :aria-expanded="isChoosingLayout"
+            @click="isChoosingLayout = !isChoosingLayout"
           >
             + Add a page
           </button>
         </li>
       </ul>
     </nav>
+    <TemplatePicker
+      v-if="isChoosingLayout"
+      title="Choose a layout for the new page"
+      :templates="PAGE_TEMPLATES"
+      @pick="addPage"
+      @cancel="isChoosingLayout = false"
+    />
 
     <template v-if="selectedIndex >= 0">
       <section class="space-y-4 rounded-md border border-panel-line bg-panel p-4">
