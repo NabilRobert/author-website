@@ -44,6 +44,28 @@ describe('theme schema backgrounds', () => {
   })
 })
 
+describe('pattern layers', () => {
+  // Counts top-level comma-separated layers; commas inside brackets
+  // (a gradient's own arguments, color-mix(...)) don't separate layers.
+  function layerCount(css: string): number {
+    let depth = 0
+    let layers = 1
+    for (const character of css) {
+      if (character === '(') depth++
+      if (character === ')') depth--
+      if (character === ',' && depth === 0) layers++
+    }
+    return layers
+  }
+
+  it.each(PATTERNS)('gives every layer of %s its own size and position', (pattern) => {
+    const variables = backgroundVariables({ ...DEFAULT_THEME, backgroundPattern: pattern })
+    const layers = layerCount(variables['--site-background-image']!)
+    expect(layerCount(variables['--site-background-size']!)).toBe(layers)
+    expect(layerCount(variables['--site-background-position']!)).toBe(layers)
+  })
+})
+
 describe('pattern colours', () => {
   it('paints the pattern in the owner colours and keeps automatic ones faint', () => {
     const theme = { ...DEFAULT_THEME, backgroundPattern: 'argyle' as const }
@@ -51,6 +73,13 @@ describe('pattern colours', () => {
     expect(variables['--site-background-image']).toContain('#aa0000')
     expect(variables['--site-background-image']).toContain('#0000aa')
     expect(variables['--site-pattern-base']).toBe('#fafafa')
+  })
+
+  it('puts the content on a light panel once the owner picks a pattern colour', () => {
+    const own = { ...DEFAULT_THEME, backgroundPattern: 'argyle' as const }
+    const ownColours = backgroundVariables({ ...own, patternColours: ['#c0392b', '', '', ''] })
+    expect(ownColours['--site-panel-background']).toContain('93%')
+    expect(backgroundVariables(own)['--site-panel-background']).toBe('transparent')
   })
 
   it('shows the page background behind the pattern unless a colour is picked', () => {

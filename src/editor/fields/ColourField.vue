@@ -16,7 +16,7 @@ const PICKER_PLACEHOLDER = '#888888'
 <template>
   <div>
     <label :for="id" class="block font-semibold">{{ label }}</label>
-    <div class="mt-1 flex items-center gap-3">
+    <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
       <input
         :id="id"
         type="color"

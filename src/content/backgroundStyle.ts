@@ -10,7 +10,12 @@ import { PATTERN_BASE_COLOUR } from '@shared/theme'
 import type { BackgroundPattern, Theme } from '@shared/theme'
 import { imageUrl } from '@/content/format'
 
-interface PatternLayers {
+/**
+ * One layer of a pattern. Every layer carries its own size: CSS reuses a
+ * shorter size list for the remaining layers, which once drew argyle's
+ * diamonds as page-sized triangles.
+ */
+interface Layer {
   image: string
   size: string
   position?: string
@@ -19,41 +24,42 @@ interface PatternLayers {
 /** The pattern's colours 1 to 3, already resolved to CSS colours. */
 type Paints = [string, string, string]
 
-const PATTERNS: Record<Exclude<BackgroundPattern, 'none'>, (paint: Paints) => PatternLayers> = {
+const PATTERNS: Record<Exclude<BackgroundPattern, 'none'>, (paint: Paints) => Layer[]> = {
   // Two grids of dots, the second offset into the gaps of the first.
-  dots: ([dots, between]) => ({
-    image: `radial-gradient(${dots} 1.3px, transparent 1.8px), radial-gradient(${between} 1.3px, transparent 1.8px)`,
-    size: '18px 18px',
-    position: '0 0, 9px 9px',
-  }),
-  grid: ([main, fine]) => ({
-    image: [
-      `linear-gradient(${main} 1px, transparent 1px)`,
-      `linear-gradient(90deg, ${main} 1px, transparent 1px)`,
-      `linear-gradient(${fine} 1px, transparent 1px)`,
-      `linear-gradient(90deg, ${fine} 1px, transparent 1px)`,
-    ].join(', '),
-    size: '96px 96px, 96px 96px, 24px 24px, 24px 24px',
-  }),
-  stripes: ([stripes, between]) => ({
-    image: `repeating-linear-gradient(45deg, ${stripes} 0 1px, transparent 1px 12px, ${between} 12px 13px, transparent 13px 24px)`,
-    size: 'auto',
-  }),
-  // Diamonds in two colours, crossed by thin lines.
-  argyle: ([diamonds, otherDiamonds, lines]) => ({
-    image: [
-      `repeating-linear-gradient(120deg, ${lines} 0 1px, transparent 1px 60px)`,
-      `repeating-linear-gradient(60deg, ${lines} 0 1px, transparent 1px 60px)`,
-      `linear-gradient(60deg, ${diamonds} 25%, transparent 25% 75%, ${diamonds} 75%)`,
-      `linear-gradient(120deg, ${diamonds} 25%, transparent 25% 75%, ${diamonds} 75%)`,
-      `linear-gradient(${otherDiamonds}, ${otherDiamonds})`,
-    ].join(', '),
-    size: '70px 120px',
-  }),
-  linen: ([across, down]) => ({
-    image: `repeating-linear-gradient(0deg, ${across} 0 1px, transparent 1px 4px), repeating-linear-gradient(90deg, ${down} 0 1px, transparent 1px 4px)`,
-    size: 'auto',
-  }),
+  dots: ([dots, between]) => [
+    { image: `radial-gradient(${dots} 1.3px, transparent 1.8px)`, size: '18px 18px', position: '0 0' },
+    { image: `radial-gradient(${between} 1.3px, transparent 1.8px)`, size: '18px 18px', position: '9px 9px' },
+  ],
+  grid: ([main, fine]) => [
+    { image: `linear-gradient(${main} 1px, transparent 1px)`, size: '96px 96px' },
+    { image: `linear-gradient(90deg, ${main} 1px, transparent 1px)`, size: '96px 96px' },
+    { image: `linear-gradient(${fine} 1px, transparent 1px)`, size: '24px 24px' },
+    { image: `linear-gradient(90deg, ${fine} 1px, transparent 1px)`, size: '24px 24px' },
+  ],
+  stripes: ([stripes, between]) => [
+    {
+      image: `repeating-linear-gradient(45deg, ${stripes} 0 1px, transparent 1px 12px, ${between} 12px 13px, transparent 13px 24px)`,
+      size: 'auto',
+    },
+  ],
+  // Diamonds in two colours, crossed by thin lines (a classic CSS argyle).
+  argyle: ([diamonds, otherDiamonds, lines]) => [
+    { image: `repeating-linear-gradient(120deg, ${lines} 0 1px, transparent 1px 60px)`, size: '70px 120px' },
+    { image: `repeating-linear-gradient(60deg, ${lines} 0 1px, transparent 1px 60px)`, size: '70px 120px' },
+    {
+      image: `linear-gradient(60deg, ${diamonds} 25%, transparent 25% 75%, ${diamonds} 75%)`,
+      size: '70px 120px',
+    },
+    {
+      image: `linear-gradient(120deg, ${diamonds} 25%, transparent 25% 75%, ${diamonds} 75%)`,
+      size: '70px 120px',
+    },
+    { image: `linear-gradient(${otherDiamonds}, ${otherDiamonds})`, size: 'auto' },
+  ],
+  linen: ([across, down]) => [
+    { image: `repeating-linear-gradient(0deg, ${across} 0 1px, transparent 1px 4px)`, size: 'auto' },
+    { image: `repeating-linear-gradient(90deg, ${down} 0 1px, transparent 1px 4px)`, size: 'auto' },
+  ],
 }
 
 const NO_BACKGROUND = {
@@ -73,13 +79,28 @@ const CLEAR_BY_DEFAULT: Partial<Record<BackgroundPattern, number[]>> = { argyle:
 export function backgroundVariables(theme: Theme): Record<string, string> {
   if (theme.backgroundImageKey) return pictureVariables(theme, theme.backgroundImageKey)
   if (theme.backgroundPattern === 'none') return NO_BACKGROUND
-  const { image, size, position } = PATTERNS[theme.backgroundPattern](resolvePaints(theme))
+  const layers = PATTERNS[theme.backgroundPattern](resolvePaints(theme))
   return {
     ...NO_BACKGROUND,
-    '--site-background-image': image,
-    '--site-background-size': size,
-    '--site-background-position': position ?? 'center',
+    '--site-background-image': layers.map((layer) => layer.image).join(', '),
+    '--site-background-size': layers.map((layer) => layer.size).join(', '),
+    '--site-background-position': layers.map((layer) => layer.position ?? 'center').join(', '),
     '--site-pattern-base': theme.patternColours[PATTERN_BASE_COLOUR] || 'transparent',
+    // Owner-picked pattern colours can be strong, so the content then sits on
+    // a light panel, as it does over a picture; faint automatic ones need none.
+    ...(hasOwnColours(theme) ? readablePanel(theme) : {}),
+  }
+}
+
+function hasOwnColours(theme: Theme): boolean {
+  return theme.patternColours.slice(0, PATTERN_BASE_COLOUR).some(Boolean)
+}
+
+/** A light panel behind the content, set in from the edges so the background frames it. */
+function readablePanel(theme: Theme): Record<string, string> {
+  return {
+    '--site-panel-background': `color-mix(in srgb, ${theme.backgroundColour} 93%, transparent)`,
+    '--site-panel-inset': 'clamp(0.75rem, 4cqw, 3rem)',
   }
 }
 
@@ -93,14 +114,12 @@ function resolvePaints(theme: Theme): Paints {
   return [paint(0), paint(1), paint(2)]
 }
 
-// A light panel behind the content, set in from the edges so the picture
-// frames it, keeps text readable on any picture.
+// Any picture can sit behind the content, so it always gets the panel.
 function pictureVariables(theme: Theme, key: string): Record<string, string> {
   return {
     ...NO_BACKGROUND,
     '--site-background-image': `url("${imageUrl(key)}")`,
     '--site-background-size': 'cover',
-    '--site-panel-background': `color-mix(in srgb, ${theme.backgroundColour} 93%, transparent)`,
-    '--site-panel-inset': 'clamp(0.75rem, 4cqw, 3rem)',
+    ...readablePanel(theme),
   }
 }
