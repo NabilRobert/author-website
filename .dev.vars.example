@@ -11,3 +11,6 @@ LOCAL_DEV_PRINT_CODES=true
 # The local test account's password, for `npm run db:seed:test` (at least 10
 # characters; pick your own). It logs in as test@framed.local.
 LOCAL_DEV_TEST_PASSWORD=
+# "open" lets anyone sign up locally; leave it out to try invite-only sign-up
+# (make an invite with `npm run invite`).
+SIGN_UP_MODE=open

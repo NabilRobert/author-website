@@ -36,8 +36,11 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+// Sign-up is open unless a test says otherwise.
+const OPEN_SIGN_UP = { 'GET /api/sign-up': json({ isInviteOnly: false }) }
+
 async function openLogin(answers: Record<string, FakeAnswer>, path = '/login') {
-  fakeApi(answers)
+  fakeApi({ ...OPEN_SIGN_UP, ...answers })
   const router = createAppRouter(createMemoryHistory())
   await router.push(path)
   const page = mount(App, { global: { plugins: [router, createHead()] } })
@@ -113,7 +116,9 @@ describe('making an account', () => {
   it('confirms the email with the emailed code, then asks for the page address', async () => {
     const { page, router } = await startSignUp({ 'GET /api/me': json({ email: 'new@example.com', site: null }) })
     await fillIn(page, { '#login-email': 'new@example.com', '#login-password': PASSWORD })
-    expect(authClient.signUp.email).toHaveBeenCalledWith({ email: 'new@example.com', password: PASSWORD, name: '' })
+    expect(authClient.signUp.email).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'new@example.com', password: PASSWORD, name: '' }),
+    )
     await fillIn(page, { '#login-code': '123456' })
     expect(authClient.emailOtp.verifyEmail).toHaveBeenCalledWith({ email: 'new@example.com', otp: '123456' })
     expect(page.text()).toContain("Pick your page's address")
@@ -159,6 +164,42 @@ describe('making an account', () => {
     await fillIn(page, { '#login-code': '123456' })
     await fillIn(page, { '#login-name': 'edit' })
     expect(alertText(page)).toBe('That name is used by Framed itself. Pick another.')
+  })
+})
+
+describe('signing up while Framed is invite-only', () => {
+  const INVITE_ONLY = { 'GET /api/sign-up': json({ isInviteOnly: true }) }
+
+  it('opens on "Make your account" from an invite link, and sends the code with the sign-up', async () => {
+    const { page } = await openLogin(INVITE_ONLY, '/login?invite=K7Q2M9XW')
+    expect(page.find('h1').text()).toBe('Make your account')
+    expect((page.find('#login-invite').element as HTMLInputElement).value).toBe('K7Q2M9XW')
+    await fillIn(page, { '#login-email': 'new@example.com', '#login-password': PASSWORD })
+    expect(authClient.signUp.email).toHaveBeenCalledWith(
+      expect.objectContaining({ fetchOptions: { headers: { 'X-Framed-Invite': 'K7Q2M9XW' } } }),
+    )
+  })
+
+  it('asks for the invite code before sending anything', async () => {
+    const { page } = await openLogin(INVITE_ONLY)
+    await clickButton(page, 'New here? Make an account')
+    await fillIn(page, { '#login-email': 'new@example.com', '#login-password': PASSWORD })
+    expect(authClient.signUp.email).not.toHaveBeenCalled()
+    expect(alertText(page)).toContain('invite-only')
+  })
+
+  it("passes on the server's reason when the invite is refused", async () => {
+    const used = { status: 403, code: 'INVITE_REQUIRED', message: 'That invite code has been used.' }
+    authClient.signUp.email.mockResolvedValue({ data: null, error: used })
+    const { page } = await openLogin(INVITE_ONLY, '/login?invite=USEDCODE')
+    await fillIn(page, { '#login-email': 'new@example.com', '#login-password': PASSWORD })
+    expect(alertText(page)).toBe('That invite code has been used.')
+  })
+
+  it('shows no invite field when sign-up is open', async () => {
+    const { page } = await openLogin({})
+    await clickButton(page, 'New here? Make an account')
+    expect(page.find('#login-invite').exists()).toBe(false)
   })
 })
 

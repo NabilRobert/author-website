@@ -80,8 +80,14 @@ these once, in order. Steps 2–4 run in this folder after `npx wrangler login`.
    output `dist`. Settings → Variables and Secrets → Production, both
    **Encrypt**: `BETTER_AUTH_SECRET` (step 4) and `RESEND_API_KEY` (step 5).
    Then Custom domains → add `framed.my.id`, and redeploy.
-7. **Check it.** Open https://framed.my.id/login, log in with your email,
-   pick a name, press Save in the editor, and open your page.
+7. **Check it.** Sign-up is invite-only (`SIGN_UP_MODE = "invite"` in
+   `wrangler.toml`), so make yourself an invite first:
+   `npm run invite -- --remote you@example.com`. Open the link it prints,
+   make your account, type the code from the email, pick a name, press
+   Save in the editor, and open your page.
+8. **Invite people** the same way: `npm run invite -- --remote their@email.com`
+   prints a link that works once, for that address only (leave the email
+   out for a link anyone can use once).
 
 **Taking a page down** after a report (reports are in the `reports` table):
 

@@ -1,12 +1,13 @@
 /**
  * The login page's steps:
  *   log-in   email + password;
- *   sign-up  email + password, then `confirm`: the 6-digit code we emailed;
+ *   sign-up  email + password (and, while Framed is invite-only, the invite
+ *            code from the invite link), then `confirm`: the code we emailed;
  *   forgot   email, then `reset`: the emailed code and a new password;
  *   name     the first time only: pick the page's address.
  * Afterwards it goes to the person's editor, or back to where they came from.
  */
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { siteNameSchema } from '@shared/names'
@@ -23,6 +24,9 @@ const ACCOUNT_EXISTS = 'There is already an account with that email. Log in inst
 const NOT_SENT = "We couldn't send the code. Check the email address and try again."
 const WRONG_CODE = 'That code is wrong or has expired. Check it, or ask for a new one.'
 const SOMETHING_FAILED = 'Something went wrong. Try again in a moment.'
+const NEEDS_INVITE = 'Framed is invite-only for now. Paste the code from your invite, or ask for one.'
+// The header server/invites.ts reads the invite code from.
+const INVITE_HEADER = 'X-Framed-Invite'
 
 interface AuthError {
   status?: number
@@ -30,11 +34,12 @@ interface AuthError {
   message?: string
 }
 
-// The server's own words for a leaked password (server/auth.ts); our
-// words for everything else.
+// The server's own words for a leaked password (server/auth.ts) or an
+// invite problem (server/invites.ts); our words for everything else.
 function problemFrom(error: AuthError, fallback: string): string {
   if (error.status === 429) return TOO_MANY
-  if (error.code === 'PASSWORD_COMPROMISED' && error.message) return error.message
+  const hasOwnWords = error.code === 'PASSWORD_COMPROMISED' || error.code === 'INVITE_REQUIRED'
+  if (hasOwnWords && error.message) return error.message
   return fallback
 }
 
@@ -58,8 +63,22 @@ function useLoginState() {
 }
 type LoginState = ReturnType<typeof useLoginState>
 
-function useLogInAndSignUp(state: LoginState, afterLogin: () => Promise<void>) {
+/** Whether signing up needs an invite (GET /api/sign-up), and the code from the invite link. */
+function useInvite(initialCode: string) {
+  const invite = ref(initialCode)
+  const isInviteOnly = ref(false)
+  onMounted(async () => {
+    const answer = await fetch('/api/sign-up').catch(() => null)
+    // If the answer doesn't come, assume invites are needed: the server checks anyway.
+    isInviteOnly.value = answer?.ok ? ((await answer.json()) as { isInviteOnly: boolean }).isInviteOnly : true
+  })
+  return { invite, isInviteOnly }
+}
+type InviteState = ReturnType<typeof useInvite>
+
+function useLogInAndSignUp(state: LoginState, inviteState: InviteState, afterLogin: () => Promise<void>) {
   const { step, password, code, busy, fail, trimmedEmail } = state
+  const { invite, isInviteOnly } = inviteState
 
   async function sendConfirmCode() {
     const { error } = await authClient.emailOtp.sendVerificationOtp({
@@ -83,7 +102,10 @@ function useLogInAndSignUp(state: LoginState, afterLogin: () => Promise<void>) {
   const signUp = () =>
     busy(async () => {
       if (password.value.length < MIN_PASSWORD_LENGTH) return fail(PASSWORD_TOO_SHORT)
-      const { error } = await authClient.signUp.email({ email: trimmedEmail(), password: password.value, name: '' })
+      if (isInviteOnly.value && !invite.value.trim()) return fail(NEEDS_INVITE)
+      const fetchOptions = { headers: { [INVITE_HEADER]: invite.value.trim() } }
+      const account = { email: trimmedEmail(), password: password.value, name: '' }
+      const { error } = await authClient.signUp.email({ ...account, fetchOptions })
       if (error) return fail(problemFrom(error, error.status === 422 ? ACCOUNT_EXISTS : SOMETHING_FAILED))
       code.value = ''
       step.value = 'confirm'
@@ -140,11 +162,14 @@ function usePickName(state: LoginState, name: Ref<string>) {
   return { pickName }
 }
 
-export function useLogin(next: string | null) {
+export function useLogin(next: string | null, inviteCode = '') {
   const router = useRouter()
   const { ownSite } = useAccount()
   const state = useLoginState()
+  const inviteState = useInvite(inviteCode)
   const name = ref('')
+  // Someone arriving from an invite link has come to make an account.
+  if (inviteCode) state.step.value = 'sign-up'
 
   // Into the editor of the person's page, or on to picking a name.
   async function afterLogin() {
@@ -163,7 +188,8 @@ export function useLogin(next: string | null) {
     ...state,
     name,
     goTo,
-    ...useLogInAndSignUp(state, afterLogin),
+    ...inviteState,
+    ...useLogInAndSignUp(state, inviteState, afterLogin),
     ...usePasswordReset(state, afterLogin),
     ...usePickName(state, name),
   }
