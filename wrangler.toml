@@ -11,6 +11,8 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 SITE_URL = "https://framed.my.id"
 EMAIL_FROM = "Framed <login@framed.my.id>"
+# Signing up needs an invite (`npm run invite`); "open" would let anyone sign up.
+SIGN_UP_MODE = "invite"
 
 [[d1_databases]]
 binding = "DB"

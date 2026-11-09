@@ -15,6 +15,7 @@ import { contactMessageSender, emailCodeSender } from './email'
 import type { SendContactMessage, SendEmailCode } from './email'
 import { contactRoutes } from './contact-messages'
 import { visitCountRoutes } from './visits'
+import { guardSignUp, signUpRoutes } from './invites'
 import type { Env } from './env'
 import type { AppEnv } from './session'
 import { publicRoutes } from './public-routes'
@@ -44,7 +45,10 @@ export function createApp({
     c.set('sendContactMessage', (message) => contactMessageSenderFor(c.env)(message))
     await next()
   })
+  // Invite-only sign-up is checked before Better Auth sees the request (server/invites.ts).
+  app.post('/auth/sign-up/email', guardSignUp)
   app.on(['GET', 'POST'], '/auth/*', (c) => c.var.auth().handler(c.req.raw))
+  app.route('/', signUpRoutes)
   app.route('/', publicRoutes)
   app.route('/', contactRoutes)
   app.route('/', visitCountRoutes)

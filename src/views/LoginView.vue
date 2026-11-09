@@ -15,8 +15,8 @@ const next = computed(() => {
   const target = String(route.query.next ?? '')
   return target.startsWith('/') && !target.startsWith('//') ? target : null
 })
-const login = useLogin(next.value)
-const { step, email, password, code, name, problem, isBusy, goTo } = login
+const login = useLogin(next.value, String(route.query.invite ?? ''))
+const { step, email, password, code, name, problem, isBusy, goTo, invite, isInviteOnly } = login
 useHead({ title: 'Log in · Framed' })
 
 const LINK = 'text-sm text-action underline'
@@ -47,6 +47,15 @@ const CODE_BOX = 'text-center font-mono text-2xl tracking-[0.5em]'
       <form v-else-if="step === 'sign-up'" class="space-y-4" @submit.prevent="login.signUp">
         <h1 class="text-2xl font-semibold">Make your account</h1>
         <p class="text-panel-muted">We'll email you a 6-digit code to confirm the address.</p>
+        <AuthField
+          v-if="isInviteOnly"
+          id="login-invite"
+          v-model="invite"
+          label="Invite code"
+          hint="Framed is invite-only for now. It's in the link you were sent."
+          autocomplete="off"
+          required
+        />
         <AuthField id="login-email" v-model="email" label="Your email" type="email" autocomplete="email" required />
         <AuthField
           id="login-password"

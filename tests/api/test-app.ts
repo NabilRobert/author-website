@@ -55,7 +55,14 @@ export async function createTestApp() {
     emailCodeSenderFor: () => async (email, code) => void codes.set(email, code),
     contactMessageSenderFor: () => async (message) => void sentMessages.push(message),
   })
-  const env: Env = { DB: db, IMAGES: images, SITE_URL: ORIGIN, BETTER_AUTH_SECRET: 'test-secret-0123456789-abcdefghij' }
+  const env: Env = {
+    DB: db,
+    IMAGES: images,
+    SITE_URL: ORIGIN,
+    BETTER_AUTH_SECRET: 'test-secret-0123456789-abcdefghij',
+    // Most tests sign people up freely; tests/api/invites.spec.ts switches invites on.
+    SIGN_UP_MODE: 'open',
+  }
 
   function request(path: string, init: RequestInit = {}, cookie = '') {
     const headers = new Headers(init.headers)

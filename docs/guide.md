@@ -322,6 +322,12 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   first 5 characters of the password's SHA-1 hash to api.pwnedpasswords.com
   and refuses passwords found in breaches; the password itself never
   leaves the server.
+- **Invite-only sign-up**: while `SIGN_UP_MODE` isn't `open`, signing up
+  needs an unused invite code (`invites` table, `migrations/0009`), sent by
+  the login page in the `X-Framed-Invite` header and checked before Better
+  Auth sees the sign-up (`server/invites.ts: guardSignUp`). It is used up
+  only when the sign-up succeeds. `npm run invite` makes one and prints
+  the link (`scripts/create-invite.ts`).
 - **Session**: a login, remembered by an HttpOnly cookie for a week; "Log
   out" ends it at once.
 - **Site name**: the part of the address after `framed.my.id/`

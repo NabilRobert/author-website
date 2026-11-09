@@ -12,6 +12,8 @@ export interface Env {
   RESEND_API_KEY?: string
   /** The sender of login codes, like "Framed <login@framed.my.id>". */
   EMAIL_FROM?: string
+  /** "open" lets anyone sign up; anything else ("invite", or unset) needs an invite (server/invites.ts). */
+  SIGN_UP_MODE?: string
   /** "true" prints emailed codes in the terminal instead of sending them: local development only. */
   LOCAL_DEV_PRINT_CODES?: string
 }

@@ -12,6 +12,10 @@ describe('the deploy config (wrangler.toml)', () => {
     expect(WRANGLER_TOML).not.toMatch(/LOCAL_DEV_/)
   })
 
+  it('launches invite-only: changing that is a decision, not an accident', () => {
+    expect(WRANGLER_TOML).toMatch(/^SIGN_UP_MODE = "invite"$/m)
+  })
+
   it('points SITE_URL at the real site, not localhost', () => {
     expect(WRANGLER_TOML).toMatch(/^SITE_URL = "https:\/\/framed\.my\.id"$/m)
   })
