@@ -17,6 +17,7 @@ import { contactRoutes } from './contact-messages'
 import { visitCountRoutes } from './visits'
 import { guardSignUp, signUpRoutes } from './invites'
 import type { Env } from './env'
+import { secretProblem } from './env'
 import type { AppEnv } from './session'
 import { publicRoutes } from './public-routes'
 import { imageServeRoutes } from './image-routes'
@@ -39,6 +40,17 @@ export function createApp({
   // Better Auth starts setting itself up (reading the database) as soon as
   // it is created, so it is created on first use: public pages, pictures
   // and requests refused early never start it.
+  // Fail closed: without a real BETTER_AUTH_SECRET nothing runs, so a preview
+  // or a half-set-up deployment can't sign logins with Better Auth's public
+  // default or touch the live database. The reason goes to the logs only.
+  app.use('*', async (c, next) => {
+    const problem = secretProblem(c.env)
+    if (problem) {
+      console.error(problem)
+      return c.json({ error: "Framed isn't set up on this address yet." }, 503)
+    }
+    await next()
+  })
   app.use('*', async (c, next) => {
     let auth: Auth | undefined
     c.set('auth', () => (auth ??= createAuth(c.env, emailCodeSenderFor(c.env))))

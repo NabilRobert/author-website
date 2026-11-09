@@ -77,10 +77,14 @@ these once, in order. Steps 2–4 run in this folder after `npx wrangler login`.
    sending domain (it shows the DNS records to add in Cloudflare), and
    create an API key with "sending access" only.
 6. **Pages project.** Workers & Pages → Create → Pages → connect to Git →
-   this repo. Production branch `main`, build command `npm run build`,
-   output `dist`. Settings → Variables and Secrets → Production, both
+   this repo. Name `framed`, production branch `main`, build command
+   `npm run build`, output `dist`. **Before pressing Save and Deploy**, add
+   under Environment variables: `NODE_VERSION` = `24`, and both secrets as
    **Encrypt**: `BETTER_AUTH_SECRET` (step 4) and `RESEND_API_KEY` (step 5).
-   Then Custom domains → add `framed.my.id`, and redeploy.
+   (Without the secret the API refuses to run, answering 503.) Then
+   Settings → Builds → Branch control → preview deployments: **None**,
+   because previews would use the live database. Then Custom domains → add
+   `framed.my.id`.
 7. **Check it.** Sign-up is invite-only (`SIGN_UP_MODE = "invite"` in
    `wrangler.toml`), so make yourself an invite first:
    `npm run invite -- --remote you@example.com`. Open the link it prints,

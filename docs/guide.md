@@ -339,7 +339,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   database only (`npm run db:seed:test`, which sets its password from
   `LOCAL_DEV_TEST_PASSWORD` in your `.dev.vars`).
 - **Fail closed**: when something is missing or wrong, refuse rather than
-  allow.
+  allow. For example, without a real `BETTER_AUTH_SECRET` (missing, under
+  32 characters, or Better Auth's public default) every API request gets a
+  503 (`server/env.ts: secretProblem`, checked first in `server/app.ts`).
 - **Draft backup**: a copy of unsaved changes in the browser's
   `localStorage`, brought back after a reload or a new sign-in.
 - **Draft**: the editor's working copy of the content; nothing changes on
