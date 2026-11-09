@@ -8,7 +8,7 @@ const { isDirty, isSaving, lastSave } = props.editor
 </script>
 
 <template>
-  <header class="sticky top-0 z-10 border-b border-panel-line bg-panel">
+  <header class="shrink-0 border-b border-panel-line bg-panel">
     <div class="flex flex-wrap items-center justify-between gap-4 px-4 py-3">
       <div>
         <h1 class="text-xl font-semibold">Edit your site</h1>
@@ -17,6 +17,7 @@ const { isDirty, isSaving, lastSave } = props.editor
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
+        <slot />
         <a href="/" target="_blank" class="rounded-md border border-panel-line px-4 py-3">View the site</a>
         <a href="/cdn-cgi/access/logout" class="rounded-md border border-panel-line px-4 py-3">Sign out</a>
         <button

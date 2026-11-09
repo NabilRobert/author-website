@@ -18,7 +18,7 @@ const colours = computed(() => ({
 
 <template>
   <section
-    class="relative overflow-hidden rounded-sm px-6 py-16 text-center sm:py-24"
+    class="relative overflow-hidden rounded-sm px-6 py-16 text-center @2xl:py-24"
     :class="block.imageKey ? 'bg-ink text-cream' : 'bg-paper-deep'"
     :style="colours"
   >
@@ -29,12 +29,12 @@ const colours = computed(() => ({
       class="absolute inset-0 h-full w-full object-cover opacity-45"
     />
     <div class="relative">
-      <component :is="isPageTitle ? 'h1' : 'h2'" class="text-5xl font-semibold sm:text-7xl">{{
+      <component :is="isPageTitle ? 'h1' : 'h2'" class="text-5xl font-semibold @2xl:text-7xl">{{
         block.heading
       }}</component>
       <p
         v-if="block.subheading"
-        class="mt-4 text-xl italic sm:text-2xl"
+        class="mt-4 text-xl italic @2xl:text-2xl"
         :class="block.imageKey || block.textColour ? '' : 'text-muted'"
       >
         {{ block.subheading }}

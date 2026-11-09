@@ -30,7 +30,7 @@ defineProps<{ block: BlockOf<'pressKit'>; content: SiteContent }>()
     </section>
     <section v-if="content.books.length">
       <h3 class="mb-3 text-2xl font-semibold">Covers</h3>
-      <ul class="grid grid-cols-2 gap-6 sm:grid-cols-4">
+      <ul class="grid grid-cols-2 gap-6 @2xl:grid-cols-4">
         <li v-for="book in content.books" :key="book.id">
           <BookCover :title="book.title" :author-name="content.author.name" :cover-key="book.coverKey" />
           <a

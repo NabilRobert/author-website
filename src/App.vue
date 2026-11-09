@@ -16,7 +16,7 @@ useSiteTheme()
 
 <template>
   <RouterView v-if="isEditor" />
-  <template v-else-if="status === 'ready' && loadedContent">
+  <div v-else-if="status === 'ready' && loadedContent" class="@container">
     <a
       href="#main"
       class="sr-only bg-button px-4 py-2 font-sans text-button-text focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
@@ -27,7 +27,7 @@ useSiteTheme()
       <RouterView />
     </main>
     <SiteFooter :content="loadedContent" />
-  </template>
+  </div>
   <main v-else class="page-width py-24 text-center text-lg" aria-live="polite">
     <p v-if="status === 'loading'" class="text-muted">Loading…</p>
     <p v-else-if="status === 'not-set-up'">This site is being set up. Please come back soon.</p>

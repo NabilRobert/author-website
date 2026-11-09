@@ -5,6 +5,6 @@ defineProps<{ title: string }>()
 
 <template>
   <header class="mb-12 border-b border-line pb-6">
-    <h1 class="text-4xl font-semibold sm:text-5xl">{{ title }}</h1>
+    <h1 class="text-4xl font-semibold @2xl:text-5xl">{{ title }}</h1>
   </header>
 </template>

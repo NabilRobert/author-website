@@ -1,30 +1,27 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { useHead } from '@unhead/vue'
+import { Pane, Splitpanes } from 'splitpanes'
+import 'splitpanes/dist/splitpanes.css'
 import { createEditor, DRAFT_KEY } from '@/editor/useEditor'
+import { useWideScreen } from '@/composables/useWideScreen'
 import EditorTopBar from '@/editor/EditorTopBar.vue'
-import SitePreview from '@/editor/SitePreview.vue'
-import PagesTab from '@/editor/tabs/PagesTab.vue'
-import BooksTab from '@/editor/tabs/BooksTab.vue'
-import NewsTab from '@/editor/tabs/NewsTab.vue'
-import AuthorTab from '@/editor/tabs/AuthorTab.vue'
-import LookTab from '@/editor/tabs/LookTab.vue'
+import EditPanel from '@/editor/EditPanel.vue'
+import PreviewPanel from '@/editor/PreviewPanel.vue'
+import LayoutButtons from '@/editor/LayoutButtons.vue'
 
-// The editor: tabs of forms on the left, a live preview of the draft on the
-// right (below on a phone), and the Save button on top.
+// The editor: the Save bar on top, then the forms and a live preview of the
+// draft. On a wide screen they sit side by side with a divider to drag (all
+// the way to one side hides the other); on a narrow one they stack.
 const editor = createEditor()
 const { draft, status, loadError, isStarter, isRestored, isDirty } = editor
 provide(DRAFT_KEY, draft)
 useHead({ title: 'Edit your site', meta: [{ name: 'robots', content: 'noindex' }] })
 
-const TABS = [
-  { key: 'pages', label: 'Pages' },
-  { key: 'books', label: 'Books' },
-  { key: 'news', label: 'News' },
-  { key: 'author', label: 'About you' },
-  { key: 'look', label: 'Look' },
-] as const
-const activeTab = ref<(typeof TABS)[number]['key']>('pages')
+// Tailwind's lg breakpoint: below it there is no room for two columns.
+const isWide = useWideScreen('64rem')
+// The forms' share of the width, in percent.
+const editorShare = ref(45)
 const previewPageId = ref('')
 
 // Preview the front page until the owner picks another.
@@ -43,7 +40,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
 
 <template>
   <!-- The editor keeps its own plain font; only the preview uses the theme. -->
-  <div class="min-h-screen bg-panel-back font-sans text-panel-text [--font-heading:var(--font-sans)]">
+  <div class="flex h-screen flex-col bg-panel-back font-sans text-panel-text [--font-heading:var(--font-sans)]">
     <p v-if="status === 'loading'" class="p-8 text-lg">Loading your site…</p>
     <div v-else-if="status === 'signed-out'" class="p-8 text-lg">
       <p>Your sign-in has expired.</p>
@@ -53,46 +50,51 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
     </div>
     <p v-else-if="status === 'failed'" class="p-8 text-lg text-danger" role="alert">{{ loadError }}</p>
     <template v-else>
-      <EditorTopBar :editor="editor" />
-      <p v-if="isRestored" class="bg-notice px-4 py-3" role="status">
+      <EditorTopBar :editor="editor">
+        <LayoutButtons v-if="isWide" v-model="editorShare" />
+      </EditorTopBar>
+      <p v-if="isRestored" class="shrink-0 bg-notice px-4 py-3" role="status">
         Your unsaved changes from last time are back. Press <strong>Save changes</strong> to publish them.
       </p>
-      <p v-if="isStarter" class="bg-notice px-4 py-3">
+      <p v-if="isStarter" class="shrink-0 bg-notice px-4 py-3">
         Your site is new, so this is example content. Change it to your own, then press <strong>Save changes</strong>
         to publish it.
       </p>
-      <div class="grid gap-6 p-4 lg:grid-cols-[minmax(0,32rem)_minmax(0,1fr)]">
-        <section aria-label="Edit">
-          <div role="tablist" class="mb-6 flex flex-wrap gap-2">
-            <button
-              v-for="tab in TABS"
-              :key="tab.key"
-              role="tab"
-              type="button"
-              :aria-selected="activeTab === tab.key"
-              class="rounded-md border-2 border-panel-line bg-panel px-4 py-2 text-lg font-semibold aria-selected:border-action aria-selected:bg-action aria-selected:text-panel"
-              @click="activeTab = tab.key"
-            >
-              {{ tab.label }}
-            </button>
-          </div>
-          <PagesTab v-if="activeTab === 'pages'" v-model:page-id="previewPageId" />
-          <BooksTab v-else-if="activeTab === 'books'" />
-          <NewsTab v-else-if="activeTab === 'news'" />
-          <AuthorTab v-else-if="activeTab === 'author'" />
-          <LookTab v-else />
-        </section>
-        <section aria-label="Preview" class="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
-          <h2 class="mb-2 font-semibold">Preview: what visitors will see after you save</h2>
-          <label class="mb-3 flex items-center gap-2 text-sm">
-            Page:
-            <select v-model="previewPageId" class="rounded-md border border-panel-line bg-panel p-2">
-              <option v-for="page in draft.pages" :key="page.id" :value="page.id">{{ page.title }}</option>
-            </select>
-          </label>
-          <SitePreview :content="draft" :page-id="previewPageId" />
-        </section>
+      <Splitpanes v-if="isWide" class="editor-split min-h-0 flex-1" @resized="editorShare = $event.panes[0]!.size">
+        <Pane :size="editorShare" :min-size="0" class="overflow-y-auto">
+          <EditPanel v-model:preview-page-id="previewPageId" />
+        </Pane>
+        <Pane :size="100 - editorShare" :min-size="0" class="overflow-y-auto">
+          <PreviewPanel v-model:page-id="previewPageId" :content="draft" />
+        </Pane>
+      </Splitpanes>
+      <div v-else class="min-h-0 flex-1 overflow-y-auto">
+        <EditPanel v-model:preview-page-id="previewPageId" />
+        <PreviewPanel v-model:page-id="previewPageId" :content="draft" />
       </div>
     </template>
   </div>
 </template>
+
+<style>
+/* The divider between the forms and the preview: a wide, visible grip. */
+.editor-split > .splitpanes__splitter {
+  position: relative;
+  width: 0.75rem;
+  background: var(--color-panel-line);
+  cursor: col-resize;
+}
+.editor-split > .splitpanes__splitter::after {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 0.2rem;
+  height: 2.5rem;
+  border-radius: 1rem;
+  background: var(--color-panel-muted);
+  transform: translate(-50%, -50%);
+}
+.editor-split > .splitpanes__splitter:hover {
+  background: var(--color-action);
+}
+</style>

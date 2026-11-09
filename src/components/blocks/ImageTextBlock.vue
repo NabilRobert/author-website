@@ -9,15 +9,15 @@ defineProps<{ block: BlockOf<'imageText'> }>()
 </script>
 
 <template>
-  <section class="grid items-start gap-8 md:grid-cols-[18rem_1fr] md:gap-12">
+  <section class="grid items-start gap-8 @3xl:grid-cols-[18rem_1fr] @3xl:gap-12">
     <img
       v-if="block.imageKey"
       :src="imageUrl(block.imageKey)"
       :alt="block.imageDescription"
       class="w-full max-w-72 rounded-sm object-cover shadow-md"
-      :class="{ 'md:order-2': block.imageSide === 'right' }"
+      :class="{ '@3xl:order-2': block.imageSide === 'right' }"
     />
-    <div :class="{ 'md:col-span-2': !block.imageKey }">
+    <div :class="{ '@3xl:col-span-2': !block.imageKey }">
       <BlockHeading :text="block.heading" />
       <div class="prose-text">
         <p v-for="(paragraph, index) in paragraphs(block.body)" :key="index">{{ paragraph }}</p>

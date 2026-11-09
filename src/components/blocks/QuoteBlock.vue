@@ -7,7 +7,7 @@ defineProps<{ block: BlockOf<'quote'> }>()
 
 <template>
   <figure class="mx-auto max-w-3xl text-center">
-    <blockquote class="text-2xl leading-snug italic sm:text-3xl">“{{ block.quote }}”</blockquote>
+    <blockquote class="text-2xl leading-snug italic @2xl:text-3xl">“{{ block.quote }}”</blockquote>
     <figcaption v-if="block.source" class="mt-4 font-sans text-muted">{{ block.source }}</figcaption>
   </figure>
 </template>

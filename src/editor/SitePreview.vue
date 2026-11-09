@@ -26,7 +26,7 @@ watchEffect(() => loadFonts([props.content.theme.headingFont, props.content.them
     :style="style"
     class="overflow-hidden rounded-md border border-panel-line bg-paper font-[family-name:var(--font-body)] text-ink"
   >
-    <div inert>
+    <div inert class="@container">
       <SiteHeader :content="content" />
       <div class="page-width pb-4">
         <template v-if="page">

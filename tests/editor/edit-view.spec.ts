@@ -8,6 +8,14 @@ import { demoContent } from '@shared/demo-content'
 
 afterEach(() => vi.unstubAllGlobals())
 
+function pretendScreenIsWide() {
+  const query = { matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn(() => query),
+  )
+}
+
 async function openEditor() {
   vi.stubGlobal(
     'fetch',
@@ -57,6 +65,23 @@ describe('the editor page', () => {
     // Text the same colour as the background.
     await colourInputs[1]!.setValue('#f7f2e8')
     expect(editor.text()).toContain('Hard to read: Text on the background')
+    editor.unmount()
+  })
+
+  it('puts the forms and preview side by side on a wide screen, with a divider', async () => {
+    pretendScreenIsWide()
+    const editor = await openEditor()
+    expect(editor.find('.splitpanes__splitter').exists()).toBe(true)
+    expect(editor.find('section[aria-label="Edit"]').exists()).toBe(true)
+    editor.unmount()
+  })
+
+  it('switches to preview only with the layout buttons', async () => {
+    pretendScreenIsWide()
+    const editor = await openEditor()
+    const previewOnly = editor.findAll('button').find((button) => button.text() === 'Preview only')!
+    await previewOnly.trigger('click')
+    expect(previewOnly.attributes('aria-pressed')).toBe('true')
     editor.unmount()
   })
 })

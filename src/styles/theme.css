@@ -48,13 +48,16 @@
   text-transform: uppercase;
 }
 
-/* The page's width and side margins, shared by the header, main and footer. */
+/* The page's width and side margins, shared by the header, main and footer.
+   Layout follows the width of the site's container, not the window
+   (Tailwind's @-prefixed variants), so the editor's preview lays out like a
+   real screen of the same width. */
 @utility page-width {
   width: 100%;
   max-width: 72rem;
   margin-inline: auto;
   padding-inline: 1.25rem;
-  @media (width >= 40rem) {
+  @container (width >= 40rem) {
     padding-inline: 2rem;
   }
 }

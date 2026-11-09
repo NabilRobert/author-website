@@ -10,8 +10,8 @@ defineProps<{ book: Book; authorName: string }>()
 </script>
 
 <template>
-  <article class="grid gap-6 sm:grid-cols-[12rem_1fr] sm:gap-10">
-    <div class="w-40 sm:w-full">
+  <article class="grid gap-6 @2xl:grid-cols-[12rem_1fr] @2xl:gap-10">
+    <div class="w-40 @2xl:w-full">
       <BookCover :title="book.title" :author-name="authorName" :cover-key="book.coverKey" />
     </div>
     <div>

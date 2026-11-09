@@ -13,7 +13,7 @@ const menuLinks = computed(() =>
 </script>
 
 <template>
-  <header class="page-width flex flex-col items-center gap-4 py-8 sm:flex-row sm:justify-between">
+  <header class="page-width flex flex-col items-center gap-4 py-8 @2xl:flex-row @2xl:justify-between">
     <RouterLink to="/" class="font-heading text-2xl font-semibold tracking-tight">{{ content.author.name }}</RouterLink>
     <nav aria-label="Main">
       <ul class="flex flex-wrap justify-center gap-x-6 gap-y-2 font-sans text-[0.95rem]">

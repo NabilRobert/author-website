@@ -32,7 +32,7 @@ const typesetColour = computed(() => {
     :class="typesetColour"
     class="flex aspect-[2/3] w-full flex-col justify-between rounded-sm p-[10%] text-cream shadow-md"
   >
-    <span class="text-[clamp(1rem,2.4vw,1.6rem)] leading-tight font-semibold">{{ title }}</span>
+    <span class="text-[clamp(1rem,2.4cqw,1.6rem)] leading-tight font-semibold">{{ title }}</span>
     <span class="small-caps opacity-90">{{ authorName }}</span>
   </div>
 </template>
