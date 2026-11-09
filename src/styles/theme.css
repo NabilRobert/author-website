@@ -1,16 +1,19 @@
-/* Design tokens: a warm paper page with ink text and one oxblood accent, like
-   a printed book. WCAG contrast on paper (#f7f2e8):
-     ink 15.3:1 · muted 7.0:1 · accent 8.7:1 · ok 7.6:1   (text and links)
-   Cover colours are only behind cream title text on typeset covers:
-     cream on each cover colour ≥ 9:1. */
+/* Design tokens. These are the default theme (shared/theme.ts:
+   DEFAULT_THEME), shown until the content loads; the owner's own colours
+   and fonts then replace them (src/content/themeVariables.ts).
+   Default contrast on the background: text 15.3:1, accent 8.7:1. */
 @theme {
   --color-*: initial;
   --color-paper: #f7f2e8;
-  --color-paper-deep: #ece4d4;
   --color-ink: #1f1b16;
-  --color-muted: #5a5046;
   --color-accent: #7c2622;
-  --color-line: #d8ccb6;
+  --color-button: #7c2622;
+  --color-button-text: #fbf7ef;
+  /* Mixed from the text and background colours, so they follow any theme. */
+  --color-muted: color-mix(in srgb, #1f1b16 72%, #f7f2e8);
+  --color-line: color-mix(in srgb, #1f1b16 18%, #f7f2e8);
+  --color-paper-deep: color-mix(in srgb, #1f1b16 6%, #f7f2e8);
+  /* Typeset covers: cream title text on each colour is at least 9:1. */
   --color-cream: #fbf7ef;
   --color-ok: #24572f;
   --color-cover-1: #2e3b4e;
@@ -18,7 +21,8 @@
   --color-cover-3: #2f4a3a;
   --color-cover-4: #3d3350;
 
-  --font-serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-heading: 'Fraunces Variable', Georgia, serif;
+  --font-body: 'Fraunces Variable', Georgia, serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 

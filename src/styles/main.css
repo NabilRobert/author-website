@@ -9,12 +9,13 @@
   body {
     background: var(--color-paper);
     color: var(--color-ink);
-    font-family: var(--font-serif);
+    font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
   }
   h1,
   h2,
   h3 {
+    font-family: var(--font-heading);
     text-wrap-style: balance;
   }
   :is(p, li, blockquote) {

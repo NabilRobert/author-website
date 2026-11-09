@@ -4,6 +4,7 @@
  * here describes a real person. The database seed loads this same document.
  */
 import type { SiteContent } from './schema'
+import { DEFAULT_THEME } from './theme'
 
 // Fixed ids so the demo is the same on every load; any valid UUID works.
 const id = (n: number) => `a1000000-0000-4000-8000-${String(n).padStart(12, '0')}`
@@ -24,6 +25,7 @@ export const demoContent: SiteContent = {
       { label: 'Goodreads', url: 'https://example.com/goodreads' },
     ],
   },
+  theme: DEFAULT_THEME,
   books: [
     {
       id: '6f1d3a52-6c1e-4d5e-9f2a-1b7c0e4a9d01',
@@ -109,6 +111,8 @@ export const demoContent: SiteContent = {
           imageKey: null,
           buttonLabel: 'See the books',
           buttonUrl: '/books',
+          backgroundColour: '',
+          textColour: '',
         },
         { id: id(102), type: 'books', heading: 'Newest book', show: 'newest' },
         { id: id(103), type: 'news', heading: 'Latest news', limit: 2 },

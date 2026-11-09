@@ -8,6 +8,7 @@
  * a name in `BLOCK_NAMES`, and add a component in src/components/blocks/.
  */
 import { z } from 'zod'
+import { optionalColour } from './theme'
 import { imageKey, itemId, linkSchema, linkTarget, longText, requiredText, shortText } from './fields'
 
 const heroBlock = z.object({
@@ -18,6 +19,9 @@ const heroBlock = z.object({
   imageKey,
   buttonLabel: shortText,
   buttonUrl: z.union([z.literal(''), linkTarget]),
+  // '' uses the site's colours.
+  backgroundColour: optionalColour,
+  textColour: optionalColour,
 })
 
 const textBlock = z.object({

@@ -31,6 +31,12 @@ flowchart TD
    text. Books come from `src/components/books/BookList.vue`, which groups a
    series in reading order (`src/content/format.ts: groupBooksBySeries`).
 
+The site's colours and fonts come from `content.theme`:
+`src/composables/useSiteTheme.ts` turns them into CSS variables
+(`src/content/themeVariables.ts`) on the page and loads the chosen fonts
+(`src/styles/fonts.ts`). Every style uses those variables, so changing the
+theme restyles the whole site at once.
+
 The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 `showInMenu` is on, in the order of `content.pages`.
 
@@ -47,6 +53,13 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Zod schema**: a description of the content's shape that can also check
   it. The same schema checks the editor's draft and the API's input, and
   its messages are what the owner sees.
+- **Theme**: the owner's background, text, accent, button colours and
+  heading and body fonts (`shared/theme.ts`). A banner block can also have
+  its own colours.
+- **CSS variable**: a named value like `--color-accent` that the styles
+  read; setting it once changes every place that uses it.
+- **Contrast ratio**: how readable text is on its background, from 1 to 21.
+  4.5 or more is readable (`shared/theme.ts: contrastRatio`).
 - **Typeset cover**: the plain title-on-colour cover shown until a book has
   a cover image (`src/components/books/BookCover.vue`).
 - **Image key**: the name an uploaded image is stored under, like
@@ -57,8 +70,12 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Add a block type:** add its schema to `shared/blocks.ts` (and to
   `blockSchema` and `BLOCK_NAMES`), add a component in
   `src/components/blocks/`, and add a line for it in `PageBlocks.vue`.
-- **Change the colours or fonts:** `src/styles/theme.css` (the contrast
-  ratios are noted there; keep text at 4.5:1 or more).
+- **Change the default colours or fonts:** `DEFAULT_THEME` in
+  `shared/theme.ts`, and the same values in `src/styles/theme.css` (shown
+  before the content loads).
+- **Offer another font:** install its `@fontsource-variable/…` package, add
+  it to `FONTS` in `shared/theme.ts` and to `FONT_LOADERS` in
+  `src/styles/fonts.ts`.
 - **Change a field's rules or its error message:** `shared/fields.ts` or the
   schema that uses it.
 - **Change the demo content:** `shared/demo-content.ts`.

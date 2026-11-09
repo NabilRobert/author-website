@@ -8,6 +8,7 @@
  */
 import { z } from 'zod'
 import { blockSchema } from './blocks'
+import { themeSchema } from './theme'
 import {
   calendarDate,
   imageKey,
@@ -84,6 +85,7 @@ export const pageSchema = z.object({
 export const siteContentSchema = z
   .object({
     author: authorSchema,
+    theme: themeSchema,
     // Books and news in the order the owner arranged them.
     books: z.array(bookSchema),
     news: z.array(newsItemSchema),
@@ -114,4 +116,5 @@ export type Author = z.infer<typeof authorSchema>
 export type Book = z.infer<typeof bookSchema>
 export type NewsItem = z.infer<typeof newsItemSchema>
 export type Page = z.infer<typeof pageSchema>
+export type { Theme } from './theme'
 export type SiteContent = z.infer<typeof siteContentSchema>

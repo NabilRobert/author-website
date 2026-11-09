@@ -12,7 +12,7 @@ defineProps<{ links: Link[]; label: string }>()
     <li v-for="link in links" :key="link.url">
       <SiteLink
         :to="link.url"
-        class="inline-block rounded-full border border-accent px-4 py-2 font-sans text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-cream"
+        class="inline-block rounded-full bg-button px-4 py-2 font-sans text-sm font-semibold text-button-text transition-opacity hover:opacity-85"
         >{{ link.label }}</SiteLink
       >
     </li>
