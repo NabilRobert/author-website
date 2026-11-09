@@ -11,6 +11,7 @@ const DESCRIPTIONS: Record<BlockType, string> = {
   hero: 'A large heading with an optional button and colours',
   text: 'A heading and paragraphs',
   imageText: 'A picture beside some text',
+  gallery: 'A grid of pictures, each with a caption',
   list: 'Bullet points or a numbered list',
   quote: 'A large quotation',
   buttons: 'A row of buttons linking anywhere',

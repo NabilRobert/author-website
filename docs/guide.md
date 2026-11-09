@@ -215,6 +215,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   Every block with a picture has both: the banner (whose shape can also
   "fit the words"), picture and text, works and the press kit. The Look
   tab's shape is the default for pictures of work.
+- **Gallery block**: a grid of uploaded pictures in one shape, each with a
+  caption (`GalleryBlock.vue`, `GalleryForm.vue`); its pictures count as in
+  use when unused ones are tidied (`server/image-limits.ts`).
 - **Picked works**: a works block set to "Only the ones I tick" shows the
   works in its `pickedWorkIds`, in the Work tab's order.
 - **No colour**: a fill (the content box, part of a pattern, a banner) set

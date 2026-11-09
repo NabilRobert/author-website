@@ -24,6 +24,7 @@ const NEW_BLOCK_FIELDS: { [T in BlockType]: () => BlockFields[T] } = {
     pictureCorners: 'soft',
   }),
   text: () => ({ heading: '', body: 'Write here.' }),
+  gallery: () => ({ heading: '', pictures: [], columns: 3, imageShape: 'square', pictureCorners: 'soft' }),
   imageText: () => ({
     heading: '',
     body: '',

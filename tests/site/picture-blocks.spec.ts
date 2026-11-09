@@ -7,6 +7,7 @@ import WorksBlock from '@/components/blocks/WorksBlock.vue'
 import ImageTextBlock from '@/components/blocks/ImageTextBlock.vue'
 import HeroBlock from '@/components/blocks/HeroBlock.vue'
 import PressKitBlock from '@/components/blocks/PressKitBlock.vue'
+import GalleryBlock from '@/components/blocks/GalleryBlock.vue'
 import WorksForm from '@/editor/block-forms/WorksForm.vue'
 import { DRAFT_KEY } from '@/editor/useEditor'
 import { blockSchema } from '@shared/blocks'
@@ -111,5 +112,25 @@ describe('a press kit', () => {
     const kit = mount(PressKitBlock, { props: { block, content } })
     expect(kit.find('a[download] .aspect-square').exists()).toBe(true)
     expect(kit.findAll('li .aspect-video')).toHaveLength(demoContent.works.length)
+  })
+})
+
+describe('a gallery', () => {
+  const picture = (description: string) => ({ imageKey: IMAGE, imageCrop: centredCrop(), description })
+  const gallery = (fields: object) =>
+    blockOf('gallery', { heading: 'Photos', columns: 3, imageShape: 'square', ...fields })
+
+  it('shows every picture in its shape, with its caption, in the chosen number of columns', () => {
+    const block = gallery({ pictures: [picture('Front door'), picture('')], columns: 4, pictureCorners: 'round' })
+    const shown = mount(GalleryBlock, { props: { block } })
+    expect(shown.find('ul').classes()).toContain('@2xl:grid-cols-4')
+    expect(shown.findAll('.aspect-square.rounded-full')).toHaveLength(2)
+    expect(shown.findAll('figcaption').map((caption) => caption.text())).toEqual(['Front door'])
+  })
+
+  it('refuses to save a picture that was never uploaded', () => {
+    const empty = { imageKey: null, imageCrop: centredCrop(), description: '' }
+    const result = blockSchema.safeParse({ ...gallery({ pictures: [] }), pictures: [empty] })
+    expect(result.error?.issues[0]?.message).toBe('Upload a picture, or remove this one.')
   })
 })

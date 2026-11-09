@@ -1,7 +1,9 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { MAX_IMAGE_BYTES } from '../../shared/images'
-import { MAX_IMAGES_PER_SITE } from '../../server/image-limits'
+import { MAX_IMAGES_PER_SITE, usedImageKeys } from '../../server/image-limits'
+import { blockSchema } from '../../shared/blocks'
+import { plainBox } from '../../shared/theme'
 import { demoContent } from '../../shared/demo-content'
 import { createTestApp } from './test-app'
 import type { TestApp } from './test-app'
@@ -134,5 +136,22 @@ describe('pictures nobody uses', () => {
     const key = await uploadedKey(fileOf(PNG_START, 'image/png'))
     await api.request('/api/me', { method: 'DELETE' }, cookie)
     expect((await api.request(`/api/${key}`)).status).toBe(404)
+  })
+})
+
+describe('which pictures are in use', () => {
+  it("counts a gallery's pictures, so tidying up never deletes them", () => {
+    const key = 'images/0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e01.jpg'
+    const gallery = blockSchema.parse({
+      id: demoContent.works[0]!.id,
+      style: plainBox(),
+      type: 'gallery',
+      heading: '',
+      pictures: [{ imageKey: key, description: '' }],
+      columns: 3,
+      imageShape: 'square',
+    })
+    const content = { ...demoContent, pages: [{ ...demoContent.pages[0]!, blocks: [gallery] }] }
+    expect(usedImageKeys(content).has(key)).toBe(true)
   })
 })

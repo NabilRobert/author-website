@@ -28,6 +28,20 @@ defineProps<{ type: BlockType }>()
         <rect x="38" y="26" width="32" height="3" />
         <rect x="38" y="33" width="26" height="3" />
       </template>
+      <template v-else-if="type === 'gallery'">
+        <template v-for="row in 2" :key="row">
+          <rect
+            v-for="column in 3"
+            :key="column"
+            :x="column * 24 - 18"
+            :y="row * 20 - 15"
+            width="20"
+            height="17"
+            rx="1"
+            class="fill-action opacity-60"
+          />
+        </template>
+      </template>
       <template v-else-if="type === 'list'">
         <template v-for="row in 3" :key="row">
           <circle cx="12" :cy="6 + row * 9" r="2" class="fill-panel-muted" />

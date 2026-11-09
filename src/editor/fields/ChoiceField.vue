@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="Value extends string">
+<script setup lang="ts" generic="Value extends string | number">
 import { useId } from 'vue'
 
 // A labelled drop-down list of choices.

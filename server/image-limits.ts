@@ -6,6 +6,7 @@
  * allowance counts what is really there. A picture uploaded in the last day
  * is kept even if unused: the owner may not have saved yet.
  */
+import type { Block } from '../shared/blocks'
 import type { SiteContent } from '../shared/schema'
 import type { Env } from './env'
 
@@ -47,13 +48,19 @@ export async function pruneUnusedImages(env: Env, siteId: string, content: SiteC
   await env.DB.batch(unused.map((key) => env.DB.prepare('DELETE FROM images WHERE key = ?').bind(key)))
 }
 
+/** The pictures one block shows: its own, or a gallery's. */
+function blockImageKeys(block: Block): (string | null)[] {
+  if (block.type === 'gallery') return block.pictures.map((picture) => picture.imageKey)
+  return 'imageKey' in block ? [block.imageKey] : []
+}
+
 /** Every picture the site shows anywhere. */
 export function usedImageKeys(content: SiteContent): Set<string> {
   const keys = [
     content.profile.photoKey,
     content.theme.backgroundImageKey,
     ...content.works.map((work) => work.imageKey),
-    ...content.pages.flatMap((page) => page.blocks.map((block) => ('imageKey' in block ? block.imageKey : null))),
+    ...content.pages.flatMap((page) => page.blocks.flatMap(blockImageKeys)),
   ]
   return new Set(keys.filter((key): key is string => key !== null))
 }
