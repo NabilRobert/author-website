@@ -19,5 +19,9 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    // API tests sign people up for real: each password is hashed with
+    // 100,000 PBKDF2 rounds (server/password-hash.ts), which on CI's slower
+    // machines can pass Vitest's 5-second default with two sign-ups.
+    testTimeout: 20_000,
   },
 })
