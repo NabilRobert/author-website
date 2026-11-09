@@ -1,11 +1,30 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory } from 'vue-router'
 import { createHead } from '@unhead/vue/client'
 import App from '@/App.vue'
 import { createAppRouter } from '@/router'
+import { loadSiteContent } from '@/content/useSiteContent'
+import { demoContent } from '@shared/demo-content'
 
-async function renderPage(path: string) {
+function stubApi(response: Response | Error) {
+  const fetchStub = vi.fn(async () => {
+    if (response instanceof Error) throw response
+    return response
+  })
+  vi.stubGlobal('fetch', fetchStub)
+  return fetchStub
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
+})
+
+async function renderPage(path: string, apiResponse: Response | Error = Response.json(demoContent)) {
+  const fetchStub = stubApi(apiResponse)
+  await loadSiteContent()
+  expect(fetchStub).toHaveBeenCalledWith('/api/content')
   const router = createAppRouter(createMemoryHistory())
   await router.push(path)
   const wrapper = mount(App, { global: { plugins: [router, createHead()] } })
@@ -63,6 +82,23 @@ describe('public pages', () => {
     const page = await renderPage('/press')
     expect(page.text()).toContain('Short bio')
     expect(page.text()).toContain('the Saltmarsh trilogy')
+  })
+
+  it('says the site is being set up when the API has no content yet', async () => {
+    const page = await renderPage('/', Response.json({ error: 'not set up' }, { status: 404 }))
+    expect(page.text()).toContain('This site is being set up.')
+  })
+
+  it('asks the visitor to refresh when the API cannot be reached', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const page = await renderPage('/', new TypeError('Failed to fetch'))
+    expect(page.text()).toContain("The site couldn't load.")
+  })
+
+  it('asks the visitor to refresh when the API fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const page = await renderPage('/', Response.json({ error: 'x' }, { status: 500 }))
+    expect(page.text()).toContain("The site couldn't load.")
   })
 
   it('an unknown address shows the not-found page', async () => {
