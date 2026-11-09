@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useSiteContent } from '@/content/useSiteContent'
+import type { SiteContent } from '@shared/schema'
 
 // The author's name, linking home, and the menu: the pages the owner chose
-// to show in it, in their order.
-const { content } = useSiteContent()
+// to show in it, in their order. Takes the content as a prop so the
+// editor's preview can show the draft.
+const props = defineProps<{ content: SiteContent }>()
 
 const menuLinks = computed(() =>
-  content.value.pages.filter((page) => page.showInMenu).map((page) => ({ to: `/${page.slug}`, label: page.title })),
+  props.content.pages.filter((page) => page.showInMenu).map((page) => ({ to: `/${page.slug}`, label: page.title })),
 )
 </script>
 

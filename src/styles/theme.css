@@ -21,6 +21,18 @@
   --color-cover-3: #2f4a3a;
   --color-cover-4: #3d3350;
 
+  /* The editor's own colours, the same whatever theme the owner picks.
+     Contrast on panel white: text 17.7:1, muted 7.7:1, action 6.7:1,
+     danger 6.5:1. */
+  --color-panel: #ffffff;
+  --color-panel-back: #f4f4f5;
+  --color-panel-line: #d4d4d8;
+  --color-panel-text: #18181b;
+  --color-panel-muted: #52525b;
+  --color-action: #1d4ed8;
+  --color-danger: #b91c1c;
+  --color-notice: #fef3c7;
+
   --font-heading: 'Fraunces Variable', Georgia, serif;
   --font-body: 'Fraunces Variable', Georgia, serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

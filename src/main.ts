@@ -5,5 +5,6 @@ import { createAppRouter } from './router'
 import { loadSiteContent } from './content/useSiteContent'
 import './styles/main.css'
 
-void loadSiteContent()
+// The editor loads its own copy (with sign-in); everything else is public.
+if (!window.location.pathname.startsWith('/edit')) void loadSiteContent()
 createApp(App).use(createAppRouter()).use(createHead()).mount('#app')

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useSiteContent } from '@/content/useSiteContent'
+import type { SiteContent } from '@shared/schema'
 
 // The newsletter link and the copyright line, on every page.
-const { content } = useSiteContent()
+defineProps<{ content: SiteContent }>()
 const year = new Date().getFullYear()
 </script>
 
