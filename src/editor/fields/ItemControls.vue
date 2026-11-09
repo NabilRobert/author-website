@@ -6,7 +6,7 @@ const emit = defineEmits<{ move: [offset: -1 | 1]; remove: [] }>()
 
 function confirmRemove() {
   if (
-    window.confirm(`Remove ${props.itemName}? You can't undo this, but nothing changes on the site until you save.`)
+    window.confirm(`Remove ${props.itemName}? Undo brings it back, and nothing changes on the site until you save.`)
   ) {
     emit('remove')
   }
