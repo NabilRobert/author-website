@@ -3,6 +3,7 @@ import { ref, useId } from 'vue'
 import { isImageType, MAX_IMAGE_BYTES, TOO_BIG_MESSAGE, WRONG_TYPE_MESSAGE } from '@shared/images'
 import { imageUrl } from '@shared/images'
 import { uploadImage } from '@/editor/editorApi'
+import { UPLOADS_OFF_NOTE, useUploadsOn } from '@/editor/uploads'
 import { centredCrop } from '@shared/fields'
 import type { ImageCrop } from '@shared/fields'
 import ImageCropper from '@/editor/fields/ImageCropper.vue'
@@ -17,6 +18,7 @@ const crop = defineModel<ImageCrop>('crop')
 const id = useId()
 const isUploading = ref(false)
 const problem = ref('')
+const areUploadsOn = useUploadsOn()
 
 async function onFileChosen(event: Event) {
   const input = event.target as HTMLInputElement
@@ -58,7 +60,9 @@ function checkFile(file: File): string {
       class="mt-2 max-h-40 rounded-md border border-panel-line"
     />
     <div class="mt-2 flex flex-wrap gap-2">
+      <p v-if="!areUploadsOn" class="rounded-md bg-notice px-3 py-2 text-sm">{{ UPLOADS_OFF_NOTE }}</p>
       <label
+        v-else
         :for="id"
         class="cursor-pointer rounded-md border border-action px-4 py-2 font-semibold text-action focus-within:outline focus-within:outline-3"
       >

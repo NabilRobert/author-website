@@ -338,6 +338,10 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Test account**: `test@framed.local`, which owns `/test` in the local
   database only (`npm run db:seed:test`, which sets its password from
   `LOCAL_DEV_TEST_PASSWORD` in your `.dev.vars`).
+- **Uploads switched off**: picture and PDF storage (R2, the `IMAGES`
+  binding) is optional. Without it the upload and download routes answer
+  503 (`server/storage.ts: requireStorage`), and the editor hides its
+  upload buttons (`GET /api/features`, `src/editor/uploads.ts`).
 - **Fail closed**: when something is missing or wrong, refuse rather than
   allow. For example, without a real `BETTER_AUTH_SECRET` (missing, under
   32 characters, or Better Auth's public default) every API request gets a

@@ -20,6 +20,8 @@ export interface AppEnv {
     sendContactMessage: SendContactMessage
     user: { id: string; email: string }
     site: Site
+    /** The R2 bucket, set by requireStorage (server/storage.ts) on routes that store or serve files. */
+    storage: R2Bucket
   }
 }
 

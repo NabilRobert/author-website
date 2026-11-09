@@ -2,8 +2,8 @@
 export interface Env {
   /** Everyone's accounts and sites (D1). */
   DB: D1Database
-  /** Uploaded pictures (R2). */
-  IMAGES: R2Bucket
+  /** Uploaded pictures and PDFs (R2). Optional: without it uploads are off (server/storage.ts). */
+  IMAGES?: R2Bucket
   /** The site's own address, like "https://framed.my.id"; login cookies are set for it. */
   SITE_URL: string
   /** Signs login sessions (secret; at least 32 random characters, checked by secretProblem). */
