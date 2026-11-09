@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ImageCrop } from '@shared/fields'
-import { imageUrl } from '@/content/format'
+import { imageUrl } from '@shared/images'
 
 // A picture filling its frame (the parent gives the frame's size and
 // shape), positioned by the owner's crop: the focus point stays in view and

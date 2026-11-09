@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BlockOf } from '@shared/blocks'
 import type { SiteContent } from '@shared/schema'
-import { imageUrl } from '@/content/format'
+import { imageUrl } from '@shared/images'
 import BlockHeading from '@/components/ui/BlockHeading.vue'
 import WorkPicture from '@/components/works/WorkPicture.vue'
 import FramedImage from '@/components/ui/FramedImage.vue'

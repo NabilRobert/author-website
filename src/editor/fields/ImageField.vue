@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, useId } from 'vue'
 import { isImageType, MAX_IMAGE_BYTES, TOO_BIG_MESSAGE, WRONG_TYPE_MESSAGE } from '@shared/images'
-import { imageUrl } from '@/content/format'
+import { imageUrl } from '@shared/images'
 import { uploadImage } from '@/editor/editorApi'
 import { centredCrop } from '@shared/fields'
 import type { ImageCrop } from '@shared/fields'

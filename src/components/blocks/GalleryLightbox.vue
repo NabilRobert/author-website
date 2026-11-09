@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { imageUrl } from '@/content/format'
+import { imageUrl } from '@shared/images'
 
 // A gallery picture shown full size over the page, uncropped, with its
 // caption, Previous / Next and Close. It is the browser's own modal

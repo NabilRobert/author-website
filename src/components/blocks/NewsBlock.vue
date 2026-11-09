@@ -2,7 +2,8 @@
 import { computed } from 'vue'
 import type { BlockOf } from '@shared/blocks'
 import type { NewsItem } from '@shared/schema'
-import { formatDate, newestFirst, paragraphs } from '@/content/format'
+import { formatDate, newestFirst } from '@/content/format'
+import { paragraphs } from '@shared/text'
 import BlockHeading from '@/components/ui/BlockHeading.vue'
 import { useSitePath } from '@/content/sitePath'
 

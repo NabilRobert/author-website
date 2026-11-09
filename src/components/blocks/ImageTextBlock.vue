@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BlockOf } from '@shared/blocks'
-import { paragraphs } from '@/content/format'
+import { paragraphs } from '@shared/text'
 import FramedImage from '@/components/ui/FramedImage.vue'
 import BlockHeading from '@/components/ui/BlockHeading.vue'
 import { PICTURE_BESIDE_TEXT_CLASSES, PICTURE_CORNER_CLASSES, WORK_SHAPE_CLASSES } from '@/content/frames'

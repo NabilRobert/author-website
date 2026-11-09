@@ -21,3 +21,11 @@ export const TOO_BIG_MESSAGE = 'The picture must be under 5 MB. Try a smaller co
 export function isImageType(type: string): type is ImageType {
   return type in IMAGE_TYPES
 }
+
+/**
+ * Where the browser loads a stored image from: the key `images/<id>.png`
+ * is served at `/api/images/<id>.png` (server/image-routes.ts).
+ */
+export function imageUrl(key: string): string {
+  return `/api/${key}`
+}

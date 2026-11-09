@@ -8,7 +8,7 @@
  */
 import { PATTERN_BASE_COLOUR } from '@shared/theme'
 import type { BackgroundPattern, BoxStyle, PatternColours, Theme } from '@shared/theme'
-import { imageUrl } from '@/content/format'
+import { imageUrl } from '@shared/images'
 
 /**
  * One layer of a pattern. Every layer carries its own size: CSS reuses a

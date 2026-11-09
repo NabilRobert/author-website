@@ -37,19 +37,3 @@ export function formatDate(isoDate: string): string {
   const date = new Date(`${isoDate}T12:00:00Z`)
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 }
-
-/** Splits text on blank lines, the way the owner types paragraphs. */
-export function paragraphs(text: string): string[] {
-  return text
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean)
-}
-
-/**
- * Where the browser loads a stored image from: the key `images/<id>.png`
- * is served at `/api/images/<id>.png` (server/image-routes.ts).
- */
-export function imageUrl(key: string): string {
-  return `/api/${key}`
-}

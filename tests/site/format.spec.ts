@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Work } from '@shared/schema'
-import { formatDate, groupWorks, imageUrl, newestFirst, paragraphs } from '@/content/format'
+import { formatDate, groupWorks, newestFirst } from '@/content/format'
+import { paragraphs } from '@shared/text'
+import { imageUrl } from '@shared/images'
 import { demoContent } from '@shared/demo-content'
 
 function work(title: string, group = ''): Work {

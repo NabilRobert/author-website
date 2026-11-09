@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BlockOf } from '@shared/blocks'
-import { paragraphs } from '@/content/format'
+import { paragraphs } from '@shared/text'
 import BlockHeading from '@/components/ui/BlockHeading.vue'
 
 // Words: an optional heading and paragraphs (a blank line starts a new one).
