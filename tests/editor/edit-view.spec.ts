@@ -176,7 +176,7 @@ describe('saving a page as a layout', () => {
 })
 
 describe("a work's own page", () => {
-  it('gives a work a page from a layout and shows it in the preview', async () => {
+  it('gives a work a page from a layout, then edits it in the Pages tab like any page', async () => {
     const editor = await openEditor()
     await editor
       .findAll('[role="tab"]')
@@ -186,10 +186,49 @@ describe("a work's own page", () => {
     const button = (text: string) => harbour.findAll('button').find((candidate) => candidate.text().startsWith(text))!
     await button('Give this work its own page').trigger('click')
     await button('Case study').trigger('click')
-    const values = harbour.findAll('input').map((input) => (input.element as HTMLInputElement).value)
-    expect(values).toContain('harbour-library')
-    expect(harbour.findAll('section[aria-label^="Block "]')).toHaveLength(4)
+    expect(editor.find('[role="tab"][aria-selected="true"]').text()).toBe('Pages')
+    const pageButton = editor.findAll('button').find((candidate) => candidate.text().includes('/work/harbour-library'))!
+    expect(pageButton.attributes('aria-pressed')).toBe('true')
+    expect(editor.find('h2').text()).toBe('Your pages')
+    expect(editor.text()).toContain('Page of “Harbour Library”')
+    expect(editor.findAll('section[aria-label^="Block "]')).toHaveLength(4)
     expect(editor.find('section[aria-label="Preview"] h1').text()).toBe('Harbour Library')
+    editor.unmount()
+  })
+})
+
+describe("editing a work's own page in the Pages tab", () => {
+  async function openLanternPage() {
+    const editor = await openEditor()
+    await editor
+      .findAll('button')
+      .find((button) => button.text().includes('/work/lantern'))!
+      .trigger('click')
+    return editor
+  }
+  const addressBox = (editor: Awaited<ReturnType<typeof openEditor>>) =>
+    editor.findAll('label').find((label) => label.text() === 'Its address')!
+
+  it("keeps the address when it is emptied, so the page doesn't vanish while typing", async () => {
+    const editor = await openLanternPage()
+    const input = editor.find(`#${addressBox(editor).attributes('for')}`)
+    await input.setValue('')
+    expect(editor.text()).toContain('Page of “Lantern”')
+    await input.setValue('lantern-app')
+    expect(editor.text()).toContain('/work/lantern-app')
+    editor.unmount()
+  })
+
+  it('removes the page after asking, and goes back to the front page', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const editor = await openLanternPage()
+    await editor
+      .findAll('button')
+      .find((button) => button.text() === 'Remove its page')!
+      .trigger('click')
+    expect(editor.text()).not.toContain('Pages of your work')
+    expect(editor.find('button[aria-pressed="true"]').text()).toContain('Home')
+    vi.restoreAllMocks()
     editor.unmount()
   })
 })
@@ -218,16 +257,19 @@ describe('click to edit', () => {
     editor.unmount()
   })
 
-  it("opens the Work tab and that work for a block on a work's own page", async () => {
+  it("opens a work's own page in the Pages tab for a block clicked on it", async () => {
     const editor = await openEditor()
     const lantern = demoContent.works[0]!
     await editor.find('section[aria-label="Preview"] select').setValue(lantern.id)
+    await editor
+      .findAll('[role="tab"]')
+      .find((tab) => tab.text() === 'Look')!
+      .trigger('click')
     await editor.find(`[data-block-id="${lantern.pageBlocks[1]!.id}"] p`).trigger('click')
     await flushPromises()
-    expect(editor.find('[role="tab"][aria-selected="true"]').text()).toBe('Work')
-    const form = editor.find(`[data-block-form="${lantern.pageBlocks[1]!.id}"]`)
-    expect(form.element.closest('details')!.open).toBe(true)
-    expect(form.attributes('data-selected')).toBeDefined()
+    expect(editor.find('[role="tab"][aria-selected="true"]').text()).toBe('Pages')
+    expect(editor.text()).toContain('Page of “Lantern”')
+    expect(editor.find(`[data-block-form="${lantern.pageBlocks[1]!.id}"]`).attributes('data-selected')).toBeDefined()
     editor.unmount()
   })
 

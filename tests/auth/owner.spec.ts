@@ -85,9 +85,10 @@ describe('the editor', () => {
     page.unmount()
   })
 
-  it("opens on a work's own page with ?work, and Done returns to it", async () => {
+  it("opens ready to edit a work's own page with ?work, and Done returns to it", async () => {
     const { page, router } = await open('/mara/edit?work=lantern', editorApi)
     expect(page.find('section[aria-label="Preview"] h1').text()).toBe('Lantern')
+    expect(page.find('section[aria-label="Edit"]').text()).toContain('Page of “Lantern”')
     await page
       .findAll('button')
       .find((button) => button.text() === 'Done')!

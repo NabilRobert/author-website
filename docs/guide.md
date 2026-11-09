@@ -233,7 +233,8 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   browser's own `<dialog>`), with Previous / Next, the arrow keys and Esc.
 - **Work page**: a work's own page at `/<site>/work/<pageSlug>`
   (`src/components/works/WorkPage.vue`): the work's details on top, then
-  blocks the owner adds in the Work tab (`WorkPageFields.vue`). Its blocks
+  blocks. It is made in the Work tab (`WorkPageFields.vue`) and edited in
+  the Pages tab like any page (`WorkPageEditor.vue`). Its blocks
   sit in the `blocks` table with the work's id as `page_id`
   (`migrations/0004`). A work with a page links to it from every list, and
   each work page links to the previous and next works that have pages.

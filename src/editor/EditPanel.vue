@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useBlockSelection, workHoldingBlock } from '@/editor/blockSelection'
-import { useDraft } from '@/editor/useEditor'
+import { useBlockSelection } from '@/editor/blockSelection'
 import PagesTab from '@/editor/tabs/PagesTab.vue'
 import WorksTab from '@/editor/tabs/WorksTab.vue'
 import NewsTab from '@/editor/tabs/NewsTab.vue'
@@ -22,13 +21,17 @@ const TABS = [
 ] as const
 const activeTab = ref<(typeof TABS)[number]['key']>('pages')
 
-// A block clicked in the preview is edited in the Pages tab, or in the Work
-// tab if it is on a work's own page.
-const draft = useDraft()
+// A block clicked in the preview is edited in the Pages tab, which holds
+// every page, works' own pages included.
 watch(useBlockSelection(), (picked) => {
-  if (picked?.source !== 'preview') return
-  activeTab.value = workHoldingBlock(draft.value, picked.blockId) ? 'works' : 'pages'
+  if (picked?.source === 'preview') activeTab.value = 'pages'
 })
+
+// "Edit its page" in the Work tab: that page, in the Pages tab.
+function editWorkPage(workId: string) {
+  previewPageId.value = workId
+  activeTab.value = 'pages'
+}
 </script>
 
 <template>
@@ -47,7 +50,7 @@ watch(useBlockSelection(), (picked) => {
       </button>
     </div>
     <PagesTab v-if="activeTab === 'pages'" v-model:page-id="previewPageId" />
-    <WorksTab v-else-if="activeTab === 'works'" @preview="(workId) => (previewPageId = workId)" />
+    <WorksTab v-else-if="activeTab === 'works'" @edit-page="editWorkPage" />
     <NewsTab v-else-if="activeTab === 'news'" />
     <ProfileTab v-else-if="activeTab === 'profile'" :site="site" />
     <LookTab v-else />

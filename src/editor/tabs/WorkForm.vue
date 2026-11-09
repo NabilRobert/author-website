@@ -11,7 +11,7 @@ import WorkPageFields from '@/editor/tabs/WorkPageFields.vue'
 // Everything about one piece of work: a book, a building, a painting, an
 // app. The picture's shape is chosen for all work in the Look tab.
 const work = defineModel<Work>({ required: true })
-const emit = defineEmits<{ preview: [] }>()
+const emit = defineEmits<{ editPage: [] }>()
 const draft = useDraft()
 </script>
 
@@ -49,6 +49,6 @@ const draft = useDraft()
       url-hint="Like where to buy it, the live site, a video or the code, starting with https://"
     />
     <QuoteListField v-model="work.quotes" />
-    <WorkPageFields v-model="work" @preview="emit('preview')" />
+    <WorkPageFields v-model="work" @edit-page="emit('editPage')" />
   </div>
 </template>

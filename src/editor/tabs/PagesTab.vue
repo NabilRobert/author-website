@@ -11,14 +11,23 @@ import { PAGE_TEMPLATES } from '@/editor/pageTemplates'
 import type { PageTemplate } from '@/editor/pageTemplates'
 import { removeSavedLayout, savedLayoutChoices } from '@/editor/savedLayouts'
 import SaveAsLayout from '@/editor/fields/SaveAsLayout.vue'
+import WorkPageEditor from '@/editor/tabs/WorkPageEditor.vue'
 
 // Pages: pick a page, change its settings and blocks, add, reorder or
 // remove pages. A new page starts from a layout (src/editor/pageTemplates.ts).
-// The page picked here is the one the preview shows.
+// Works' own pages are listed and edited here too (WorkPageEditor); they are
+// made in the Work tab. The page picked here is the one the preview shows.
 const draft = useDraft()
 const selectedPageId = defineModel<string>('pageId', { required: true })
 
 const selectedIndex = computed(() => draft.value.pages.findIndex((page) => page.id === selectedPageId.value))
+const workPages = computed(() => draft.value.works.filter((work) => work.pageSlug !== ''))
+const selectedWorkIndex = computed(() =>
+  draft.value.works.findIndex((work) => work.id === selectedPageId.value && work.pageSlug !== ''),
+)
+const PAGE_BUTTON =
+  'rounded-md border-2 px-4 py-2 font-semibold aria-pressed:border-action aria-pressed:bg-action aria-pressed:text-panel'
+const pageButtonColours = (id: string) => (id === selectedPageId.value ? '' : 'border-panel-line bg-panel')
 
 const isChoosingLayout = ref(false)
 const layoutChoices = computed(() => [...PAGE_TEMPLATES, ...savedLayoutChoices(draft.value.savedLayouts)])
@@ -46,8 +55,7 @@ function removeSelectedPage() {
           <button
             type="button"
             :aria-pressed="page.id === selectedPageId"
-            class="rounded-md border-2 px-4 py-2 font-semibold aria-pressed:border-action aria-pressed:bg-action aria-pressed:text-panel"
-            :class="page.id === selectedPageId ? '' : 'border-panel-line bg-panel'"
+            :class="[PAGE_BUTTON, pageButtonColours(page.id)]"
             @click="selectedPageId = page.id"
           >
             {{ page.title || 'Untitled' }} <span class="font-normal opacity-80">/{{ page.slug }}</span>
@@ -64,6 +72,21 @@ function removeSelectedPage() {
           </button>
         </li>
       </ul>
+      <template v-if="workPages.length">
+        <h3 class="mt-4 mb-2 font-semibold">Pages of your work</h3>
+        <ul class="flex flex-wrap gap-2">
+          <li v-for="work in workPages" :key="work.id">
+            <button
+              type="button"
+              :aria-pressed="work.id === selectedPageId"
+              :class="[PAGE_BUTTON, pageButtonColours(work.id)]"
+              @click="selectedPageId = work.id"
+            >
+              {{ work.title || 'Untitled' }} <span class="font-normal opacity-80">/work/{{ work.pageSlug }}</span>
+            </button>
+          </li>
+        </ul>
+      </template>
     </nav>
     <TemplatePicker
       v-if="isChoosingLayout"
@@ -96,5 +119,10 @@ function removeSelectedPage() {
         <PageBlocksEditor v-model="draft.pages[selectedIndex]!.blocks" />
       </section>
     </template>
+    <WorkPageEditor
+      v-else-if="selectedWorkIndex >= 0"
+      v-model="draft.works[selectedWorkIndex]!"
+      @removed="selectedPageId = draft.pages[0]?.id ?? ''"
+    />
   </div>
 </template>
