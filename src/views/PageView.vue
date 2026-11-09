@@ -21,6 +21,6 @@ usePageHead(() => (page.value && page.value.slug ? page.value.title : undefined)
   <NotFoundView v-if="!page" />
   <template v-else>
     <SectionHeading v-if="!startsWithBanner" :title="page.title" />
-    <PageBlocks :page="page" :content="content" />
+    <PageBlocks :blocks="page.blocks" :content="content" />
   </template>
 </template>

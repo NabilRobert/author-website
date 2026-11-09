@@ -3,9 +3,10 @@
  * nobody can take their names (shared/names.ts reserves them too).
  *
  *   /                      what Framed is (LandingView)
- *   /login                 log in or sign up with an emailed code
+ *   /login                 log in, sign up, or reset a password
  *   /<site>                someone's front page
  *   /<site>/<page>         their other pages
+ *   /<site>/work/<work>    a work's own page, if it has one
  *   /<site>/edit           their editor, for them only
  */
 import { createRouter, createWebHistory } from 'vue-router'
@@ -29,6 +30,12 @@ export const routes: RouteRecordRaw[] = [
     props: true,
     children: [
       { path: '', name: 'site-home', component: PageView, props: { slug: '' } },
+      {
+        path: 'work/:work([a-z0-9-]+)',
+        name: 'site-work',
+        component: () => import('@/views/WorkPageView.vue'),
+        props: (route) => ({ workSlug: String(route.params.work) }),
+      },
       {
         path: ':page([a-z0-9-]+)',
         name: 'site-page',

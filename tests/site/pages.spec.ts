@@ -39,6 +39,27 @@ describe('public pages', () => {
     expect(page.find('a[href="https://example.com/lantern"]').exists()).toBe(true)
   })
 
+  it('a work with its own page links to it from the list', async () => {
+    const page = await renderPage('/mara/work')
+    expect(page.find('article h3 a[href="/mara/work/lantern"]').text()).toBe('Lantern')
+    expect(page.findAll('a').some((link) => link.text() === 'See the whole project')).toBe(true)
+    expect(page.find('article h3 a[href="/mara/work/harbour-library"]').exists()).toBe(false)
+  })
+
+  it("a work's own page shows its details, then its blocks", async () => {
+    const page = await renderPage('/mara/work/lantern')
+    expect(page.find('h1').text()).toBe('Lantern')
+    expect(page.text()).toContain('The brief')
+    expect(page.text()).toContain('What I did')
+    const back = page.findAll('a').find((link) => link.text().includes('All work'))
+    expect(back?.attributes('href')).toBe('/mara/work')
+  })
+
+  it('says not found for a work that has no page', async () => {
+    const page = await renderPage('/mara/work/harbour-library')
+    expect(page.find('h1').text()).toBe('Page not found')
+  })
+
   it('work without a picture gets a typeset card in the site picture shape', async () => {
     const page = await renderPage('/mara/work')
     const card = page.find('[role="img"][aria-label="Ferry Posters"]')

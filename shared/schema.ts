@@ -28,6 +28,13 @@ export const MAX_BLOCKS_PER_PAGE = 40
 
 // Addresses the site itself uses, so a page cannot take them.
 const RESERVED_SLUGS = new Set(['edit', 'api'])
+// The last part of an address, like "about" in /alex/about.
+const addressPart = z
+  .string()
+  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use lower-case letters, numbers and dashes, like "my-works".')
+const blocksSchema = z
+  .array(blockSchema)
+  .max(MAX_BLOCKS_PER_PAGE, `A page can hold up to ${MAX_BLOCKS_PER_PAGE} blocks.`)
 
 export const quoteSchema = z.object({
   quote: longText.min(1, 'Add the quote.'),
@@ -62,6 +69,10 @@ export const workSchema = z.object({
   // Like where to buy it, the live site, a video or the source code.
   links: z.array(linkSchema.extend({ url: webAddress })),
   quotes: z.array(quoteSchema),
+  // The work's own page, at /<name>/work/<pageSlug>, with these blocks below
+  // its details; '' for none. Added after the first saves, hence the defaults.
+  pageSlug: z.union([z.literal(''), addressPart]).default(''),
+  pageBlocks: blocksSchema.default([]),
 })
 
 export const newsItemSchema = z.object({
@@ -79,14 +90,11 @@ export const pageSchema = z.object({
   // The page's address: '' is the front page, 'works' is /works.
   slug: z.union([
     z.literal(''),
-    z
-      .string()
-      .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use lower-case letters, numbers and dashes, like "my-works".')
-      .refine((slug) => !RESERVED_SLUGS.has(slug), 'That address is used by the site itself. Pick another.'),
+    addressPart.refine((slug) => !RESERVED_SLUGS.has(slug), 'That address is used by the site itself. Pick another.'),
   ]),
   title: requiredText('Give the page a name.'),
   showInMenu: z.boolean(),
-  blocks: z.array(blockSchema).max(MAX_BLOCKS_PER_PAGE, `A page can hold up to ${MAX_BLOCKS_PER_PAGE} blocks.`),
+  blocks: blocksSchema,
 })
 
 export const siteContentSchema = z
@@ -103,6 +111,7 @@ export const siteContentSchema = z
     updatedAt: z.string(),
   })
   .superRefine(checkPageAddresses)
+  .superRefine(checkWorkPageAddresses)
 
 /** Exactly one front page, and no two pages at the same address. */
 function checkPageAddresses(content: { pages: { slug: string }[] }, context: z.RefinementCtx) {
@@ -114,6 +123,19 @@ function checkPageAddresses(content: { pages: { slug: string }[] }, context: z.R
   if (duplicate !== undefined) {
     const address = duplicate === '' ? 'the front page' : `/${duplicate}`
     context.addIssue({ code: 'custom', path: ['pages'], message: `Two pages use ${address}. Change one.` })
+  }
+}
+
+/** No two works' own pages at the same address. */
+function checkWorkPageAddresses(content: { works: { pageSlug: string }[] }, context: z.RefinementCtx) {
+  const slugs = content.works.map((work) => work.pageSlug).filter(Boolean)
+  const duplicate = slugs.find((slug, index) => slugs.indexOf(slug) !== index)
+  if (duplicate !== undefined) {
+    context.addIssue({
+      code: 'custom',
+      path: ['works'],
+      message: `Two works' pages use /work/${duplicate}. Change one.`,
+    })
   }
 }
 

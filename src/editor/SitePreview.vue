@@ -7,16 +7,21 @@ import SiteHeader from '@/components/layout/SiteHeader.vue'
 import SiteFooter from '@/components/layout/SiteFooter.vue'
 import SectionHeading from '@/components/ui/SectionHeading.vue'
 import PageBlocks from '@/components/blocks/PageBlocks.vue'
+import WorkPage from '@/components/works/WorkPage.vue'
 
 // One page of the draft, drawn by the same components as the public site
 // and in the draft's colours and fonts, so it shows exactly what visitors
-// will see after saving. Clicking a block selects it for editing; the
-// selected block is outlined.
+// will see after saving: a site page, or a work's own page (`pageId` is then
+// the work's id). Clicking a block selects it for editing; the selected
+// block is outlined.
 const props = defineProps<{ content: SiteContent; pageId: string; selectedBlockId?: string }>()
 const emit = defineEmits<{ selectBlock: [blockId: string] }>()
 const previewRoot = ref<HTMLElement>()
 
 const page = computed(() => props.content.pages.find((candidate) => candidate.id === props.pageId))
+const workWithPage = computed(() =>
+  props.content.works.find((work) => work.id === props.pageId && work.pageSlug !== ''),
+)
 const startsWithBanner = computed(() => page.value?.blocks[0]?.type === 'hero')
 const style = computed(() => themeVariables(props.content.theme))
 
@@ -63,8 +68,14 @@ watchEffect(() => loadFonts([props.content.theme.headingFont, props.content.them
         <div class="page-width pb-4">
           <template v-if="page">
             <SectionHeading v-if="!startsWithBanner" :title="page.title" />
-            <PageBlocks :page="page" :content="content" :selected-block-id="selectedBlockId" />
+            <PageBlocks :blocks="page.blocks" :content="content" :selected-block-id="selectedBlockId" />
           </template>
+          <WorkPage
+            v-else-if="workWithPage"
+            :work="workWithPage"
+            :content="content"
+            :selected-block-id="selectedBlockId"
+          />
         </div>
         <SiteFooter :content="content" />
       </div>

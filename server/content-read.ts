@@ -7,6 +7,7 @@
  * read from the same moment.
  */
 import { siteContentSchema } from '../shared/schema'
+import type { Block } from '../shared/blocks'
 import type { Work, NewsItem, Page, SiteContent } from '../shared/schema'
 import { centredCrop } from '../shared/fields'
 import type { ImageCrop } from '../shared/fields'
@@ -47,6 +48,7 @@ interface WorkRow {
   description: string
   image_key: string | null
   image_crop: string | null
+  page_slug: string
 }
 interface WorkLinkRow extends LinkRow {
   work_id: string
@@ -113,7 +115,7 @@ export async function loadContent(db: D1Database, siteId: string): Promise<SiteC
       socialLinks: rowsOf<LinkRow>(socialLinks),
     },
     theme: toTheme(rowsOf<ThemeRow>(theme)[0]),
-    works: assembleWorks(rowsOf(works), rowsOf(links), rowsOf(quotes)),
+    works: assembleWorks(rowsOf(works), rowsOf(links), rowsOf(quotes), rowsOf(blocks)),
     news: rowsOf<NewsRow>(news).map(toNewsItem),
     pages: assemblePages(rowsOf(pages), rowsOf(blocks)),
     updatedAt: profileRow.updated_at,
@@ -152,7 +154,7 @@ function toTheme(row: ThemeRow | undefined) {
   }
 }
 
-function assembleWorks(works: WorkRow[], links: WorkLinkRow[], quotes: QuoteRow[]): Work[] {
+function assembleWorks(works: WorkRow[], links: WorkLinkRow[], quotes: QuoteRow[], blocks: BlockRow[]): Work[] {
   return works.map((row) => ({
     id: row.id,
     title: row.title,
@@ -164,6 +166,8 @@ function assembleWorks(works: WorkRow[], links: WorkLinkRow[], quotes: QuoteRow[
     imageCrop: readCrop(row.image_crop),
     links: links.filter((link) => link.work_id === row.id).map(({ label, url }) => ({ label, url })),
     quotes: quotes.filter((quote) => quote.work_id === row.id).map(({ quote, source }) => ({ quote, source })),
+    pageSlug: row.page_slug,
+    pageBlocks: blocksOf(blocks, row.id),
   }))
 }
 
@@ -185,11 +189,16 @@ function assemblePages(pages: PageRow[], blocks: BlockRow[]): Page[] {
     slug: row.slug,
     title: row.title,
     showInMenu: row.show_in_menu === 1,
-    // Checked against the block schema with the rest of the document.
-    blocks: blocks
-      .filter((block) => block.page_id === row.id)
-      .map((block) => ({ ...JSON.parse(block.fields_json), id: block.id, type: block.type })),
+    blocks: blocksOf(blocks, row.id),
   }))
+}
+
+// The blocks of one page, or of one work's own page (stored with the work's
+// id as page_id). Checked against the block schema with the rest of the document.
+function blocksOf(blocks: BlockRow[], ownerId: string): Block[] {
+  return blocks
+    .filter((block) => block.page_id === ownerId)
+    .map((block) => ({ ...JSON.parse(block.fields_json), id: block.id, type: block.type }) as Block)
 }
 
 function parseStored(document: unknown): SiteContent {

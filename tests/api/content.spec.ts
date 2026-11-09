@@ -162,6 +162,27 @@ describe('/api/me/content', () => {
     })
   })
 
+  it("keeps a work's own page: its address and its blocks, apart from the site's pages", async () => {
+    await api.signUp('mara@example.com', 'mara')
+    const id = await siteId('mara')
+    await saveContent(api.db, id, demoContent, SAVED_AT)
+    const loaded = await loadContent(api.db, id)
+    const lantern = loaded!.works[0]!
+    expect(lantern.pageSlug).toBe('lantern')
+    expect(lantern.pageBlocks.map((block) => block.id)).toEqual(demoContent.works[0]!.pageBlocks.map((b) => b.id))
+    const pageBlockIds = loaded!.pages.flatMap((page) => page.blocks.map((block) => block.id))
+    expect(pageBlockIds).not.toContain(lantern.pageBlocks[0]!.id)
+  })
+
+  it("refuses two works' pages at the same address", async () => {
+    const cookie = await api.signUp('mara@example.com', 'mara')
+    const [first, second, ...rest] = demoContent.works
+    const works = [first!, { ...second!, pageSlug: first!.pageSlug }, ...rest]
+    const response = await putContent({ ...demoContent, works }, cookie)
+    expect(response.status).toBe(400)
+    expect(await response.text()).toContain("Two works' pages use /work/lantern")
+  })
+
   it('refuses a save without a login', async () => {
     expect((await putContent(demoContent, '')).status).toBe(401)
   })

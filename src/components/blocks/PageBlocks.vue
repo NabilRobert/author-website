@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { Page, SiteContent } from '@shared/schema'
+import type { Block } from '@shared/blocks'
+import type { SiteContent } from '@shared/schema'
 import BlockBox from '@/components/blocks/BlockBox.vue'
 import HeroBlock from '@/components/blocks/HeroBlock.vue'
 import TextBlock from '@/components/blocks/TextBlock.vue'
@@ -13,16 +14,16 @@ import NewsBlock from '@/components/blocks/NewsBlock.vue'
 import ContactBlock from '@/components/blocks/ContactBlock.vue'
 import PressKitBlock from '@/components/blocks/PressKitBlock.vue'
 
-// A page's blocks, top to bottom, each in its box (BlockBox). The public page and the editor's preview
+// A page's blocks (or a work's own page's), top to bottom, each in its box (BlockBox). The public page and the editor's preview
 // both use this, so the preview is exactly what visitors will see. Each box carries its block's id
 // (data-block-id) so the editor's preview can tell which block was clicked, and marks the selected one.
-defineProps<{ page: Page; content: SiteContent; selectedBlockId?: string }>()
+defineProps<{ blocks: Block[]; content: SiteContent; selectedBlockId?: string }>()
 </script>
 
 <template>
   <div class="space-y-16">
     <BlockBox
-      v-for="(block, index) in page.blocks"
+      v-for="(block, index) in blocks"
       :key="block.id"
       :box-style="block.style"
       :data-block-id="block.id"

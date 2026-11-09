@@ -9,6 +9,7 @@
  * plan's 100,000 a day.
  */
 import type { Work, NewsItem, Page, SiteContent, Theme } from '../shared/schema'
+import type { Block } from '../shared/blocks'
 
 /** Prepares a statement with the site's id bound as its first value. */
 type Insert = (sql: string, ...values: unknown[]) => D1PreparedStatement
@@ -111,8 +112,8 @@ function themeStatement(insert: Insert, theme: Theme): D1PreparedStatement {
 function workStatements(insert: Insert, work: Work, position: number): D1PreparedStatement[] {
   const workRow = insert(
     `INSERT INTO works (site_id, id, position, title, subtitle, group_name, dated_on, description,
-       image_key, image_crop)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       image_key, image_crop, page_slug)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     work.id,
     position,
     work.title,
@@ -122,6 +123,7 @@ function workStatements(insert: Insert, work: Work, position: number): D1Prepare
     work.description,
     work.imageKey,
     JSON.stringify(work.imageCrop),
+    work.pageSlug,
   )
   const links = work.links.map((link, linkPosition) =>
     insert(
@@ -141,7 +143,7 @@ function workStatements(insert: Insert, work: Work, position: number): D1Prepare
       quote.source,
     ),
   )
-  return [workRow, ...links, ...quotes]
+  return [workRow, ...links, ...quotes, ...blockStatements(insert, work.id, work.pageBlocks)]
 }
 
 function newsStatement(insert: Insert, item: NewsItem, position: number): D1PreparedStatement {
@@ -168,16 +170,20 @@ function pageStatements(insert: Insert, page: Page, position: number): D1Prepare
     page.title,
     page.showInMenu ? 1 : 0,
   )
-  const blocks = page.blocks.map((block, blockPosition) => {
+  return [pageRow, ...blockStatements(insert, page.id, page.blocks)]
+}
+
+// A page's blocks, or a work's own page's: `ownerId` is the page's or the work's id.
+function blockStatements(insert: Insert, ownerId: string, blocks: Block[]): D1PreparedStatement[] {
+  return blocks.map((block, position) => {
     const { id, type, ...fields } = block
     return insert(
       'INSERT INTO blocks (site_id, id, page_id, position, type, fields_json) VALUES (?, ?, ?, ?, ?, ?)',
       id,
-      page.id,
-      blockPosition,
+      ownerId,
+      position,
       type,
       JSON.stringify(fields),
     )
   })
-  return [pageRow, ...blocks]
 }

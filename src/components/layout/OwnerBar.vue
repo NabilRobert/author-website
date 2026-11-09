@@ -12,7 +12,12 @@ const router = useRouter()
 const { ownSite } = useAccount()
 
 const isOwner = computed(() => ownSite.value === props.site)
-const viewedPage = computed(() => (route.params.page ? String(route.params.page) : ''))
+// The page being viewed, for the editor to preview: ?page=about, or
+// ?work=lantern on a work's own page.
+const editQuery = computed(() => {
+  if (route.params.work) return { work: String(route.params.work) }
+  return route.params.page ? { page: String(route.params.page) } : {}
+})
 
 async function logOut() {
   await authClient.signOut()
@@ -29,7 +34,7 @@ async function logOut() {
     class="fixed right-4 bottom-4 z-20 flex items-center gap-2 rounded-full border border-panel-line bg-panel p-1.5 font-sans text-sm text-panel-text shadow-lg"
   >
     <RouterLink
-      :to="{ path: `/${site}/edit`, query: viewedPage ? { page: viewedPage } : {} }"
+      :to="{ path: `/${site}/edit`, query: editQuery }"
       class="rounded-full bg-action px-4 py-2 font-semibold text-panel"
       >Edit this page</RouterLink
     >

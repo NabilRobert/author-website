@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { useDraft } from '@/editor/useEditor'
+import { useBlockSelection, workHoldingBlock } from '@/editor/blockSelection'
 import { moveItem, newWork } from '@/editor/newItems'
 import ItemControls from '@/editor/fields/ItemControls.vue'
 import WorkForm from '@/editor/tabs/WorkForm.vue'
@@ -9,9 +11,30 @@ import WorkForm from '@/editor/tabs/WorkForm.vue'
 // kit, in the order arranged here: drag a work by its handle, or use Up and
 // Down. Each opens to its form.
 const draft = useDraft()
+const emit = defineEmits<{ preview: [workId: string] }>()
+
+// Which works are open, kept here (not only in the page) so a block clicked
+// on a work's own page in the preview can open that work.
+const openWorkIds = ref(new Set<string>())
+function noteToggle(workId: string, event: Event) {
+  if ((event.target as HTMLDetailsElement).open) openWorkIds.value.add(workId)
+  else openWorkIds.value.delete(workId)
+}
+
+watch(
+  useBlockSelection(),
+  (picked) => {
+    if (picked?.source !== 'preview') return
+    const work = workHoldingBlock(draft.value, picked.blockId)
+    if (work) openWorkIds.value.add(work.id)
+  },
+  { immediate: true },
+)
 
 function addWork() {
-  draft.value.works.unshift(newWork())
+  const work = newWork()
+  draft.value.works.unshift(work)
+  openWorkIds.value.add(work.id)
 }
 </script>
 
@@ -29,7 +52,8 @@ function addWork() {
         v-for="(work, index) in draft.works"
         :key="work.id"
         class="rounded-md border border-panel-line bg-panel p-4"
-        :open="work.title === 'New work'"
+        :open="openWorkIds.has(work.id)"
+        @toggle="noteToggle(work.id, $event)"
       >
         <summary class="flex cursor-pointer items-center gap-3 text-lg font-semibold">
           <span class="drag-handle cursor-grab px-1 text-panel-muted" title="Drag to reorder" aria-hidden="true"
@@ -38,7 +62,7 @@ function addWork() {
           {{ work.title || 'Untitled' }}
         </summary>
         <div class="mt-4 space-y-4">
-          <WorkForm v-model="draft.works[index]!" />
+          <WorkForm v-model="draft.works[index]!" @preview="emit('preview', work.id)" />
           <ItemControls
             :item-name="`“${work.title}”`"
             :is-first="index === 0"

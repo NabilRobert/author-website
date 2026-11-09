@@ -16,8 +16,9 @@ flowchart TD
 ```
 
 1. **Router** (`src/router/index.ts`): fixed pages (`/`, `/login`, `/terms`,
-   `/privacy`) come first. Anything else is `/<site>`, `/<site>/<page>` or
-   `/<site>/edit`.
+   `/privacy`) come first. Anything else is `/<site>`, `/<site>/<page>`,
+   `/<site>/work/<work>` (a work's own page, `src/views/WorkPageView.vue`)
+   or `/<site>/edit`.
 2. **The site** (`src/views/SiteLayout.vue`): asks the API for that site's
    whole content in one request (`src/content/useSiteContent.ts:
    loadSiteContent`). Until it arrives it shows "Loading…"; for a name
@@ -222,6 +223,11 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Gallery block**: a grid of uploaded pictures in one shape, each with a
   caption (`GalleryBlock.vue`, `GalleryForm.vue`); its pictures count as in
   use when unused ones are tidied (`server/image-limits.ts`).
+- **Work page**: a work's own page at `/<site>/work/<pageSlug>`
+  (`src/components/works/WorkPage.vue`): the work's details on top, then
+  blocks the owner adds in the Work tab (`WorkPageFields.vue`). Its blocks
+  sit in the `blocks` table with the work's id as `page_id`
+  (`migrations/0004`). A work with a page links to it from every list.
 - **Picked works**: a works block set to "Only the ones I tick" shows the
   works in its `pickedWorkIds`, in the Work tab's order.
 - **No colour**: a fill (the content box, part of a pattern, a banner) set

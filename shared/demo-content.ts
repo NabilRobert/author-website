@@ -44,6 +44,23 @@ export const demoContent: SiteContent = {
         { label: 'Case study', url: 'https://example.com/lantern/case-study' },
       ],
       quotes: [{ quote: 'The first ferry app my mother could use.', source: 'An example review' }],
+      pageSlug: 'lantern',
+      pageBlocks: [
+        {
+          id: id(901),
+          style: plainBox(),
+          type: 'text',
+          heading: 'The brief',
+          body: 'The ferry company had timetables nobody could read on a phone, and passengers missed boats.',
+        },
+        {
+          id: id(902),
+          style: plainBox(),
+          type: 'text',
+          heading: 'What I did',
+          body: 'One screen: your pier, the next boat, and when to start walking. Tested on the boats for a month.',
+        },
+      ],
     },
     {
       id: '6f1d3a52-6c1e-4d5e-9f2a-1b7c0e4a9d02',
@@ -56,6 +73,8 @@ export const demoContent: SiteContent = {
       imageCrop: centredCrop(),
       links: [{ label: 'Photos', url: 'https://example.com/harbour-library' }],
       quotes: [{ quote: 'Nobody asks us where the toilets are any more.', source: 'An example librarian' }],
+      pageSlug: '',
+      pageBlocks: [],
     },
     {
       id: '6f1d3a52-6c1e-4d5e-9f2a-1b7c0e4a9d03',
@@ -68,6 +87,8 @@ export const demoContent: SiteContent = {
       imageCrop: centredCrop(),
       links: [{ label: 'Photos', url: 'https://example.com/tidewater-market' }],
       quotes: [],
+      pageSlug: '',
+      pageBlocks: [],
     },
     {
       id: '6f1d3a52-6c1e-4d5e-9f2a-1b7c0e4a9d04',
@@ -80,6 +101,8 @@ export const demoContent: SiteContent = {
       imageCrop: centredCrop(),
       links: [],
       quotes: [],
+      pageSlug: '',
+      pageBlocks: [],
     },
   ],
   news: [

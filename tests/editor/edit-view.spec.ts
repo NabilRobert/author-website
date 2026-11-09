@@ -127,12 +127,32 @@ describe('the Works tab', () => {
     expect(editor.findAll('.drag-handle')).toHaveLength(4)
     const moveDown = editor.find('button[aria-label="Move “Lantern” down"]')
     await moveDown.trigger('click')
-    expect(editor.findAll('details summary').map((summary) => summary.text().replace('⠿', '').trim())).toEqual([
+    const titles = editor.findAll('.drag-handle').map((handle) => handle.element.parentElement!.textContent!)
+    expect(titles.map((title) => title.replace('⠿', '').trim())).toEqual([
       'Harbour Library',
       'Lantern',
       'Tidewater Market',
       'Ferry Posters',
     ])
+    editor.unmount()
+  })
+})
+
+describe("a work's own page", () => {
+  it('gives a work a page from a layout and shows it in the preview', async () => {
+    const editor = await openEditor()
+    await editor
+      .findAll('[role="tab"]')
+      .find((tab) => tab.text() === 'Work')!
+      .trigger('click')
+    const harbour = editor.findAll('details').find((details) => details.text().includes('Harbour Library'))!
+    const button = (text: string) => harbour.findAll('button').find((candidate) => candidate.text().startsWith(text))!
+    await button('Give this work its own page').trigger('click')
+    await button('Case study').trigger('click')
+    const values = harbour.findAll('input').map((input) => (input.element as HTMLInputElement).value)
+    expect(values).toContain('harbour-library')
+    expect(harbour.findAll('section[aria-label^="Block "]')).toHaveLength(4)
+    expect(editor.find('section[aria-label="Preview"] h1').text()).toBe('Harbour Library')
     editor.unmount()
   })
 })
@@ -158,6 +178,19 @@ describe('click to edit', () => {
     const form = editor.find('section[aria-label="Block 2: Your work"]')
     expect(form.attributes('data-selected')).toBeDefined()
     expect(scrollIntoView.mock.contexts).toContain(form.element)
+    editor.unmount()
+  })
+
+  it("opens the Work tab and that work for a block on a work's own page", async () => {
+    const editor = await openEditor()
+    const lantern = demoContent.works[0]!
+    await editor.find('section[aria-label="Preview"] select').setValue(lantern.id)
+    await editor.find(`[data-block-id="${lantern.pageBlocks[1]!.id}"] p`).trigger('click')
+    await flushPromises()
+    expect(editor.find('[role="tab"][aria-selected="true"]').text()).toBe('Work')
+    const form = editor.find(`[data-block-form="${lantern.pageBlocks[1]!.id}"]`)
+    expect(form.element.closest('details')!.open).toBe(true)
+    expect(form.attributes('data-selected')).toBeDefined()
     editor.unmount()
   })
 

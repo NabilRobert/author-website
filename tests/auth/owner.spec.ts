@@ -47,6 +47,12 @@ describe('the owner bar', () => {
     page.unmount()
   })
 
+  it("opens the editor on a work's own page from that page", async () => {
+    const { page } = await open('/mara/work/lantern', { ...SITE, 'GET /api/me': json(MARA) })
+    expect(page.find('[aria-label="Your page"] a').attributes('href')).toBe('/mara/edit?work=lantern')
+    page.unmount()
+  })
+
   it('is not shown to visitors', async () => {
     const { page } = await open('/mara', { ...SITE, 'GET /api/me': json({ error: 'x' }, 401) })
     expect(page.find('[aria-label="Your page"]').exists()).toBe(false)
@@ -76,6 +82,17 @@ describe('the editor', () => {
       .find((button) => button.text() === 'Done')!
       .trigger('click')
     await vi.waitFor(() => expect(router.currentRoute.value.fullPath).toBe('/mara/work'))
+    page.unmount()
+  })
+
+  it("opens on a work's own page with ?work, and Done returns to it", async () => {
+    const { page, router } = await open('/mara/edit?work=lantern', editorApi)
+    expect(page.find('section[aria-label="Preview"] h1').text()).toBe('Lantern')
+    await page
+      .findAll('button')
+      .find((button) => button.text() === 'Done')!
+      .trigger('click')
+    await vi.waitFor(() => expect(router.currentRoute.value.fullPath).toBe('/mara/work/lantern'))
     page.unmount()
   })
 

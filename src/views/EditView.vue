@@ -43,16 +43,21 @@ const DIVIDER = [
   '[&>[class*=splitter]]:after:rounded-full [&>[class*=splitter]]:after:bg-panel-muted',
 ]
 
-// Preview the page the owner was viewing (?page=works), or the front page.
+// Preview the page the owner was viewing (?page=about, or ?work=lantern for
+// a work's own page), or the front page.
 watch(status, () => {
-  const wanted = draft.value.pages.find((page) => page.slug === String(route.query.page ?? ''))
-  previewPageId.value ||= wanted?.id ?? draft.value.pages[0]?.id ?? ''
+  const { pages, works } = draft.value
+  const wantedWork = route.query.work ? works.find((work) => work.pageSlug === String(route.query.work)) : undefined
+  const wantedPage = pages.find((page) => page.slug === String(route.query.page ?? ''))
+  previewPageId.value ||= wantedWork?.id ?? wantedPage?.id ?? pages[0]?.id ?? ''
 })
 
 // "Done": back to the public page being previewed, as visitors see it.
 function finishEditing() {
+  const work = draft.value.works.find((candidate) => candidate.id === previewPageId.value && candidate.pageSlug)
   const slug = draft.value.pages.find((page) => page.id === previewPageId.value)?.slug ?? ''
-  void router.push(slug ? `/${props.site}/${slug}` : `/${props.site}`)
+  const path = work ? `/work/${work.pageSlug}` : slug ? `/${slug}` : ''
+  void router.push(`/${props.site}${path}`)
 }
 
 // Leaving the editor inside the app with unsaved changes asks first; they

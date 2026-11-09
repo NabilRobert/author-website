@@ -63,6 +63,8 @@ export function newWork(): Work {
     imageCrop: centredCrop(),
     links: [],
     quotes: [],
+    pageSlug: '',
+    pageBlocks: [],
   }
 }
 
@@ -80,10 +82,15 @@ export function newNewsItem(today: Date): NewsItem {
 
 /** A new page with a free address based on its title: "New page" → /new-page, /new-page-2, … */
 export function newPage(title: string, takenSlugs: string[]): Page {
-  const base = slugify(title) || 'page'
+  return { id: crypto.randomUUID(), slug: uniqueSlug(title, takenSlugs, 'page'), title, showInMenu: true, blocks: [] }
+}
+
+/** An address made from `title` that isn't taken yet: "about", then "about-2", "about-3"… */
+export function uniqueSlug(title: string, takenSlugs: string[], fallback: string): string {
+  const base = slugify(title) || fallback
   let slug = base
   for (let suffix = 2; takenSlugs.includes(slug); suffix++) slug = `${base}-${suffix}`
-  return { id: crypto.randomUUID(), slug, title, showInMenu: true, blocks: [] }
+  return slug
 }
 
 /** "Tour Dates 2027!" → "tour-dates-2027"; accents are dropped ("Café" → "cafe"). */

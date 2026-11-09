@@ -85,7 +85,7 @@ function removeSelectedPage() {
       </section>
       <section>
         <h2 class="mb-4 text-xl font-semibold">Blocks on this page</h2>
-        <PageBlocksEditor v-model="draft.pages[selectedIndex]!" />
+        <PageBlocksEditor v-model="draft.pages[selectedIndex]!.blocks" />
       </section>
     </template>
   </div>
