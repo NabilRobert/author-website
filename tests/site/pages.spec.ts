@@ -101,6 +101,12 @@ describe('public pages', () => {
     expect(page.text()).toContain("The site couldn't load.")
   })
 
+  it('credits the builder in the footer with a link to his GitHub', async () => {
+    const page = await renderPage('/')
+    const credit = page.find('footer a[href="https://github.com/NabilRobert"]')
+    expect(credit.text()).toBe('@nabilrobert')
+  })
+
   it('an unknown address shows the not-found page', async () => {
     const page = await renderPage('/no-such-page')
     expect(page.find('h1').text()).toBe('Page not found')
