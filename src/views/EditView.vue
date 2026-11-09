@@ -13,10 +13,11 @@ import LayoutButtons from '@/editor/LayoutButtons.vue'
 // The editor: the Save bar on top, then the forms and a live preview of the
 // draft. On a wide screen they sit side by side with a divider to drag (all
 // the way to one side hides the other); on a narrow one they stack.
-const editor = createEditor()
-const { draft, status, loadError, isStarter, isRestored, isDirty } = editor
+const props = defineProps<{ site: string }>()
+const editor = createEditor(props.site)
+const { draft, status, loadError, ownName, isStarter, isRestored, isDirty } = editor
 provide(DRAFT_KEY, draft)
-useHead({ title: 'Edit your site', meta: [{ name: 'robots', content: 'noindex' }] })
+useHead({ title: 'Edit your page · Framed', meta: [{ name: 'robots', content: 'noindex' }] })
 
 // Tailwind's lg breakpoint: below it there is no room for two columns.
 const isWide = useWideScreen('64rem')
@@ -56,9 +57,19 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
   <div class="flex h-screen flex-col bg-panel-back font-sans text-panel-text [--font-heading:var(--font-sans)]">
     <p v-if="status === 'loading'" class="p-8 text-lg">Loading your site…</p>
     <div v-else-if="status === 'signed-out'" class="p-8 text-lg">
-      <p>Your sign-in has expired.</p>
-      <a href="/edit" class="mt-4 inline-block rounded-md bg-action px-6 py-3 font-semibold text-panel"
-        >Sign in again</a
+      <p>Log in to edit your page.</p>
+      <RouterLink
+        :to="{ path: '/login', query: { next: `/${site}/edit` } }"
+        class="mt-4 inline-block rounded-md bg-action px-6 py-3 font-semibold text-panel"
+        >Log in</RouterLink
+      >
+    </div>
+    <div v-else-if="status === 'not-yours'" class="p-8 text-lg">
+      <p>framed.my.id/{{ site }} isn't your page, so you can't edit it.</p>
+      <RouterLink
+        :to="ownName ? `/${ownName}/edit` : '/login'"
+        class="mt-4 inline-block rounded-md bg-action px-6 py-3 font-semibold text-panel"
+        >{{ ownName ? 'Edit your own page' : 'Make your own page' }}</RouterLink
       >
     </div>
     <p v-else-if="status === 'failed'" class="p-8 text-lg text-danger" role="alert">{{ loadError }}</p>
@@ -75,14 +86,14 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
       </p>
       <Splitpanes v-if="isWide" :class="DIVIDER" class="min-h-0 flex-1" @resized="editorShare = $event.panes[0]!.size">
         <Pane :size="editorShare" :min-size="0" class="overflow-y-auto">
-          <EditPanel v-model:preview-page-id="previewPageId" />
+          <EditPanel v-model:preview-page-id="previewPageId" :site="site" />
         </Pane>
         <Pane :size="100 - editorShare" :min-size="0" class="overflow-y-auto">
           <PreviewPanel v-model:page-id="previewPageId" :content="draft" />
         </Pane>
       </Splitpanes>
       <div v-else class="min-h-0 flex-1 overflow-y-auto">
-        <EditPanel v-model:preview-page-id="previewPageId" />
+        <EditPanel v-model:preview-page-id="previewPageId" :site="site" />
         <PreviewPanel v-model:page-id="previewPageId" :content="draft" />
       </div>
     </template>

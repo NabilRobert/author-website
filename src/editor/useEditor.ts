@@ -6,14 +6,13 @@
  */
 import { computed, inject, ref, watch } from 'vue'
 import type { InjectionKey, Ref } from 'vue'
-import { siteContentSchema } from '@shared/schema'
 import type { SiteContent } from '@shared/schema'
 import { demoContent } from '@shared/demo-content'
-import { fetchDraft, problemsResult, sendDraft } from '@/editor/editorApi'
+import { fetchDraft, saveDraft } from '@/editor/editorApi'
 import type { SaveResult } from '@/editor/editorApi'
 import { clearBackup, keepBackup, takeBackup } from '@/editor/draftBackup'
 
-export type EditorStatus = 'loading' | 'ready' | 'signed-out' | 'failed'
+export type EditorStatus = 'loading' | 'ready' | 'signed-out' | 'not-yours' | 'failed'
 
 export const DRAFT_KEY: InjectionKey<Ref<SiteContent>> = Symbol('draft')
 
@@ -24,17 +23,20 @@ export function useDraft(): Ref<SiteContent> {
   return draft
 }
 
-export function createEditor() {
+/** The editor for framed.my.id/<site>, which must belong to whoever is logged in. */
+export function createEditor(site: string) {
   const draft = ref<SiteContent>(structuredClone(demoContent))
   const savedCopy = ref('')
   const status = ref<EditorStatus>('loading')
   const loadError = ref('')
+  // When the page belongs to someone else: the logged-in person's own page.
+  const ownName = ref<string | null>(null)
   // True while showing the example content of a site never saved before.
   const isStarter = ref(false)
   const isSaving = ref(false)
   const lastSave = ref<SaveResult | null>(null)
   const isDirty = computed(() => JSON.stringify(draft.value) !== savedCopy.value)
-  const backup = useDraftBackup(draft, isDirty, status)
+  const backup = useDraftBackup(site, draft, isDirty, status)
 
   function keepAsSaved(content: SiteContent) {
     draft.value = content
@@ -42,8 +44,9 @@ export function createEditor() {
   }
 
   async function load(): Promise<void> {
-    const result = await fetchDraft()
+    const result = await fetchDraft(site)
     if (result.kind === 'loaded') keepAsSaved(result.content)
+    if (result.kind === 'not-yours') ownName.value = result.ownName
     if (result.kind === 'empty') isStarter.value = true
     if (result.kind === 'failed') loadError.value = result.message
     const isReady = result.kind === 'loaded' || result.kind === 'empty'
@@ -52,13 +55,8 @@ export function createEditor() {
   }
 
   async function save(): Promise<void> {
-    const checked = siteContentSchema.safeParse(draft.value)
-    if (!checked.success) {
-      lastSave.value = problemsResult('Some fields need fixing first:', checked.error.issues, draft.value)
-      return
-    }
     isSaving.value = true
-    lastSave.value = await sendDraft(checked.data)
+    lastSave.value = await saveDraft(draft.value)
     isSaving.value = false
     if (lastSave.value.isSaved) {
       keepAsSaved(lastSave.value.content)
@@ -67,7 +65,7 @@ export function createEditor() {
   }
 
   const { isRestored } = backup
-  return { draft, status, loadError, isStarter, isRestored, isSaving, isDirty, lastSave, load, save }
+  return { site, draft, status, loadError, ownName, isStarter, isRestored, isSaving, isDirty, lastSave, load, save }
 }
 
 /**
@@ -75,11 +73,11 @@ export function createEditor() {
  * once all is saved (src/editor/draftBackup.ts). `restore` brings back a
  * backup from an earlier visit, if it was made from the same saved version.
  */
-function useDraftBackup(draft: Ref<SiteContent>, isDirty: Ref<boolean>, status: Ref<EditorStatus>) {
+function useDraftBackup(site: string, draft: Ref<SiteContent>, isDirty: Ref<boolean>, status: Ref<EditorStatus>) {
   const isRestored = ref(false)
 
   function restore(saved: SiteContent | null) {
-    const backup = takeBackup(saved)
+    const backup = takeBackup(site, saved)
     if (backup) draft.value = backup
     isRestored.value = backup !== null
   }
@@ -88,8 +86,8 @@ function useDraftBackup(draft: Ref<SiteContent>, isDirty: Ref<boolean>, status: 
     draft,
     () => {
       if (status.value !== 'ready') return
-      if (isDirty.value) keepBackup(draft.value)
-      else clearBackup()
+      if (isDirty.value) keepBackup(site, draft.value)
+      else clearBackup(site)
     },
     { deep: true },
   )

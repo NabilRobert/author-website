@@ -9,6 +9,7 @@ import LookTab from '@/editor/tabs/LookTab.vue'
 // The editing side: the tabs and the active tab's forms. The page picked in
 // the Pages tab is the one the preview shows.
 const previewPageId = defineModel<string>('previewPageId', { required: true })
+defineProps<{ site: string }>()
 
 const TABS = [
   { key: 'pages', label: 'Pages' },
@@ -38,7 +39,7 @@ const activeTab = ref<(typeof TABS)[number]['key']>('pages')
     <PagesTab v-if="activeTab === 'pages'" v-model:page-id="previewPageId" />
     <BooksTab v-else-if="activeTab === 'books'" />
     <NewsTab v-else-if="activeTab === 'news'" />
-    <AuthorTab v-else-if="activeTab === 'author'" />
+    <AuthorTab v-else-if="activeTab === 'author'" :site="site" />
     <LookTab v-else />
   </section>
 </template>

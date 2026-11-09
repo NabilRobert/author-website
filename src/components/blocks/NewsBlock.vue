@@ -4,10 +4,12 @@ import type { BlockOf } from '@shared/blocks'
 import type { NewsItem } from '@shared/schema'
 import { formatDate, newestFirst, paragraphs } from '@/content/format'
 import BlockHeading from '@/components/ui/BlockHeading.vue'
+import { useSitePath } from '@/content/sitePath'
 
 // News posts and events from the News tab, newest first; the block's limit
 // shows only the latest few.
 const props = defineProps<{ block: BlockOf<'news'>; items: NewsItem[] }>()
+const sitePath = useSitePath()
 const shown = computed(() => newestFirst(props.items).slice(0, props.block.limit ?? undefined))
 </script>
 
@@ -41,7 +43,7 @@ const shown = computed(() => newestFirst(props.items).slice(0, props.block.limit
     </ol>
     <RouterLink
       v-if="block.limit && items.length > block.limit"
-      to="/news"
+      :to="sitePath('/news')"
       class="mt-8 inline-block font-sans text-accent underline"
       >All news and events</RouterLink
     >

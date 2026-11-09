@@ -1,25 +1,23 @@
 /**
- * The editor's two calls to its API (server/admin-routes.ts), turned into
+ * The editor's calls to the API (server/me-routes.ts), turned into
  * results the editor can show: every failure becomes a sentence saying what
  * happened and what to do.
  */
+import { siteContentSchema } from '@shared/schema'
 import type { SiteContent } from '@shared/schema'
+import { fetchMe } from '@/auth/account'
 import { describeLocation } from '@/editor/problems'
 import type { SaveProblem } from '@/editor/problems'
 
-const API = '/api/admin/content'
+const API = '/api/me/content'
 const NO_CONNECTION =
   "Couldn't reach the site. Check your internet connection and try again. Your changes are still here."
 const SIGNED_OUT =
-  'Your sign-in has expired. Reload this page to sign in again; your unsaved changes are kept on this computer and will come back.'
-
-// Marks requests as coming from the page. Without it, Cloudflare Access
-// answers a request with an expired sign-in by redirecting to its login
-// page, which the editor can't show; with it, Access answers 401.
-const FROM_THE_PAGE = { 'X-Requested-With': 'XMLHttpRequest' }
+  'Your login has expired. Log in again at framed.my.id/login in a new tab, then save here: your changes are kept on this computer.'
 
 export type LoadResult =
   | { kind: 'loaded'; content: SiteContent }
+  | { kind: 'not-yours'; ownName: string | null }
   | { kind: 'empty' }
   | { kind: 'signed-out' }
   | { kind: 'failed'; message: string }
@@ -36,8 +34,23 @@ interface ErrorBody {
   issues?: Issue[]
 }
 
-export async function fetchDraft(): Promise<LoadResult> {
-  const response = await fetch(API, { cache: 'no-store', headers: FROM_THE_PAGE }).catch(() => null)
+/** The site to edit, if it belongs to whoever is logged in. */
+export async function fetchDraft(site: string): Promise<LoadResult> {
+  const refusal = await checkOwner(site)
+  return refusal ?? fetchOwnContent()
+}
+
+/** Why this person can't edit `site`, or null if it is theirs. */
+async function checkOwner(site: string): Promise<LoadResult | null> {
+  const me = await fetchMe().catch(() => undefined)
+  if (me === undefined) return { kind: 'failed', message: NO_CONNECTION }
+  if (me === null) return { kind: 'signed-out' }
+  if (me.site?.name !== site) return { kind: 'not-yours', ownName: me.site?.name ?? null }
+  return null
+}
+
+async function fetchOwnContent(): Promise<LoadResult> {
+  const response = await fetch(API, { cache: 'no-store' }).catch(() => null)
   if (!response) return { kind: 'failed', message: NO_CONNECTION }
   if (response.status === 401) return { kind: 'signed-out' }
   if (response.status === 404) return { kind: 'empty' }
@@ -45,8 +58,15 @@ export async function fetchDraft(): Promise<LoadResult> {
   return { kind: 'loaded', content: (await response.json()) as SiteContent }
 }
 
-export async function sendDraft(content: SiteContent): Promise<SaveResult> {
-  const headers = { ...FROM_THE_PAGE, 'Content-Type': 'application/json' }
+/** Checks the draft with the schema first (listing problems right away), then saves it. */
+export async function saveDraft(draft: SiteContent): Promise<SaveResult> {
+  const checked = siteContentSchema.safeParse(draft)
+  if (!checked.success) return problemsResult('Some fields need fixing first:', checked.error.issues, draft)
+  return sendDraft(checked.data)
+}
+
+async function sendDraft(content: SiteContent): Promise<SaveResult> {
+  const headers = { 'Content-Type': 'application/json' }
   const response = await fetch(API, { method: 'PUT', body: JSON.stringify(content), headers }).catch(() => null)
   if (!response) return { isSaved: false, text: NO_CONNECTION, problems: [] }
   if (response.status === 401) return { isSaved: false, text: SIGNED_OUT, problems: [] }
@@ -74,9 +94,7 @@ export type UploadResult = { isUploaded: true; key: string } | { isUploaded: fal
 export async function uploadImage(file: File): Promise<UploadResult> {
   const form = new FormData()
   form.set('image', file)
-  const response = await fetch('/api/admin/images', { method: 'POST', body: form, headers: FROM_THE_PAGE }).catch(
-    () => null,
-  )
+  const response = await fetch('/api/me/images', { method: 'POST', body: form }).catch(() => null)
   if (!response) return { isUploaded: false, message: NO_CONNECTION }
   if (response.status === 401) return { isUploaded: false, message: SIGNED_OUT }
   if (!response.ok) {

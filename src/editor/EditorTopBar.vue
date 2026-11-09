@@ -1,10 +1,18 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import type { Editor } from '@/editor/useEditor'
+import { authClient } from '@/auth/authClient'
 
 // The bar along the top of the editor: whether there are unsaved changes,
 // the Save button, and what happened on the last save.
 const props = defineProps<{ editor: Editor }>()
-const { isDirty, isSaving, lastSave } = props.editor
+const { site, isDirty, isSaving, lastSave } = props.editor
+const router = useRouter()
+
+async function logOut() {
+  await authClient.signOut()
+  await router.push('/')
+}
 </script>
 
 <template>
@@ -18,8 +26,8 @@ const { isDirty, isSaving, lastSave } = props.editor
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <slot />
-        <a href="/" target="_blank" class="rounded-md border border-panel-line px-4 py-3">View the site</a>
-        <a href="/cdn-cgi/access/logout" class="rounded-md border border-panel-line px-4 py-3">Sign out</a>
+        <a :href="`/${site}`" target="_blank" class="rounded-md border border-panel-line px-4 py-3">View my page</a>
+        <button type="button" class="rounded-md border border-panel-line px-4 py-3" @click="logOut">Log out</button>
         <button
           type="button"
           :disabled="isSaving || !isDirty"

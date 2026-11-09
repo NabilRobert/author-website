@@ -10,19 +10,20 @@
 import { siteContentSchema } from '@shared/schema'
 import type { SiteContent } from '@shared/schema'
 
-const BACKUP_KEY = 'author-site:unsaved-draft'
+// One backup per site, in case one browser edits more than one.
+const backupKey = (site: string) => `framed:unsaved-draft:${site}`
 
-export function keepBackup(draft: SiteContent): void {
+export function keepBackup(site: string, draft: SiteContent): void {
   try {
-    localStorage.setItem(BACKUP_KEY, JSON.stringify(draft))
+    localStorage.setItem(backupKey(site), JSON.stringify(draft))
   } catch {
     // No room or no storage: nothing to do but carry on without a backup.
   }
 }
 
-export function clearBackup(): void {
+export function clearBackup(site: string): void {
   try {
-    localStorage.removeItem(BACKUP_KEY)
+    localStorage.removeItem(backupKey(site))
   } catch {
     // Storage switched off: there is no backup to clear.
   }
@@ -33,19 +34,19 @@ export function clearBackup(): void {
  * `saved` (so restoring it can't undo newer work), otherwise null. A backup
  * that no longer matches is thrown away.
  */
-export function takeBackup(saved: SiteContent | null): SiteContent | null {
-  const backup = readBackup()
+export function takeBackup(site: string, saved: SiteContent | null): SiteContent | null {
+  const backup = readBackup(site)
   if (!backup) return null
   if (backup.updatedAt !== (saved?.updatedAt ?? '')) {
-    clearBackup()
+    clearBackup(site)
     return null
   }
   return backup
 }
 
-function readBackup(): SiteContent | null {
+function readBackup(site: string): SiteContent | null {
   try {
-    const parsed = siteContentSchema.safeParse(JSON.parse(localStorage.getItem(BACKUP_KEY) ?? 'null'))
+    const parsed = siteContentSchema.safeParse(JSON.parse(localStorage.getItem(backupKey(site)) ?? 'null'))
     return parsed.success ? parsed.data : null
   } catch {
     return null

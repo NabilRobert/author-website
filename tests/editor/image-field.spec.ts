@@ -26,7 +26,7 @@ describe('ImageField', () => {
     vi.stubGlobal('fetch', fetchStub)
     const { wrapper, updates } = mountField()
     await choose(wrapper, new File(['png'], 'cover.png', { type: 'image/png' }))
-    expect(fetchStub).toHaveBeenCalledWith('/api/admin/images', expect.objectContaining({ method: 'POST' }))
+    expect(fetchStub).toHaveBeenCalledWith('/api/me/images', expect.objectContaining({ method: 'POST' }))
     expect(updates).toEqual(['images/new.png'])
   })
 

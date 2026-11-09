@@ -1,26 +1,29 @@
 /**
- * The site's content, loaded once from the API (GET /api/content) and
- * shared by every page. The app shows the pages only once it has loaded,
- * so components below it can use `useSiteContent()` without null checks.
+ * The content of the site being viewed, loaded from the API
+ * (GET /api/sites/<name>/content) and shared by every page of that site.
+ * SiteLayout shows the pages only once it has loaded, so components below
+ * it can use `useSiteContent()` without null checks.
  */
 import { computed, ref, shallowRef } from 'vue'
 import type { SiteContent } from '@shared/schema'
 
-/** Where loading stands: the app shows a message for each state but 'ready'. */
-export type LoadStatus = 'loading' | 'ready' | 'not-set-up' | 'failed'
+/** Where loading stands: SiteLayout shows a message for each state but 'ready'. */
+export type LoadStatus = 'loading' | 'ready' | 'not-set-up' | 'no-site' | 'failed'
 
 const loadedContent = shallowRef<SiteContent | null>(null)
 const status = ref<LoadStatus>('loading')
 
-export async function loadSiteContent(): Promise<void> {
+export async function loadSiteContent(siteName: string): Promise<void> {
   status.value = 'loading'
+  loadedContent.value = null
   try {
-    const response = await fetch('/api/content')
+    const response = await fetch(`/api/sites/${encodeURIComponent(siteName)}/content`)
     if (response.status === 404) {
-      status.value = 'not-set-up'
+      const body = (await response.json().catch(() => ({}))) as { reason?: string }
+      status.value = body.reason === 'not-set-up' ? 'not-set-up' : 'no-site'
       return
     }
-    if (!response.ok) throw new Error(`GET /api/content answered ${response.status}`)
+    if (!response.ok) throw new Error(`GET /api/sites/${siteName}/content answered ${response.status}`)
     loadedContent.value = (await response.json()) as SiteContent
     status.value = 'ready'
   } catch (error) {

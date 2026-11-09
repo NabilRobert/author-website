@@ -5,6 +5,7 @@ import { createMemoryHistory } from 'vue-router'
 import { createAppRouter } from '@/router'
 import EditView from '@/views/EditView.vue'
 import { demoContent } from '@shared/demo-content'
+import { fakeApi, json } from '../fake-api'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -17,13 +18,17 @@ function pretendScreenIsWide() {
 }
 
 async function openEditor() {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async () => Response.json({ ...demoContent, updatedAt: 'saved' })),
-  )
+  fakeApi({
+    'GET /api/me': json({ email: 'mara@example.com', site: { name: 'mara' } }),
+    'GET /api/me/content': json({ ...demoContent, updatedAt: 'saved' }),
+  })
   const router = createAppRouter(createMemoryHistory())
-  await router.push('/edit')
-  const wrapper = mount(EditView, { global: { plugins: [router, createHead()] }, attachTo: document.body })
+  await router.push('/mara/edit')
+  const wrapper = mount(EditView, {
+    props: { site: 'mara' },
+    global: { plugins: [router, createHead()] },
+    attachTo: document.body,
+  })
   await flushPromises()
   return wrapper
 }
