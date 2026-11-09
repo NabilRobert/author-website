@@ -213,3 +213,18 @@ describe('click to edit', () => {
     editor.unmount()
   })
 })
+
+describe('the Help tab', () => {
+  it('explains how to do things, one topic at a time, without changing the page', async () => {
+    const editor = await openEditor()
+    await editor
+      .findAll('[role="tab"]')
+      .find((tab) => tab.text() === 'Help')!
+      .trigger('click')
+    const topics = editor.findAll('section[aria-label="Edit"] details summary').map((summary) => summary.text())
+    expect(topics).toContain('Change something on your page')
+    expect(topics).toContain('Show your work, each with its own page')
+    expect(editor.text()).toContain('Everything is saved.')
+    editor.unmount()
+  })
+})

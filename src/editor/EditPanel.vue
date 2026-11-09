@@ -6,6 +6,7 @@ import WorksTab from '@/editor/tabs/WorksTab.vue'
 import NewsTab from '@/editor/tabs/NewsTab.vue'
 import ProfileTab from '@/editor/tabs/ProfileTab.vue'
 import LookTab from '@/editor/tabs/LookTab.vue'
+import HelpTab from '@/editor/tabs/HelpTab.vue'
 
 // The editing side: the tabs and the active tab's forms. The page picked in
 // the Pages tab is the one the preview shows.
@@ -18,6 +19,7 @@ const TABS = [
   { key: 'news', label: 'News' },
   { key: 'profile', label: 'About you' },
   { key: 'look', label: 'Look' },
+  { key: 'help', label: 'Help' },
 ] as const
 const activeTab = ref<(typeof TABS)[number]['key']>('pages')
 
@@ -53,6 +55,7 @@ function openWork(workId: string) {
     <WorksTab v-else-if="activeTab === 'works'" @open-work="openWork" />
     <NewsTab v-else-if="activeTab === 'news'" />
     <ProfileTab v-else-if="activeTab === 'profile'" :site="site" />
-    <LookTab v-else />
+    <LookTab v-else-if="activeTab === 'look'" />
+    <HelpTab v-else />
   </section>
 </template>

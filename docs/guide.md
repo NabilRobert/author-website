@@ -352,6 +352,8 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Change how a selected block looks:** the outline classes
   (`BLOCK_OUTLINES`) in `src/editor/SitePreview.vue`, and the `data-selected:`
   classes in `src/editor/tabs/PageBlocksEditor.vue`.
+- **Change the editor's how-tos:** `HOW_TOS` in `src/editor/tabs/HelpTab.vue`;
+  update it when a button or tab is renamed.
 - **Change a label or hint in the editor:** the form components in
   `src/editor/tabs/` and `src/editor/block-forms/`.
 - **Change an error message people see:** field rules in
