@@ -130,6 +130,41 @@ describe('the Works tab', () => {
   })
 })
 
+describe('minimising blocks', () => {
+  const blockForm = (editor: Editor, number: number) => editor.find(`section[aria-label^="Block ${number}:"]`)
+  const formIsShown = (section: ReturnType<typeof blockForm>) =>
+    (section.find('[id^="block-form-"]').element as HTMLElement).style.display !== 'none'
+
+  it('folds a block to its title row with a reminder of its heading, and opens it again', async () => {
+    const editor = await openEditor()
+    const toggle = blockForm(editor, 2).find('button[aria-expanded]')
+    await toggle.trigger('click')
+    expect(toggle.attributes('aria-expanded')).toBe('false')
+    expect(formIsShown(blockForm(editor, 2))).toBe(false)
+    expect(blockForm(editor, 2).text()).toContain('Latest work')
+    expect(formIsShown(blockForm(editor, 1))).toBe(true)
+    await toggle.trigger('click')
+    expect(formIsShown(blockForm(editor, 2))).toBe(true)
+    editor.unmount()
+  })
+
+  it('opens a minimised block when it is clicked in the preview', async () => {
+    Element.prototype.scrollIntoView = vi.fn()
+    const editor = await openEditor()
+    await editor
+      .findAll('button')
+      .find((button) => button.text() === 'Minimise all')!
+      .trigger('click')
+    expect(formIsShown(blockForm(editor, 3))).toBe(false)
+    const newsBlock = demoContent.pages[0]!.blocks[2]!
+    await editor.find(`[data-block-id="${newsBlock.id}"] h2`).trigger('click')
+    await flushPromises()
+    expect(formIsShown(blockForm(editor, 3))).toBe(true)
+    expect(formIsShown(blockForm(editor, 2))).toBe(false)
+    editor.unmount()
+  })
+})
+
 describe('click to edit', () => {
   // jsdom has no layout, so it has no scrollIntoView; record the calls instead.
   const scrollIntoView = vi.fn()
