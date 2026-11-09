@@ -54,6 +54,17 @@ describe('content store', () => {
     expect((await loadContent(db))?.author.name).toBe('Sári Đặng 张伟 — “quoted”')
   })
 
+  it('still loads a block saved before a newer field existed', async () => {
+    await saveContent(db, demoContent, SAVED_AT)
+    await db
+      .prepare(
+        "UPDATE blocks SET fields_json = json_remove(fields_json, '$.imageDescription') WHERE type = 'imageText'",
+      )
+      .run()
+    const about = (await loadContent(db))?.pages.find((page) => page.slug === 'about')
+    expect(about?.blocks[0]).toMatchObject({ type: 'imageText', imageDescription: '' })
+  })
+
   it('leaves the old content when a save fails part-way', async () => {
     const first = await saveContent(db, demoContent, SAVED_AT)
     // Two books with one id break the books table's primary key mid-batch.

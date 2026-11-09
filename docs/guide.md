@@ -100,6 +100,22 @@ sequenceDiagram
    (`src/editor/problems.ts`). Then `sendDraft` sends it; the API checks
    it again, refuses a save from an older copy (409), and writes it.
 
+### Pictures
+
+1. In a picture field (`src/editor/fields/ImageField.vue`) the owner picks
+   a file. The editor checks its type and size first (`shared/images.ts`).
+2. `uploadImage` (`src/editor/editorApi.ts`) sends it to
+   `POST /api/admin/images` (`server/image-routes.ts`), behind the same
+   sign-in check. The API checks again, including the file's first bytes,
+   and stores it in R2 as `images/<random id>.<jpg|png|webp>`.
+3. The returned key goes into the draft (a cover, a photo, a banner); the
+   preview shows it straight away. It goes live when the owner saves.
+4. Visitors load it from `GET /api/images/<id>.png`, cached for a year (a
+   key is never reused, so the picture behind it never changes).
+
+A picture uploaded but never saved stays in R2 unused. At this size that's
+harmless.
+
 The site's colours and fonts come from `content.theme`:
 `src/composables/useSiteTheme.ts` turns them into CSS variables
 (`src/content/themeVariables.ts`) on the page and loads the chosen fonts
@@ -155,8 +171,13 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   the site until it is saved.
 - **Stale save**: a save made from an older copy than the one stored; the
   API refuses it (409) so it can't undo newer changes.
+- **R2**: Cloudflare's file storage, here for pictures. The bucket is
+  private; pictures are served through the API.
+- **Magic bytes**: the first bytes every file of a type starts with (a PNG
+  starts `89 50 4E 47`). The API checks them so a renamed file is refused.
 - **Image key**: the name an uploaded image is stored under, like
-  `images/<id>.jpg`; the site loads it from `/api/images/<key>`.
+  `images/<id>.jpg`; the site loads it from `/api/images/<id>.jpg`
+  (`src/content/format.ts: imageUrl`).
 
 ## Where to change things
 
@@ -183,6 +204,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   `src/editor/editorApi.ts`.
 - **Add an API address:** a route in `server/app.ts`, with a test in
   `tests/api/`.
+- **Add a field to a block:** give it a `.default(…)` in
+  `shared/blocks.ts`. Blocks are stored as JSON, so sites saved before the
+  field existed don't have it; without a default they would fail to load.
 - **Change the database tables:** add a new numbered file in `migrations/`
   (never edit one that has been applied), then update
   `server/content-read.ts` and `server/content-write.ts`.

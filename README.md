@@ -10,8 +10,8 @@ Built with Vue 3, TypeScript, Tailwind and Vite. Runs on Cloudflare (free
 plan): Pages for the site, a Pages Function (Hono) for the API, D1 for the
 content and R2 for images.
 
-> Status: the public site and the editor (`/edit`) work locally. Image
-> upload and the deploy checklist come next. Demo content is an invented
+> Status: the public site, the editor (`/edit`) and picture upload work
+> locally. The deploy checklist comes next. Demo content is an invented
 > author, "Mara Ellison".
 
 ## Run it
@@ -32,7 +32,7 @@ npm run check              # types, lint, format, tests and build (what CI runs)
 | --- | --- |
 | `shared/` | The content's shape: `schema.ts` (author, books, news, pages), `blocks.ts` (block types), `theme.ts` (colours and fonts), `fields.ts` (field rules), `demo-content.ts` |
 | `functions/api/` | The Pages Function entry: hands every `/api/*` request to the API |
-| `server/` | The API (Hono): `app.ts` and `admin-routes.ts` route, `access.ts` checks the sign-in, `content-read.ts` and `content-write.ts` for D1 |
+| `server/` | The API (Hono): `app.ts` and `admin-routes.ts` route, `access.ts` checks the sign-in, `content-read.ts` and `content-write.ts` for D1, `image-routes.ts` for pictures in R2 |
 | `migrations/` | The D1 tables, as numbered SQL files |
 | `src/views/` | `PageView.vue` finds a page by its address and shows its blocks; `EditView.vue` is the editor |
 | `src/editor/` | The editor: its state and API calls, the tabs, a form per block type, form fields, the preview |

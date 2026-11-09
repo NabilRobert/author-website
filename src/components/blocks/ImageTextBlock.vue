@@ -13,7 +13,7 @@ defineProps<{ block: BlockOf<'imageText'> }>()
     <img
       v-if="block.imageKey"
       :src="imageUrl(block.imageKey)"
-      alt=""
+      :alt="block.imageDescription"
       class="w-full max-w-72 rounded-sm object-cover shadow-md"
       :class="{ 'md:order-2': block.imageSide === 'right' }"
     />

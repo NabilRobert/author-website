@@ -2,6 +2,7 @@
 import type { Book } from '@shared/schema'
 import TextField from '@/editor/fields/TextField.vue'
 import NumberField from '@/editor/fields/NumberField.vue'
+import ImageField from '@/editor/fields/ImageField.vue'
 import LinkListField from '@/editor/fields/LinkListField.vue'
 import ReviewListField from '@/editor/tabs/ReviewListField.vue'
 
@@ -12,6 +13,11 @@ const book = defineModel<Book>({ required: true })
 <template>
   <div class="space-y-4">
     <TextField v-model="book.title" label="Title" />
+    <ImageField
+      v-model="book.coverKey"
+      label="Cover"
+      hint="Until you add one, the site shows a plain cover with the title."
+    />
     <div class="grid gap-4 sm:grid-cols-[1fr_auto]">
       <TextField v-model="book.seriesName" label="Series" hint="Leave empty if the book stands alone." />
       <NumberField v-model="book.seriesPosition" label="Number in series" />

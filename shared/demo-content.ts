@@ -131,7 +131,15 @@ export const demoContent: SiteContent = {
       title: 'About',
       showInMenu: true,
       blocks: [
-        { id: id(301), type: 'imageText', heading: 'About Mara', body: ABOUT_TEXT, imageKey: null, imageSide: 'left' },
+        {
+          id: id(301),
+          type: 'imageText',
+          heading: 'About Mara',
+          body: ABOUT_TEXT,
+          imageKey: null,
+          imageDescription: '',
+          imageSide: 'left',
+        },
         {
           id: id(302),
           type: 'list',

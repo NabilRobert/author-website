@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Book } from '@shared/schema'
-import { formatDate, groupBooksBySeries, newestFirst, paragraphs, seriesLabel } from '@/content/format'
+import { formatDate, groupBooksBySeries, imageUrl, newestFirst, paragraphs, seriesLabel } from '@/content/format'
 import { demoContent } from '@shared/demo-content'
 
 function book(title: string, seriesName = '', seriesPosition: number | null = null): Book {
@@ -47,6 +47,14 @@ describe('formatDate', () => {
 describe('paragraphs', () => {
   it('splits on blank lines and drops empty ones', () => {
     expect(paragraphs('One.\n\n\nTwo\nstill two.\n\n')).toEqual(['One.', 'Two\nstill two.'])
+  })
+})
+
+describe('imageUrl', () => {
+  it('points at the address the API serves the picture from', () => {
+    expect(imageUrl('images/0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e01.png')).toBe(
+      '/api/images/0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e01.png',
+    )
   })
 })
 

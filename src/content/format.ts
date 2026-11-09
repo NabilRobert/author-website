@@ -63,7 +63,10 @@ export function paragraphs(text: string): string[] {
     .filter(Boolean)
 }
 
-/** Where the browser loads a stored image from (served by the API). */
+/**
+ * Where the browser loads a stored image from: the key `images/<id>.png`
+ * is served at `/api/images/<id>.png` (server/image-routes.ts).
+ */
 export function imageUrl(key: string): string {
-  return `/api/images/${key}`
+  return `/api/${key}`
 }

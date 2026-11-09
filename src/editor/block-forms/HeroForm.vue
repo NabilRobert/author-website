@@ -2,6 +2,7 @@
 import type { BlockOf } from '@shared/blocks'
 import TextField from '@/editor/fields/TextField.vue'
 import ColourField from '@/editor/fields/ColourField.vue'
+import ImageField from '@/editor/fields/ImageField.vue'
 
 const block = defineModel<BlockOf<'hero'>>({ required: true })
 </script>
@@ -15,6 +16,11 @@ const block = defineModel<BlockOf<'hero'>>({ required: true })
       v-model="block.buttonUrl"
       label="Button link"
       hint="A page on this site, like /books, or a full web address."
+    />
+    <ImageField
+      v-model="block.imageKey"
+      label="Background picture"
+      hint="Optional. It is dimmed so the words stay readable."
     />
     <div class="grid gap-4 sm:grid-cols-2">
       <ColourField v-model="block.backgroundColour" label="Banner colour" can-be-empty />

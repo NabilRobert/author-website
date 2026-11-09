@@ -4,6 +4,9 @@
  * text, list, quote, buttons); others show the author's books, news or
  * contact details, which are kept once and edited in their own tabs.
  *
+ * A field added after launch needs a `.default(…)`, so blocks saved before
+ * it existed still load (see imageDescription).
+ *
  * To add a block type: add its schema here, add it to `blockSchema`, give it
  * a name in `BLOCK_NAMES`, and add a component in src/components/blocks/.
  */
@@ -37,6 +40,9 @@ const imageTextBlock = z.object({
   heading: shortText,
   body: longText,
   imageKey,
+  // Read aloud to visitors who can't see the picture. Added after the first
+  // saves, hence the default.
+  imageDescription: shortText.default(''),
   imageSide: z.enum(['left', 'right']),
 })
 

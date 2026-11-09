@@ -2,6 +2,7 @@
 import { useDraft } from '@/editor/useEditor'
 import TextField from '@/editor/fields/TextField.vue'
 import LinkListField from '@/editor/fields/LinkListField.vue'
+import ImageField from '@/editor/fields/ImageField.vue'
 
 // The author's details, shown by the contact and press-kit blocks and used
 // as the site's name and description.
@@ -16,6 +17,11 @@ const draft = useDraft()
       label="Short bio"
       hint="Two or three sentences. Used in the press kit and by search engines."
       multiline
+    />
+    <ImageField
+      v-model="draft.author.photoKey"
+      label="Author photo"
+      hint="Offered for download in the press kit. Use a photo you have the rights to share."
     />
     <TextField v-model="draft.author.contactEmail" label="Contact email" type="email" hint="Shown on the site." />
     <TextField

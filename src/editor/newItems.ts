@@ -19,7 +19,7 @@ const NEW_BLOCK_FIELDS: { [T in BlockType]: () => BlockFields[T] } = {
     textColour: '',
   }),
   text: () => ({ heading: '', body: 'Write here.' }),
-  imageText: () => ({ heading: '', body: '', imageKey: null, imageSide: 'left' }),
+  imageText: () => ({ heading: '', body: '', imageKey: null, imageDescription: '', imageSide: 'left' }),
   list: () => ({ heading: '', numbered: false, items: ['First item'] }),
   quote: () => ({ quote: 'The quote.', source: '' }),
   buttons: () => ({ heading: '', links: [{ label: 'Button', url: '/' }] }),

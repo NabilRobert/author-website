@@ -59,3 +59,18 @@ export function problemsResult(text: string, issues: Issue[], content: SiteConte
 async function readError(response: Response): Promise<ErrorBody> {
   return ((await response.json().catch(() => null)) ?? {}) as ErrorBody
 }
+
+export type UploadResult = { isUploaded: true; key: string } | { isUploaded: false; message: string }
+
+/** Sends one picture to R2 through the API; the key goes into the draft. */
+export async function uploadImage(file: File): Promise<UploadResult> {
+  const form = new FormData()
+  form.set('image', file)
+  const response = await fetch('/api/admin/images', { method: 'POST', body: form }).catch(() => null)
+  if (!response) return { isUploaded: false, message: NO_CONNECTION }
+  if (!response.ok) {
+    const message = (await readError(response)).error ?? 'The upload failed. Try again in a minute.'
+    return { isUploaded: false, message }
+  }
+  return { isUploaded: true, key: ((await response.json()) as { key: string }).key }
+}
