@@ -43,7 +43,7 @@ function resetTheme() {
         Hard to read: {{ hardToRead.join(', ') }}. Pick colours further apart (one darker, one lighter).
       </p>
     </div>
-    <PatternField v-model="draft.theme.backgroundPattern" :theme="draft.theme" />
+    <PatternField v-model="draft.theme" />
     <ImageField
       v-model="draft.theme.backgroundImageKey"
       label="Background picture"

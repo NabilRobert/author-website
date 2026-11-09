@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { reactive } from 'vue'
 import { BACKGROUND_PATTERNS, DEFAULT_THEME, themeSchema } from '@shared/theme'
-import type { BackgroundPattern } from '@shared/theme'
+import type { BackgroundPattern, Theme } from '@shared/theme'
 import { backgroundVariables } from '@/content/backgroundStyle'
 import PatternField from '@/editor/fields/PatternField.vue'
 
@@ -43,14 +44,43 @@ describe('theme schema backgrounds', () => {
   })
 })
 
+describe('pattern colours', () => {
+  it('paints the pattern in the owner colours and keeps automatic ones faint', () => {
+    const theme = { ...DEFAULT_THEME, backgroundPattern: 'argyle' as const }
+    const variables = backgroundVariables({ ...theme, patternColours: ['#aa0000', '', '#0000aa', '#fafafa'] })
+    expect(variables['--site-background-image']).toContain('#aa0000')
+    expect(variables['--site-background-image']).toContain('#0000aa')
+    expect(variables['--site-pattern-base']).toBe('#fafafa')
+  })
+
+  it('shows the page background behind the pattern unless a colour is picked', () => {
+    const variables = backgroundVariables({ ...DEFAULT_THEME, backgroundPattern: 'dots' })
+    expect(variables['--site-pattern-base']).toBe('transparent')
+  })
+})
+
 describe('PatternField', () => {
+  function mountField(pattern: BackgroundPattern) {
+    const theme = reactive<Theme>({ ...DEFAULT_THEME, backgroundPattern: pattern, patternColours: ['', '', '', ''] })
+    const field = mount(PatternField, { props: { modelValue: theme } })
+    return { theme, field }
+  }
+
   it('offers each pattern as a tile and picks the one clicked', async () => {
-    const picks: string[] = []
-    const field = mount(PatternField, {
-      props: { theme: DEFAULT_THEME, modelValue: 'none', 'onUpdate:modelValue': (key: string) => picks.push(key) },
-    })
+    const { theme, field } = mountField('none')
     expect(field.findAll('input[type="radio"]')).toHaveLength(6)
     await field.find('input[value="argyle"]').setValue()
-    expect(picks).toEqual(['argyle'])
+    expect(theme.backgroundPattern).toBe('argyle')
+  })
+
+  it('asks for a colour per part of the pattern, plus what is behind it', () => {
+    const { field } = mountField('argyle')
+    const labels = field.findAll('fieldset label.block').map((label) => label.text())
+    expect(labels).toEqual(['Diamonds', 'Other diamonds', 'Lines', 'Behind the pattern'])
+  })
+
+  it('asks for no pattern colours on a plain background', () => {
+    const { field } = mountField('none')
+    expect(field.text()).not.toContain('Pattern colours')
   })
 })

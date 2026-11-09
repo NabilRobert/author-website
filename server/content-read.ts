@@ -28,6 +28,7 @@ interface ThemeRow {
   heading_font: string
   body_font: string
   background_pattern: string
+  pattern_colours: string | null
   background_image_key: string | null
 }
 interface LinkRow {
@@ -138,6 +139,8 @@ function toTheme(row: ThemeRow | undefined) {
     headingFont: row.heading_font,
     bodyFont: row.body_font,
     backgroundPattern: row.background_pattern,
+    // JSON, or NULL (saved before pattern colours existed) for the schema default.
+    patternColours: row.pattern_colours ? (JSON.parse(row.pattern_colours) as unknown) : undefined,
     backgroundImageKey: row.background_image_key,
   }
 }

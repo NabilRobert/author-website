@@ -65,10 +65,14 @@
 /* The site's background (pattern or picture) and, over a picture, a light
    panel behind the content (src/content/backgroundStyle.ts). */
 @utility site-background {
+  /* The pattern, then the pattern's own base colour (if the owner picked
+     one) as a solid layer over the page colour. */
   background-color: var(--color-paper);
-  background-image: var(--site-background-image, none);
-  background-size: var(--site-background-size, auto);
-  background-position: center;
+  background-image:
+    var(--site-background-image, none),
+    linear-gradient(var(--site-pattern-base, transparent), var(--site-pattern-base, transparent));
+  background-size: var(--site-background-size, auto), auto;
+  background-position: var(--site-background-position, center), center;
 }
 @utility site-panel {
   width: min(76rem, 100% - 2 * var(--site-panel-inset, 0px));

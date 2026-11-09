@@ -34,6 +34,22 @@ export const BACKGROUND_PATTERNS = {
 } as const
 
 export type BackgroundPattern = keyof typeof BACKGROUND_PATTERNS
+
+/**
+ * What each of a pattern's colours paints, in the order of
+ * `patternColours`. The fourth colour is always what shows behind the
+ * pattern. An empty colour means automatic: a faint mix of the text colour
+ * (or, behind the pattern, the page background).
+ */
+export const PATTERN_COLOUR_ROLES: Record<BackgroundPattern, string[]> = {
+  none: [],
+  dots: ['Dots', 'In-between dots'],
+  grid: ['Main lines', 'Fine lines'],
+  stripes: ['Stripes', 'In-between stripes'],
+  argyle: ['Diamonds', 'Other diamonds', 'Lines'],
+  linen: ['Across threads', 'Down threads'],
+}
+export const PATTERN_BASE_COLOUR = 3
 const fontKey = z.enum(Object.keys(FONTS) as [FontKey, ...FontKey[]])
 
 export const colour = z.string().regex(/^#[0-9a-f]{6}$/i, 'Pick a colour.')
@@ -53,6 +69,9 @@ export const themeSchema = z.object({
   backgroundPattern: z
     .enum(Object.keys(BACKGROUND_PATTERNS) as [BackgroundPattern, ...BackgroundPattern[]])
     .default('none'),
+  patternColours: z
+    .tuple([optionalColour, optionalColour, optionalColour, optionalColour])
+    .default((): [string, string, string, string] => ['', '', '', '']),
   // A picture behind the whole site; it replaces the pattern.
   backgroundImageKey: imageKey.default(null),
 })
@@ -69,6 +88,7 @@ export const DEFAULT_THEME: Theme = {
   headingFont: 'fraunces',
   bodyFont: 'fraunces',
   backgroundPattern: 'none',
+  patternColours: ['', '', '', ''],
   backgroundImageKey: null,
 }
 

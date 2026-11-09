@@ -66,8 +66,8 @@ function themeStatement(db: D1Database, theme: Theme): D1PreparedStatement {
   return db
     .prepare(
       `INSERT INTO theme (id, background_colour, text_colour, accent_colour, button_colour, button_text_colour,
-         heading_font, body_font, background_pattern, background_image_key)
-       VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         heading_font, body_font, background_pattern, pattern_colours, background_image_key)
+       VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       theme.backgroundColour,
@@ -78,6 +78,7 @@ function themeStatement(db: D1Database, theme: Theme): D1PreparedStatement {
       theme.headingFont,
       theme.bodyFont,
       theme.backgroundPattern,
+      JSON.stringify(theme.patternColours),
       theme.backgroundImageKey,
     )
 }
