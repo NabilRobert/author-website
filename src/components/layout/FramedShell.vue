@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import FramedCredit from '@/components/layout/FramedCredit.vue'
+
 // Framed's own pages (landing, login, terms, privacy): its name, a login
 // link, and the small print. People's sites use SiteLayout instead.
 </script>
@@ -15,7 +17,7 @@
     <footer class="mx-auto flex w-full max-w-5xl flex-wrap gap-x-6 gap-y-2 px-5 py-8 text-sm text-panel-muted">
       <RouterLink to="/terms" class="underline">Terms</RouterLink>
       <RouterLink to="/privacy" class="underline">Privacy</RouterLink>
-      <span>Made by <a href="https://github.com/NabilRobert" rel="noopener" class="underline">@nabilrobert</a></span>
+      <FramedCredit />
     </footer>
   </div>
 </template>

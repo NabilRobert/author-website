@@ -10,13 +10,17 @@ import PageBlocks from '@/components/blocks/PageBlocks.vue'
 
 // One page of the draft, drawn by the same components as the public site
 // and in the draft's colours and fonts, so it shows exactly what visitors
-// will see after saving. `inert` stops clicks in the preview from leaving
-// the editor.
+// will see after saving.
 const props = defineProps<{ content: SiteContent; pageId: string }>()
 
 const page = computed(() => props.content.pages.find((candidate) => candidate.id === props.pageId))
 const startsWithBanner = computed(() => page.value?.blocks[0]?.type === 'hero')
 const style = computed(() => themeVariables(props.content.theme))
+
+// RouterLink skips navigation for an event that is already prevented.
+function stopLinks(event: MouseEvent) {
+  if ((event.target as Element).closest('a')) event.preventDefault()
+}
 
 watchEffect(() => loadFonts([props.content.theme.headingFont, props.content.theme.bodyFont]))
 </script>
@@ -26,7 +30,9 @@ watchEffect(() => loadFonts([props.content.theme.headingFont, props.content.them
     :style="style"
     class="overflow-hidden rounded-md border border-panel-line bg-paper font-[family-name:var(--font-body)] text-ink"
   >
-    <div inert class="site-background @container">
+    <!-- Clicks on links are stopped here so they can't leave the editor;
+         scrolling and selecting text work as on the real page. -->
+    <div class="site-background @container" @click.capture="stopLinks">
       <div class="site-panel">
         <SiteHeader :content="content" />
         <div class="page-width pb-4">

@@ -100,14 +100,22 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeLeavi
         to publish it.
       </p>
       <Splitpanes v-if="isWide" :class="DIVIDER" class="min-h-0 flex-1" @resized="editorShare = $event.panes[0]!.size">
-        <Pane :size="editorShare" :min-size="0" class="overflow-y-auto">
-          <EditPanel v-model:preview-page-id="previewPageId" :site="site" />
+        <!-- Each pane scrolls in its own box: splitpanes' stylesheet sets
+             overflow: hidden on the pane itself, which wins over a Tailwind class.
+             `relative` keeps visually hidden (sr-only) inputs inside the box;
+             otherwise they stretch the whole page below the window. -->
+        <Pane :size="editorShare" :min-size="0">
+          <div class="relative h-full overflow-y-auto">
+            <EditPanel v-model:preview-page-id="previewPageId" :site="site" />
+          </div>
         </Pane>
-        <Pane :size="100 - editorShare" :min-size="0" class="overflow-y-auto">
-          <PreviewPanel v-model:page-id="previewPageId" :content="draft" />
+        <Pane :size="100 - editorShare" :min-size="0">
+          <div class="relative h-full overflow-y-auto">
+            <PreviewPanel v-model:page-id="previewPageId" :content="draft" />
+          </div>
         </Pane>
       </Splitpanes>
-      <div v-else class="min-h-0 flex-1 overflow-y-auto">
+      <div v-else class="relative min-h-0 flex-1 overflow-y-auto">
         <EditPanel v-model:preview-page-id="previewPageId" :site="site" />
         <PreviewPanel v-model:page-id="previewPageId" :content="draft" />
       </div>

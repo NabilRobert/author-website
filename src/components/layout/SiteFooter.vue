@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { SiteContent } from '@shared/schema'
+import FramedCredit from '@/components/layout/FramedCredit.vue'
 
 // The newsletter link, the copyright line and Framed's credit, on every
 // page. The credit is fixed here, not editable in the editor.
 defineProps<{ content: SiteContent }>()
 const year = new Date().getFullYear()
-const BUILDER = { name: '@nabilrobert', url: 'https://github.com/NabilRobert' }
 </script>
 
 <template>
@@ -13,10 +13,7 @@ const BUILDER = { name: '@nabilrobert', url: 'https://github.com/NabilRobert' }
     <div class="page-width flex flex-col gap-4 py-10 font-sans text-sm text-muted @2xl:flex-row @2xl:justify-between">
       <div>
         <p>© {{ year }} {{ content.author.name }}</p>
-        <p class="mt-1 text-xs">
-          Made with <RouterLink to="/" class="underline">Framed</RouterLink> by
-          <a :href="BUILDER.url" rel="noopener" class="underline">{{ BUILDER.name }}</a>
-        </p>
+        <FramedCredit class="mt-1 text-xs" />
       </div>
       <a
         v-if="content.author.newsletterUrl"
