@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { BACKGROUND_PATTERNS, DEFAULT_PANEL, DEFAULT_THEME, themeSchema } from '@shared/theme'
+import { BACKGROUND_PATTERNS, DEFAULT_PANEL, DEFAULT_THEME, NO_COLOUR, themeSchema } from '@shared/theme'
 import type { BackgroundPattern, PatternColours } from '@shared/theme'
 import { backgroundVariables } from '@/content/backgroundStyle'
 import PatternField from '@/editor/fields/PatternField.vue'
@@ -117,6 +117,14 @@ describe('PatternField', () => {
     expect(labels).toEqual(['Diamonds', 'Other diamonds', 'Lines', 'Behind the pattern'])
   })
 
+  it('lets a part of the pattern have no colour, so what is behind shows through', async () => {
+    const { picked, field } = mountField('argyle')
+    const noColour = field.findAll('button').filter((button) => button.text() === 'No colour')
+    expect(noColour).toHaveLength(3)
+    await noColour[2]!.trigger('click')
+    expect(picked.colours).toEqual(['', '', NO_COLOUR, ''])
+  })
+
   it('asks for no pattern colours on a plain background', () => {
     const { field } = mountField('none')
     expect(field.text()).not.toContain('Pattern colours')
@@ -148,5 +156,29 @@ describe('the content box', () => {
     const olderTheme: Record<string, unknown> = { ...DEFAULT_THEME }
     delete olderTheme.panel
     expect(themeSchema.parse(olderTheme).panel).toEqual(DEFAULT_PANEL)
+  })
+})
+
+describe('no colour', () => {
+  it('is allowed for fills: the content box and pattern parts', () => {
+    const theme = {
+      ...DEFAULT_THEME,
+      patternColours: [NO_COLOUR, '', '', ''],
+      panel: { ...DEFAULT_PANEL, colour: NO_COLOUR },
+    }
+    expect(themeSchema.safeParse(theme).success).toBe(true)
+  })
+
+  it('is refused for text, which would disappear', () => {
+    expect(themeSchema.safeParse({ ...DEFAULT_THEME, textColour: NO_COLOUR }).success).toBe(false)
+  })
+
+  it('makes the content box see-through', () => {
+    const variables = backgroundVariables({
+      ...DEFAULT_THEME,
+      backgroundImageKey: 'images/0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e01.jpg',
+      panel: { ...DEFAULT_PANEL, colour: NO_COLOUR },
+    })
+    expect(variables['--site-panel-background']).toBe('color-mix(in srgb, transparent 93%, transparent)')
   })
 })

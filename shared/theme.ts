@@ -68,13 +68,17 @@ const fontKey = z.enum(Object.keys(FONTS) as [FontKey, ...FontKey[]])
 export const colour = z.string().regex(/^#[0-9a-f]{6}$/i, 'Pick a colour.')
 /** A colour, or '' for "use the site's colours". */
 export const optionalColour = z.union([z.literal(''), colour])
+/** "No colour": a fill that paints nothing, so whatever is behind shows through. */
+export const NO_COLOUR = 'transparent'
+/** A fill (a box, a banner, part of a pattern): a colour, '' for automatic, or NO_COLOUR. */
+export const fillColour = z.union([z.literal(''), z.literal(NO_COLOUR), colour])
 
 const patternSchema = z.enum(Object.keys(BACKGROUND_PATTERNS) as [BackgroundPattern, ...BackgroundPattern[]])
 
 /** Four pattern colours (see PATTERN_COLOUR_ROLES); '' means automatic. */
 export type PatternColours = [string, string, string, string]
 const noPatternColours = (): PatternColours => ['', '', '', '']
-const patternColoursSchema = z.tuple([optionalColour, optionalColour, optionalColour, optionalColour])
+const patternColoursSchema = z.tuple([fillColour, fillColour, fillColour, fillColour])
 
 export const CORNERS = { rounded: 'Rounded', sharp: 'Sharp' } as const
 export type Corners = keyof typeof CORNERS
@@ -123,7 +127,7 @@ export type PanelWidth = keyof typeof PANEL_WIDTHS
  * whether it is framed by the background or spans the whole width.
  */
 export const panelSchema = z.object({
-  colour: optionalColour,
+  colour: fillColour,
   opacity: opacitySchema,
   corners: cornersSchema,
   width: z.enum(Object.keys(PANEL_WIDTHS) as [PanelWidth, ...PanelWidth[]]),

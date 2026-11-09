@@ -203,6 +203,10 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   (`shared/theme.ts: boxStyleSchema`, `src/components/blocks/BlockBox.vue`).
   A plain style draws no box. It can also set the block's own button and
   button-text colours.
+- **No colour**: a fill (the content box, part of a pattern, a banner) set
+  to `transparent`, so whatever is behind shows through
+  (`shared/theme.ts: NO_COLOUR`, `fillColour`). Text colours can't be
+  empty this way.
 - **Undo history**: copies of the draft, one per pause in editing, that
   Undo and Redo step through (`src/editor/undoHistory.ts`). It starts again
   on every load and save, so a saved version is never undone.

@@ -60,6 +60,7 @@ const roles = computed(() => PATTERN_COLOUR_ROLES[pattern.value])
         v-model="colours[index]!"
         :label="role"
         can-be-empty
+        can-be-none
         empty-name="automatic"
       />
       <ColourField

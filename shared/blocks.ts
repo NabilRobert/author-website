@@ -11,7 +11,7 @@
  * a name in `BLOCK_NAMES`, and add a component in src/components/blocks/.
  */
 import { z } from 'zod'
-import { boxStyleSchema, optionalColour, plainBox } from './theme'
+import { boxStyleSchema, fillColour, optionalColour, plainBox } from './theme'
 import { imageCrop, imageKey, itemId, linkSchema, linkTarget, longText, requiredText, shortText } from './fields'
 
 // Every block's box (shared/theme.ts: boxStyleSchema); plain unless the
@@ -29,7 +29,7 @@ const heroBlock = z.object({
   buttonLabel: shortText,
   buttonUrl: z.union([z.literal(''), linkTarget]),
   // '' uses the site's colours.
-  backgroundColour: optionalColour,
+  backgroundColour: fillColour,
   textColour: optionalColour,
 })
 

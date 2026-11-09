@@ -26,7 +26,7 @@ const block = defineModel<BlockOf<'hero'>>({ required: true })
       hint="Optional. It is dimmed so the words stay readable."
     />
     <div class="grid gap-4 sm:grid-cols-2">
-      <ColourField v-model="block.backgroundColour" label="Banner colour" can-be-empty />
+      <ColourField v-model="block.backgroundColour" label="Banner colour" can-be-empty can-be-none />
       <ColourField v-model="block.textColour" label="Banner text colour" can-be-empty />
     </div>
   </div>

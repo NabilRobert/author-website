@@ -22,7 +22,7 @@ const WIDTH_OPTIONS = (Object.keys(PANEL_WIDTHS) as PanelWidth[]).map((key) => (
     <p class="text-sm text-panel-muted">
       Appears over a background picture, or over a pattern in your own colours, so the text stays readable.
     </p>
-    <ColourField v-model="panel.colour" label="Box colour" can-be-empty empty-name="the page background" />
+    <ColourField v-model="panel.colour" label="Box colour" can-be-empty can-be-none empty-name="the page background" />
     <RangeField v-model="panel.opacity" label="Box opacity" hint="Lower lets more of the background show through." />
     <ChoiceField v-model="panel.width" label="Width" :options="WIDTH_OPTIONS" />
     <ChoiceField v-model="panel.corners" label="Corners" :options="CORNER_OPTIONS" />
