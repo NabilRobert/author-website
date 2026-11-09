@@ -2,8 +2,8 @@
 import type { Link } from '@shared/schema'
 import SiteLink from '@/components/ui/SiteLink.vue'
 
-// A row of links shown as buttons: where to buy a book, where to find the
-// author online, or a buttons block.
+// A row of links shown as buttons: where to buy a work, where to find the
+// profile online, or a buttons block.
 defineProps<{ links: Link[]; label: string }>()
 </script>
 

@@ -13,7 +13,7 @@ CREATE TABLE sites (
   created_at TEXT NOT NULL
 );
 
-CREATE TABLE author (
+CREATE TABLE profile (
   site_id TEXT PRIMARY KEY REFERENCES sites (id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   bio_short TEXT NOT NULL,
@@ -34,6 +34,7 @@ CREATE TABLE theme (
   heading_font TEXT NOT NULL,
   body_font TEXT NOT NULL,
   background_pattern TEXT NOT NULL,
+  work_shape TEXT NOT NULL,
   pattern_colours TEXT,
   background_image_key TEXT
 );
@@ -46,36 +47,36 @@ CREATE TABLE social_links (
   PRIMARY KEY (site_id, position)
 );
 
-CREATE TABLE books (
+CREATE TABLE works (
   site_id TEXT NOT NULL REFERENCES sites (id) ON DELETE CASCADE,
   id TEXT NOT NULL,
   position INTEGER NOT NULL,
   title TEXT NOT NULL,
-  series_name TEXT NOT NULL,
-  series_position INTEGER,
-  published_on TEXT NOT NULL,
-  blurb TEXT NOT NULL,
-  cover_key TEXT,
-  cover_crop TEXT,
+  subtitle TEXT NOT NULL,
+  group_name TEXT NOT NULL,
+  dated_on TEXT NOT NULL,
+  description TEXT NOT NULL,
+  image_key TEXT,
+  image_crop TEXT,
   PRIMARY KEY (site_id, id)
 );
 
-CREATE TABLE buy_links (
+CREATE TABLE work_links (
   site_id TEXT NOT NULL REFERENCES sites (id) ON DELETE CASCADE,
-  book_id TEXT NOT NULL,
+  work_id TEXT NOT NULL,
   position INTEGER NOT NULL,
   label TEXT NOT NULL,
   url TEXT NOT NULL,
-  PRIMARY KEY (site_id, book_id, position)
+  PRIMARY KEY (site_id, work_id, position)
 );
 
-CREATE TABLE reviews (
+CREATE TABLE work_quotes (
   site_id TEXT NOT NULL REFERENCES sites (id) ON DELETE CASCADE,
-  book_id TEXT NOT NULL,
+  work_id TEXT NOT NULL,
   position INTEGER NOT NULL,
   quote TEXT NOT NULL,
   source TEXT NOT NULL,
-  PRIMARY KEY (site_id, book_id, position)
+  PRIMARY KEY (site_id, work_id, position)
 );
 
 CREATE TABLE news (
@@ -123,7 +124,7 @@ CREATE TABLE images (
 );
 CREATE INDEX images_site_idx ON images (site_id);
 
--- Visitors' reports of a page that breaks the rules, for Arthur to review.
+-- Visitors' reports of a page that breaks the rules, for Arthur to quote.
 CREATE TABLE reports (
   id TEXT PRIMARY KEY,
   site_id TEXT NOT NULL REFERENCES sites (id) ON DELETE CASCADE,

@@ -119,10 +119,10 @@ describe('pictures nobody uses', () => {
     const used = await uploadedKey(fileOf(PNG_START, 'image/png'))
     const unused = await uploadedKey(fileOf(PNG_START, 'image/png'))
     await api.db.prepare("UPDATE images SET created_at = '2000-01-01T00:00:00.000Z'").run()
-    const author = { ...demoContent.author, photoKey: used }
+    const profile = { ...demoContent.profile, photoKey: used }
     const init = {
       method: 'PUT',
-      body: JSON.stringify({ ...demoContent, author }),
+      body: JSON.stringify({ ...demoContent, profile }),
       headers: { 'Content-Type': 'application/json' },
     }
     expect((await api.request('/api/me/content', init, cookie)).status).toBe(200)

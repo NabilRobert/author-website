@@ -2,7 +2,8 @@
 
 Portfolio pages anyone can make: sign up with your email, pick an address
 (`framed.my.id/your-name`), and build your page from blocks (a big banner,
-text, picture and text, lists, quotes, buttons, your books or projects,
+text, picture and text, lists, quotes, buttons, your work (projects,
+books, buildings, art),
 news, contact details, a press kit). Choose your colours, fonts and
 background, crop your pictures, and edit it all from the browser with a
 live preview.
@@ -14,7 +15,7 @@ Better Auth; codes are sent with Resend's free tier. No passwords exist.
 
 > Status: works end to end locally (sign up, edit, save, public page). Not
 > deployed yet: see the setup checklist below. The example content is an
-> invented author, "Mara Ellison".
+> invented designer, "Alex Rowan".
 
 ## Run it
 
@@ -50,7 +51,7 @@ logged in, your own page shows an **Edit this page** button; the editor's
 | `migrations/` | The D1 tables: Better Auth's (`0001`), then sites and content (`0002`) |
 | `src/views/` | One view per address: `LandingView`, `LoginView`, `SiteLayout` + `PageView` (someone's site), `EditView` (their editor), terms and privacy |
 | `src/auth/` | The login page's steps and the account calls |
-| `src/components/` | What a site is made of: one component per block, books, header and footer |
+| `src/components/` | What a site is made of: one component per block, work, header and footer |
 | `src/editor/` | The editor: its state and API calls, tabs, a form per block type, fields, cropper, preview |
 | `src/content/` | Loading a site, its links (`sitePath.ts`), theme and background as CSS variables, formatting |
 | `tests/` | Vitest specs: `api/` on a real local D1 and R2 (Miniflare), `site/`, `editor/` and `auth/` for the pages |

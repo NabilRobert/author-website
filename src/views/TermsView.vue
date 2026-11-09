@@ -2,7 +2,7 @@
 import { useHead } from '@unhead/vue'
 import FramedShell from '@/components/layout/FramedShell.vue'
 
-// The rules, in plain words. A draft for Arthur to review before launch.
+// The rules, in plain words. A draft for Arthur to quote before launch.
 useHead({ title: 'Terms · Framed' })
 </script>
 

@@ -11,7 +11,7 @@ import { imageKey } from './fields'
 /** The fonts on offer: what the editor calls each, and its CSS stack. */
 export const FONTS = {
   fraunces: { name: 'Fraunces (warm serif)', stack: "'Fraunces Variable', Georgia, serif" },
-  lora: { name: 'Lora (book serif)', stack: "'Lora Variable', Georgia, serif" },
+  lora: { name: 'Lora (work serif)', stack: "'Lora Variable', Georgia, serif" },
   'eb-garamond': { name: 'EB Garamond (classic serif)', stack: "'EB Garamond Variable', Garamond, serif" },
   'playfair-display': { name: 'Playfair Display (elegant headings)', stack: "'Playfair Display Variable', serif" },
   inter: { name: 'Inter (clean sans-serif)', stack: "'Inter Variable', system-ui, sans-serif" },
@@ -50,6 +50,19 @@ export const PATTERN_COLOUR_ROLES: Record<BackgroundPattern, string[]> = {
   linen: ['Across threads', 'Down threads'],
 }
 export const PATTERN_BASE_COLOUR = 3
+
+/**
+ * The shape of pictures of work: portrait suits books and posters,
+ * landscape buildings and design, square art, wide apps and video.
+ */
+export const WORK_SHAPES = {
+  portrait: 'Portrait (books, posters)',
+  landscape: 'Landscape (buildings, design, photos)',
+  square: 'Square (art, products)',
+  wide: 'Wide (apps, websites, video)',
+} as const
+
+export type WorkShape = keyof typeof WORK_SHAPES
 const fontKey = z.enum(Object.keys(FONTS) as [FontKey, ...FontKey[]])
 
 export const colour = z.string().regex(/^#[0-9a-f]{6}$/i, 'Pick a colour.')
@@ -72,13 +85,14 @@ export const themeSchema = z.object({
   patternColours: z
     .tuple([optionalColour, optionalColour, optionalColour, optionalColour])
     .default((): [string, string, string, string] => ['', '', '', '']),
+  workShape: z.enum(Object.keys(WORK_SHAPES) as [WorkShape, ...WorkShape[]]).default('landscape'),
   // A picture behind the whole site; it replaces the pattern.
   backgroundImageKey: imageKey.default(null),
 })
 
 export type Theme = z.infer<typeof themeSchema>
 
-/** Warm paper, ink and oxblood, like a printed book. */
+/** Warm paper, ink and oxblood, like a printed work. */
 export const DEFAULT_THEME: Theme = {
   backgroundColour: '#f7f2e8',
   textColour: '#1f1b16',
@@ -89,6 +103,7 @@ export const DEFAULT_THEME: Theme = {
   bodyFont: 'fraunces',
   backgroundPattern: 'none',
   patternColours: ['', '', '', ''],
+  workShape: 'landscape',
   backgroundImageKey: null,
 }
 

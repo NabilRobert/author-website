@@ -5,13 +5,13 @@ import { imageUrl } from '@/content/format'
 import { uploadImage } from '@/editor/editorApi'
 import { centredCrop } from '@shared/fields'
 import type { ImageCrop } from '@shared/fields'
-import type { FrameShape } from '@/content/frames'
 import ImageCropper from '@/editor/fields/ImageCropper.vue'
 
 // Pick a picture, upload it, and keep its key; or remove it. The file is
 // checked here first for a quick answer, and again by the API. With a
-// `shape` and a crop (v-model:crop), the picture can be cropped to its frame.
-defineProps<{ label: string; hint?: string; shape?: FrameShape }>()
+// `frameClass` (the frame's aspect class, src/content/frames.ts) and a crop
+// (v-model:crop), the picture can be cropped to its frame.
+defineProps<{ label: string; hint?: string; frameClass?: string }>()
 const imageKey = defineModel<string | null>({ required: true })
 const crop = defineModel<ImageCrop>('crop')
 const id = useId()
@@ -48,8 +48,8 @@ function checkFile(file: File): string {
   <div>
     <p :id="`${id}-label`" class="font-semibold">{{ label }}</p>
     <p v-if="hint" class="text-sm text-panel-muted">{{ hint }}</p>
-    <div v-if="imageKey && shape && crop" class="mt-2">
-      <ImageCropper v-model="crop" :image-key="imageKey" :shape="shape" />
+    <div v-if="imageKey && frameClass && crop" class="mt-2">
+      <ImageCropper v-model="crop" :image-key="imageKey" :frame-class="frameClass" />
     </div>
     <img
       v-else-if="imageKey"

@@ -9,7 +9,7 @@ const block = defineModel<BlockOf<'contact'> | BlockOf<'pressKit'>>({ required: 
 
 <template>
   <div class="space-y-4">
-    <p class="text-sm text-panel-muted">Shows your details from the “About you” tab and your books.</p>
+    <p class="text-sm text-panel-muted">Shows your details from the “About you” tab and your work.</p>
     <TextField v-model="block.heading" label="Heading" hint="Optional." />
   </div>
 </template>

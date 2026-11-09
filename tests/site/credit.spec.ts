@@ -26,7 +26,7 @@ function expectCredit(text: string, credit: ReturnType<ReturnType<typeof mount>[
 }
 
 describe('the Framed credit', () => {
-  it.each(['/mara', '/mara/books', '/', '/login', '/terms', '/privacy'])('is in the footer of %s', async (path) => {
+  it.each(['/mara', '/mara/works', '/', '/login', '/terms', '/privacy'])('is in the footer of %s', async (path) => {
     const page = await render(path)
     expectCredit(page.find('footer').text(), page.find('footer [data-framed-credit]'))
   })
@@ -54,7 +54,7 @@ describe("the editor's preview", () => {
   it('does not follow links, so the editor stays open', async () => {
     const { preview, router } = mountPreview()
     await router.push('/mara/edit')
-    await preview.find('a[href="/books"]').trigger('click')
+    await preview.find('a[href="/work"]').trigger('click')
     await flushPromises()
     expect(router.currentRoute.value.fullPath).toBe('/mara/edit')
   })

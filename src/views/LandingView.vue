@@ -11,13 +11,16 @@ useHead({
 const FEATURES = [
   {
     title: 'Your own address',
-    text: 'framed.my.id/your-name, to put on your CV, your social profiles and your books.',
+    text: 'framed.my.id/your-name, to put on your CV, your social profiles and your business card.',
   },
   {
     title: 'Build it from blocks',
     text: 'Banners, text, pictures, lists, quotes and buttons, stacked the way you like.',
   },
-  { title: 'Show your work', text: 'Books, projects and news, kept once and shown wherever you want them.' },
+  {
+    title: 'Show your work',
+    text: 'Projects, books, buildings or paintings, and your news, kept once and shown wherever you want them.',
+  },
   {
     title: 'Make it look like you',
     text: 'Your colours, fonts and background pattern, with a live preview as you go.',

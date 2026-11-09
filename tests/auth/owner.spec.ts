@@ -40,10 +40,10 @@ async function open(path: string, answers: Record<string, FakeAnswer>) {
 
 describe('the owner bar', () => {
   it('lets the owner switch to editing the page they are viewing', async () => {
-    const { page } = await open('/mara/books', { ...SITE, 'GET /api/me': json(MARA) })
+    const { page } = await open('/mara/work', { ...SITE, 'GET /api/me': json(MARA) })
     const edit = page.find('[aria-label="Your page"] a')
     expect(edit.text()).toBe('Edit this page')
-    expect(edit.attributes('href')).toBe('/mara/edit?page=books')
+    expect(edit.attributes('href')).toBe('/mara/edit?page=work')
     page.unmount()
   })
 
@@ -69,13 +69,13 @@ describe('the editor', () => {
   }
 
   it('opens on the page the owner was viewing, and Done returns to it', async () => {
-    const { page, router } = await open('/mara/edit?page=books', editorApi)
+    const { page, router } = await open('/mara/edit?page=work', editorApi)
     expect(page.find('section[aria-label="Preview"] select').element).toHaveProperty('value', demoContent.pages[1]!.id)
     await page
       .findAll('button')
       .find((button) => button.text() === 'Done')!
       .trigger('click')
-    await vi.waitFor(() => expect(router.currentRoute.value.fullPath).toBe('/mara/books'))
+    await vi.waitFor(() => expect(router.currentRoute.value.fullPath).toBe('/mara/work'))
     page.unmount()
   })
 

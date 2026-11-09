@@ -1,7 +1,7 @@
 /**
  * Page blocks: the pieces the owner stacks to build a page, like a website
  * builder. Some hold their own words and pictures (hero, text, picture and
- * text, list, quote, buttons); others show the author's books, news or
+ * text, list, quote, buttons); others show the profile's works, news or
  * contact details, which are kept once and edited in their own tabs.
  *
  * A field added after launch needs a `.default(…)`, so blocks saved before
@@ -72,7 +72,7 @@ const buttonsBlock = z.object({
 
 const booksBlock = z.object({
   id: itemId,
-  type: z.literal('books'),
+  type: z.literal('works'),
   heading: shortText,
   show: z.enum(['all', 'newest']),
 })
@@ -114,7 +114,7 @@ export const BLOCK_NAMES: Record<BlockType, string> = {
   list: 'List',
   quote: 'Quote',
   buttons: 'Buttons',
-  books: 'Your books',
+  works: 'Your work',
   news: 'News and events',
   contact: 'Contact details',
   pressKit: 'Press kit',

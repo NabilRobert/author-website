@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import PagesTab from '@/editor/tabs/PagesTab.vue'
-import BooksTab from '@/editor/tabs/BooksTab.vue'
+import WorksTab from '@/editor/tabs/WorksTab.vue'
 import NewsTab from '@/editor/tabs/NewsTab.vue'
-import AuthorTab from '@/editor/tabs/AuthorTab.vue'
+import ProfileTab from '@/editor/tabs/ProfileTab.vue'
 import LookTab from '@/editor/tabs/LookTab.vue'
 
 // The editing side: the tabs and the active tab's forms. The page picked in
@@ -13,9 +13,9 @@ defineProps<{ site: string }>()
 
 const TABS = [
   { key: 'pages', label: 'Pages' },
-  { key: 'books', label: 'Books' },
+  { key: 'works', label: 'Work' },
   { key: 'news', label: 'News' },
-  { key: 'author', label: 'About you' },
+  { key: 'profile', label: 'About you' },
   { key: 'look', label: 'Look' },
 ] as const
 const activeTab = ref<(typeof TABS)[number]['key']>('pages')
@@ -37,9 +37,9 @@ const activeTab = ref<(typeof TABS)[number]['key']>('pages')
       </button>
     </div>
     <PagesTab v-if="activeTab === 'pages'" v-model:page-id="previewPageId" />
-    <BooksTab v-else-if="activeTab === 'books'" />
+    <WorksTab v-else-if="activeTab === 'works'" />
     <NewsTab v-else-if="activeTab === 'news'" />
-    <AuthorTab v-else-if="activeTab === 'author'" :site="site" />
+    <ProfileTab v-else-if="activeTab === 'profile'" :site="site" />
     <LookTab v-else />
   </section>
 </template>

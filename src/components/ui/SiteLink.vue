@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useSitePath } from '@/content/sitePath'
 
-// A link that stays inside the app for this site's pages ("/books" becomes
-// "/<site>/books") and opens outside addresses normally.
+// A link that stays inside the app for this site's pages ("/works" becomes
+// "/<site>/works") and opens outside addresses normally.
 defineProps<{ to: string }>()
 const sitePath = useSitePath()
 </script>

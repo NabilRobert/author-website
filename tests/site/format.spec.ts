@@ -1,38 +1,28 @@
 import { describe, expect, it } from 'vitest'
-import type { Book } from '@shared/schema'
-import { formatDate, groupAdjacentSeries, imageUrl, newestFirst, paragraphs, seriesLabel } from '@/content/format'
+import type { Work } from '@shared/schema'
+import { formatDate, groupWorks, imageUrl, newestFirst, paragraphs } from '@/content/format'
 import { demoContent } from '@shared/demo-content'
 
-function book(title: string, seriesName = '', seriesPosition: number | null = null): Book {
-  return { ...demoContent.books[0]!, id: title, title, seriesName, seriesPosition }
+function work(title: string, group = ''): Work {
+  return { ...demoContent.works[0]!, id: title, title, group }
 }
 
-describe('groupAdjacentSeries', () => {
+describe('groupWorks', () => {
   it('keeps the owner order exactly, re-sorting nothing', () => {
-    const books = [book('Two', 'Tides', 2), book('Solo'), book('One', 'Tides', 1)]
-    const groups = groupAdjacentSeries(books)
-    expect(groups.map((group) => group.books.map((b) => b.title))).toEqual([['Two'], ['Solo'], ['One']])
+    const works = [work('Two', 'Tides'), work('Solo'), work('One', 'Tides')]
+    const groups = groupWorks(works)
+    expect(groups.map((group) => group.works.map((b) => b.title))).toEqual([['Two'], ['Solo'], ['One']])
   })
 
-  it('gives neighbouring books of one series a shared heading', () => {
-    const books = [book('Solo'), book('One', 'Tides', 1), book('Two', 'Tides', 2)]
-    const groups = groupAdjacentSeries(books)
-    expect(groups.map((group) => group.seriesName)).toEqual(['', 'Tides'])
-    expect(groups[1]?.books.map((b) => b.title)).toEqual(['One', 'Two'])
+  it('gives neighbouring works of one group a shared heading', () => {
+    const works = [work('Solo'), work('One', 'Tides'), work('Two', 'Tides')]
+    const groups = groupWorks(works)
+    expect(groups.map((group) => group.group)).toEqual(['', 'Tides'])
+    expect(groups[1]?.works.map((b) => b.title)).toEqual(['One', 'Two'])
   })
 
-  it('keeps each standalone book in its own group', () => {
-    expect(groupAdjacentSeries([book('A'), book('B')])).toHaveLength(2)
-  })
-})
-
-describe('seriesLabel', () => {
-  it('names the series and the number', () => {
-    expect(seriesLabel(book('Two', 'Tides', 2))).toBe('Tides, book 2')
-  })
-
-  it('is empty for a standalone book', () => {
-    expect(seriesLabel(book('Solo'))).toBe('')
+  it('keeps each work without a group on its own', () => {
+    expect(groupWorks([work('A'), work('B')])).toHaveLength(2)
   })
 })
 

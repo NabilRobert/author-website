@@ -41,10 +41,10 @@ describe('content store', () => {
     await api.signUp('a@example.com', 'site-a')
     await api.signUp('b@example.com', 'site-b')
     await saveContent(api.db, await siteId('site-a'), demoContent, SAVED_AT)
-    const renamed = { ...demoContent, author: { ...demoContent.author, name: 'Someone Else' } }
+    const renamed = { ...demoContent, profile: { ...demoContent.profile, name: 'Someone Else' } }
     await saveContent(api.db, await siteId('site-b'), renamed, SAVED_AT)
-    expect((await loadContent(api.db, await siteId('site-a')))?.author.name).toBe('Mara Ellison')
-    expect((await loadContent(api.db, await siteId('site-b')))?.author.name).toBe('Someone Else')
+    expect((await loadContent(api.db, await siteId('site-a')))?.profile.name).toBe(demoContent.profile.name)
+    expect((await loadContent(api.db, await siteId('site-b')))?.profile.name).toBe('Someone Else')
   })
 
   it('refuses a save made from an older copy', async () => {
@@ -58,7 +58,7 @@ describe('content store', () => {
     await api.signUp('mara@example.com', 'mara')
     const id = await siteId('mara')
     const first = await saveContent(api.db, id, demoContent, SAVED_AT)
-    const broken = { ...first, books: [first.books[0]!, first.books[0]!] }
+    const broken = { ...first, works: [first.works[0]!, first.works[0]!] }
     await expect(saveContent(api.db, id, broken, new Date())).rejects.toThrow()
     expect(await loadContent(api.db, id)).toEqual(first)
   })
@@ -107,7 +107,7 @@ describe('GET /api/sites/<name>/content', () => {
   it('answers a stored row that breaks the schema with a plain 500, not the details', async () => {
     const cookie = await api.signUp('mara@example.com', 'mara')
     await putContent(demoContent, cookie)
-    await api.db.prepare("UPDATE books SET cover_key = '../../etc/passwd'").run()
+    await api.db.prepare("UPDATE works SET image_key = '../../etc/passwd'").run()
     const response = await api.request('/api/sites/mara/content')
     expect(response.status).toBe(500)
     expect(JSON.stringify(await response.json())).not.toContain('passwd')
@@ -127,19 +127,19 @@ describe('/api/me/content', () => {
     const maraCookie = await api.signUp('mara@example.com', 'mara')
     await putContent(demoContent, maraCookie)
     const otherCookie = await api.signUp('other@example.com', 'other')
-    const takeover = { ...demoContent, author: { ...demoContent.author, name: 'Hacked' } }
+    const takeover = { ...demoContent, profile: { ...demoContent.profile, name: 'Hacked' } }
     await putContent(takeover, otherCookie)
     const mara = (await (await api.request('/api/sites/mara/content')).json()) as SiteContent
-    expect(mara.author.name).toBe('Mara Ellison')
+    expect(mara.profile.name).toBe(demoContent.profile.name)
   })
 
   it('lists the fields to fix when the content is invalid', async () => {
     const cookie = await api.signUp('mara@example.com', 'mara')
-    const author = { ...demoContent.author, contactEmail: 'not an email' }
-    const response = await putContent({ ...demoContent, author }, cookie)
+    const profile = { ...demoContent.profile, contactEmail: 'not an email' }
+    const response = await putContent({ ...demoContent, profile }, cookie)
     expect(response.status).toBe(400)
     expect(await response.json()).toMatchObject({
-      issues: [{ path: ['author', 'contactEmail'], message: 'Enter an email address like name@example.com.' }],
+      issues: [{ path: ['profile', 'contactEmail'], message: 'Enter an email address like name@example.com.' }],
     })
   })
 

@@ -51,7 +51,7 @@ describe('describeLocation', () => {
   })
 
   it('names the about-you field', () => {
-    expect(describeLocation(['author', 'contactEmail'], demoContent)).toBe('About you › Contact email')
+    expect(describeLocation(['profile', 'contactEmail'], demoContent)).toBe('About you › Contact email')
   })
 
   it('names the site for a whole-site problem', () => {

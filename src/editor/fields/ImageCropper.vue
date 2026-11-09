@@ -2,14 +2,13 @@
 import { ref, useId } from 'vue'
 import { centredCrop } from '@shared/fields'
 import type { ImageCrop } from '@shared/fields'
-import { FRAME_CLASSES } from '@/content/frames'
-import type { FrameShape } from '@/content/frames'
 import FramedImage from '@/components/ui/FramedImage.vue'
 
 // Crop a picture inside a frame shaped like its place on the site: drag the
 // picture (or use the arrow keys) to choose what stays in view, and the
 // slider to zoom. The preview beside the forms follows along.
-const props = defineProps<{ imageKey: string; shape: FrameShape }>()
+// `frameClass` is the frame's Tailwind aspect class (src/content/frames.ts).
+const props = defineProps<{ imageKey: string; frameClass: string }>()
 const crop = defineModel<ImageCrop>({ required: true })
 const zoomId = useId()
 
@@ -66,7 +65,7 @@ function setZoom(event: Event) {
       tabindex="0"
       aria-label="Picture position: drag it, or use the arrow keys, to choose what stays in view"
       class="relative w-full max-w-xs cursor-grab touch-none overflow-hidden rounded-md border border-panel-line bg-panel-back active:cursor-grabbing"
-      :class="FRAME_CLASSES[props.shape]"
+      :class="props.frameClass"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="lastPointer = null"

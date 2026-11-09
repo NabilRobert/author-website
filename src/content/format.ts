@@ -1,35 +1,28 @@
 /**
  * Small helpers that turn stored content into what a page shows: grouped
- * books, readable dates, paragraphs and image addresses.
+ * works, readable dates, paragraphs and image addresses.
  */
-import type { Book, NewsItem } from '@shared/schema'
+import type { Work, NewsItem } from '@shared/schema'
 
-/** A run of books shown under one heading: a series, or one standalone book. */
+/** A run of works shown under one heading: a group, or one work on its own. */
 export interface BookGroup {
-  seriesName: string
-  books: Book[]
+  group: string
+  works: Work[]
 }
 
 /**
- * The books in the owner's order, nothing re-sorted. Books of the same
- * series that sit next to each other share a heading; a standalone book is
+ * The works in the owner's order, nothing re-sorted. Works of the same
+ * group that sit next to each other share a heading; a work with no group is
  * a group of its own.
  */
-export function groupAdjacentSeries(books: Book[]): BookGroup[] {
+export function groupWorks(works: Work[]): BookGroup[] {
   const groups: BookGroup[] = []
-  for (const book of books) {
+  for (const work of works) {
     const previous = groups.at(-1)
-    if (book.seriesName && previous?.seriesName === book.seriesName) previous.books.push(book)
-    else groups.push({ seriesName: book.seriesName, books: [book] })
+    if (work.group && previous?.group === work.group) previous.works.push(work)
+    else groups.push({ group: work.group, works: [work] })
   }
   return groups
-}
-
-/** "Saltmarsh, book 2", or '' for a standalone book. */
-export function seriesLabel(book: Book): string {
-  if (!book.seriesName) return ''
-  if (book.seriesPosition === null) return book.seriesName
-  return `${book.seriesName}, book ${book.seriesPosition}`
 }
 
 /** News and events, newest first. */

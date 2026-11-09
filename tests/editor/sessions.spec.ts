@@ -20,7 +20,7 @@ afterEach(() => vi.unstubAllGlobals())
 describe('an expired login while editing', () => {
   it('says so, and that the changes are kept', async () => {
     const editor = await openEditor()
-    editor.draft.value.author.name = 'Changed'
+    editor.draft.value.profile.name = 'Changed'
     fakeApi({ 'PUT /api/me/content': json({ error: 'expired' }, 401) })
     await editor.save()
     expect(editor.lastSave.value?.text).toContain('Your login has expired.')
@@ -29,26 +29,26 @@ describe('an expired login while editing', () => {
 
   it('brings the unsaved changes back on the next visit', async () => {
     const first = await openEditor()
-    first.draft.value.author.name = 'Typed before the login expired'
+    first.draft.value.profile.name = 'Typed before the login expired'
     await nextTick()
     const second = await openEditor()
-    expect(second.draft.value.author.name).toBe('Typed before the login expired')
+    expect(second.draft.value.profile.name).toBe('Typed before the login expired')
     expect(second.isRestored.value).toBe(true)
     expect(second.isDirty.value).toBe(true)
   })
 
   it('does not bring back changes made from an older version of the site', async () => {
     const first = await openEditor()
-    first.draft.value.author.name = 'Old change'
+    first.draft.value.profile.name = 'Old change'
     await nextTick()
     const second = await openEditor({ ...saved, updatedAt: '2026-11-10T09:00:00.000Z' })
-    expect(second.draft.value.author.name).toBe(saved.author.name)
+    expect(second.draft.value.profile.name).toBe(saved.profile.name)
     expect(second.isRestored.value).toBe(false)
   })
 
   it("keeps each site's unsaved changes apart in one browser", async () => {
     const mara = await openEditor()
-    mara.draft.value.author.name = 'Mara change'
+    mara.draft.value.profile.name = 'Mara change'
     await nextTick()
     const other = await openEditor(saved, 'other')
     expect(other.isRestored.value).toBe(false)
@@ -56,9 +56,9 @@ describe('an expired login while editing', () => {
 
   it('forgets the backup once everything is saved', async () => {
     const first = await openEditor()
-    first.draft.value.author.name = 'Changed'
+    first.draft.value.profile.name = 'Changed'
     await nextTick()
-    const after = { ...saved, author: { ...saved.author, name: 'Changed' }, updatedAt: 'later' }
+    const after = { ...saved, profile: { ...saved.profile, name: 'Changed' }, updatedAt: 'later' }
     fakeApi({ 'PUT /api/me/content': json(after) })
     await first.save()
     await nextTick()

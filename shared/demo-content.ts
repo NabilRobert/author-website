@@ -1,102 +1,102 @@
 /**
- * Placeholder content: an invented author with invented books, so the site
- * can be built and shown before the real author's details arrive. Nothing
- * here describes a real person. The database seed loads this same document.
+ * Example content: an invented designer and maker with invented work, so a
+ * new page starts with something to change rather than a blank screen, and
+ * tests have a full site to check. Nothing here describes a real person.
  */
 import type { SiteContent } from './schema'
 import { DEFAULT_THEME } from './theme'
 import { centredCrop } from './fields'
 
-// Fixed ids so the demo is the same on every load; any valid UUID works.
+// Fixed ids so the example is the same on every load; any valid UUID works.
 const id = (n: number) => `a1000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 
 const ABOUT_TEXT =
-  'Mara Ellison grew up between a harbour town and her grandmother’s kitchen, which is where most of her stories still begin.\n\nShe started writing on night shifts at a ferry ticket office, filling notebooks between departures. Those notebooks became The Low Tide House, the first book of the Saltmarsh trilogy.\n\n(Mara Ellison is a placeholder author. Replace this text in the editor.)'
+  'Alex Rowan designs signs, identities and small apps for public places: libraries, markets, ferries.\n\nAlex studied architecture, then spent five years making wayfinding for a city transport office before starting a small studio.\n\n(Alex Rowan is an example person. Replace this text with your own in the editor.)'
 
 export const demoContent: SiteContent = {
-  author: {
-    name: 'Mara Ellison',
+  profile: {
+    name: 'Alex Rowan',
     bioShort:
-      'Mara Ellison writes literary fiction set on small islands and in large families. She is the author of the Saltmarsh trilogy and the novel The Lantern Year.',
+      'Alex Rowan is a designer and maker of signs, identities and small apps for public places, working from a small studio by the harbour.',
     photoKey: null,
     photoCrop: centredCrop(),
     contactEmail: 'hello@example.com',
     newsletterUrl: 'https://example.com/newsletter',
     socialLinks: [
       { label: 'Instagram', url: 'https://example.com/instagram' },
-      { label: 'Goodreads', url: 'https://example.com/goodreads' },
+      { label: 'LinkedIn', url: 'https://example.com/linkedin' },
     ],
   },
   theme: DEFAULT_THEME,
-  books: [
+  works: [
     {
       id: '6f1d3a52-6c1e-4d5e-9f2a-1b7c0e4a9d01',
-      title: 'The Lantern Year',
-      seriesName: '',
-      seriesPosition: null,
-      publishedOn: '2026-03-12',
-      blurb:
-        'For one year, the lighthouse keeper’s daughter keeps a lantern lit for a brother who left without a word. Then a letter arrives with the wrong name on it.',
-      coverKey: null,
-      coverCrop: centredCrop(),
-      buyLinks: [
-        { label: 'Bookshop', url: 'https://example.com/buy/lantern-year' },
-        { label: 'E-book', url: 'https://example.com/ebook/lantern-year' },
+      title: 'Lantern',
+      subtitle: 'Mobile app',
+      group: '',
+      date: '2026-03-12',
+      description:
+        'A small app that tells ferry passengers, in plain words, which boat to take and when to walk to the pier.',
+      imageKey: null,
+      imageCrop: centredCrop(),
+      links: [
+        { label: 'Try it', url: 'https://example.com/lantern' },
+        { label: 'Case study', url: 'https://example.com/lantern/case-study' },
       ],
-      reviews: [{ quote: 'Tender, funny and quietly devastating.', source: 'A placeholder review' }],
+      quotes: [{ quote: 'The first ferry app my mother could use.', source: 'An example review' }],
     },
     {
       id: '6f1d3a52-6c1e-4d5e-9f2a-1b7c0e4a9d02',
-      title: 'The Low Tide House',
-      seriesName: 'Saltmarsh',
-      seriesPosition: 1,
-      publishedOn: '2022-05-04',
-      blurb: 'Three sisters inherit a house that floods twice a day. None of them wants it. All of them move in.',
-      coverKey: null,
-      coverCrop: centredCrop(),
-      buyLinks: [{ label: 'Bookshop', url: 'https://example.com/buy/low-tide-house' }],
-      reviews: [{ quote: 'A house you will not want to leave.', source: 'Another placeholder review' }],
+      title: 'Harbour Library',
+      subtitle: 'Wayfinding and signs',
+      group: 'Public places',
+      date: '2025-05-04',
+      description: 'Signs for a library in an old customs house, in three languages, readable from a wheelchair.',
+      imageKey: null,
+      imageCrop: centredCrop(),
+      links: [{ label: 'Photos', url: 'https://example.com/harbour-library' }],
+      quotes: [{ quote: 'Nobody asks us where the toilets are any more.', source: 'An example librarian' }],
     },
     {
       id: '6f1d3a52-6c1e-4d5e-9f2a-1b7c0e4a9d03',
-      title: 'Between Two Ferries',
-      seriesName: 'Saltmarsh',
-      seriesPosition: 2,
-      publishedOn: '2023-09-21',
-      blurb: 'The middle sister takes the last ferry out and misses the first one back.',
-      coverKey: null,
-      coverCrop: centredCrop(),
-      buyLinks: [{ label: 'Bookshop', url: 'https://example.com/buy/between-two-ferries' }],
-      reviews: [],
+      title: 'Tidewater Market',
+      subtitle: 'Identity and signs',
+      group: 'Public places',
+      date: '2024-09-21',
+      description: 'A name, a logo and stall signs for a covered fish market that opens at four in the morning.',
+      imageKey: null,
+      imageCrop: centredCrop(),
+      links: [{ label: 'Photos', url: 'https://example.com/tidewater-market' }],
+      quotes: [],
     },
     {
       id: '6f1d3a52-6c1e-4d5e-9f2a-1b7c0e4a9d04',
-      title: 'The Salt Wedding',
-      seriesName: 'Saltmarsh',
-      seriesPosition: 3,
-      publishedOn: '2024-10-02',
-      blurb: 'Everyone comes home for the wedding. Not everyone is invited.',
-      coverKey: null,
-      coverCrop: centredCrop(),
-      buyLinks: [{ label: 'Bookshop', url: 'https://example.com/buy/salt-wedding' }],
-      reviews: [],
+      title: 'Ferry Posters',
+      subtitle: 'Poster series',
+      group: '',
+      date: '2023-10-02',
+      description: 'Twelve posters, one for each ferry route, printed in two colours.',
+      imageKey: null,
+      imageCrop: centredCrop(),
+      links: [],
+      quotes: [],
     },
   ],
   news: [
     {
       id: '0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e01',
       kind: 'event',
-      title: 'Reading and signing: The Lantern Year',
-      body: 'An evening reading followed by questions and signing.',
+      title: 'Talk: signs that help people find their way',
+      body: 'An evening talk about designing for people in a hurry, followed by questions.',
       happensOn: '2026-12-05',
-      place: 'Harbour Street Books',
-      linkUrl: 'https://example.com/events/lantern-reading',
+      place: 'Harbour Street Library',
+      linkUrl: 'https://example.com/events/wayfinding-talk',
     },
     {
       id: '0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e02',
       kind: 'news',
-      title: 'The Lantern Year is out now',
-      body: 'My new novel is in bookshops and online from today. Thank you to everyone who read early copies.',
+      title: 'Lantern is out now',
+      body: 'The ferry app is free for everyone from today. Thank you to everyone who tested it on the boats.',
       happensOn: '2026-03-12',
       place: '',
       linkUrl: '',
@@ -112,25 +112,25 @@ export const demoContent: SiteContent = {
         {
           id: id(101),
           type: 'hero',
-          heading: 'Mara Ellison',
-          subheading: 'Quiet novels about loud families.',
+          heading: 'Alex Rowan',
+          subheading: 'Signs, identities and small apps for public places.',
           imageKey: null,
           imageCrop: centredCrop(),
-          buttonLabel: 'See the books',
-          buttonUrl: '/books',
+          buttonLabel: 'See the work',
+          buttonUrl: '/work',
           backgroundColour: '',
           textColour: '',
         },
-        { id: id(102), type: 'books', heading: 'Newest book', show: 'newest' },
+        { id: id(102), type: 'works', heading: 'Latest work', show: 'newest' },
         { id: id(103), type: 'news', heading: 'Latest news', limit: 2 },
       ],
     },
     {
       id: id(2),
-      slug: 'books',
-      title: 'Books',
+      slug: 'work',
+      title: 'Work',
       showInMenu: true,
-      blocks: [{ id: id(201), type: 'books', heading: '', show: 'all' }],
+      blocks: [{ id: id(201), type: 'works', heading: '', show: 'all' }],
     },
     {
       id: id(3),
@@ -141,7 +141,7 @@ export const demoContent: SiteContent = {
         {
           id: id(301),
           type: 'imageText',
-          heading: 'About Mara',
+          heading: 'About Alex',
           body: ABOUT_TEXT,
           imageKey: null,
           imageCrop: centredCrop(),
@@ -151,16 +151,11 @@ export const demoContent: SiteContent = {
         {
           id: id(302),
           type: 'list',
-          heading: 'Things that end up in my books',
+          heading: 'What I make',
           numbered: false,
-          items: ['Ferries and the people who miss them', 'Kitchens with too many chairs', 'Weather, always'],
+          items: ['Signs and wayfinding', 'Names, logos and identities', 'Small, plain apps'],
         },
-        {
-          id: id(303),
-          type: 'quote',
-          quote: 'Every family is an island with its own tides.',
-          source: 'The Low Tide House',
-        },
+        { id: id(303), type: 'quote', quote: 'A good sign is one nobody notices.', source: 'Alex Rowan' },
       ],
     },
     {
@@ -175,7 +170,7 @@ export const demoContent: SiteContent = {
       slug: 'press',
       title: 'Press',
       showInMenu: true,
-      blocks: [{ id: id(501), type: 'pressKit', heading: 'For journalists and event organisers' }],
+      blocks: [{ id: id(501), type: 'pressKit', heading: 'For journalists, clients and organisers' }],
     },
     {
       id: id(6),
@@ -183,12 +178,7 @@ export const demoContent: SiteContent = {
       title: 'Contact',
       showInMenu: true,
       blocks: [
-        {
-          id: id(601),
-          type: 'text',
-          heading: '',
-          body: 'For events, interviews and rights, email me. I read everything, slowly.',
-        },
+        { id: id(601), type: 'text', heading: '', body: 'For projects, talks and interviews, email me.' },
         { id: id(602), type: 'contact', heading: '' },
       ],
     },

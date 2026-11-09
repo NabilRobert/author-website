@@ -50,9 +50,9 @@ export async function pruneUnusedImages(env: Env, siteId: string, content: SiteC
 /** Every picture the site shows anywhere. */
 export function usedImageKeys(content: SiteContent): Set<string> {
   const keys = [
-    content.author.photoKey,
+    content.profile.photoKey,
     content.theme.backgroundImageKey,
-    ...content.books.map((book) => book.coverKey),
+    ...content.works.map((work) => work.imageKey),
     ...content.pages.flatMap((page) => page.blocks.map((block) => ('imageKey' in block ? block.imageKey : null))),
   ]
   return new Set(keys.filter((key): key is string => key !== null))

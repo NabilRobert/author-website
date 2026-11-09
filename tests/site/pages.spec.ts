@@ -23,24 +23,27 @@ async function renderPage(path: string, contentAnswer: FakeAnswer = json(demoCon
 }
 
 describe('public pages', () => {
-  it('home shows the author, the newest book and the latest news', async () => {
+  it('home shows the profile, the newest work and the latest news', async () => {
     const page = await renderPage('/mara')
-    expect(page.find('h1').text()).toBe('Mara Ellison')
-    expect(page.text()).toContain('The Lantern Year')
-    expect(page.text()).toContain('Reading and signing')
+    expect(page.find('h1').text()).toBe(demoContent.profile.name)
+    expect(page.text()).toContain('Lantern')
+    expect(page.text()).toContain('Talk: signs that help people find their way')
   })
 
-  it('books page lists a series in reading order with buy links', async () => {
-    const page = await renderPage('/mara/books')
+  it('work page lists the work in the owner order, with group headings and links', async () => {
+    const page = await renderPage('/mara/work')
     const titles = page.findAll('article h3').map((heading) => heading.text())
-    expect(titles).toEqual(['The Lantern Year', 'The Low Tide House', 'Between Two Ferries', 'The Salt Wedding'])
-    expect(page.text()).toContain('Saltmarsh, book 2')
-    expect(page.find('a[href="https://example.com/buy/lantern-year"]').exists()).toBe(true)
+    expect(titles).toEqual(['Lantern', 'Harbour Library', 'Tidewater Market', 'Ferry Posters'])
+    expect(page.findAll('section h2').map((heading) => heading.text())).toContain('Public places')
+    expect(page.text()).toContain('Mobile app')
+    expect(page.find('a[href="https://example.com/lantern"]').exists()).toBe(true)
   })
 
-  it('books without a cover image get a typeset cover', async () => {
-    const page = await renderPage('/mara/books')
-    expect(page.find('[role="img"][aria-label="Cover of The Salt Wedding"]').exists()).toBe(true)
+  it('work without a picture gets a typeset card in the site picture shape', async () => {
+    const page = await renderPage('/mara/work')
+    const card = page.find('[role="img"][aria-label="Ferry Posters"]')
+    expect(card.exists()).toBe(true)
+    expect(card.classes()).toContain('aspect-[4/3]')
   })
 
   it('about page shows its picture-and-text, list and quote blocks', async () => {
@@ -48,18 +51,18 @@ describe('public pages', () => {
     expect(page.find('h1').text()).toBe('About')
     expect(page.findAll('.prose-text p').length).toBeGreaterThan(1)
     expect(page.findAll('ul.list-disc li')).toHaveLength(3)
-    expect(page.find('blockquote').text()).toContain('Every family is an island')
+    expect(page.find('blockquote').text()).toContain('A good sign is one nobody notices.')
   })
 
   it('the menu lists the pages marked for it, in order, without the front page', async () => {
     const page = await renderPage('/mara')
     const menu = page.findAll('nav[aria-label="Main"] a').map((link) => link.text())
-    expect(menu).toEqual(['Books', 'About', 'News', 'Press', 'Contact'])
+    expect(menu).toEqual(['Work', 'About', 'News', 'Press', 'Contact'])
   })
 
   it('the banner button links to another page of the site', async () => {
     const page = await renderPage('/mara')
-    expect(page.find('main a[href="/mara/books"]').text()).toBe('See the books')
+    expect(page.find('main a[href="/mara/work"]').text()).toBe('See the work')
   })
 
   it('contact page links the email and the newsletter', async () => {
@@ -71,7 +74,7 @@ describe('public pages', () => {
   it('press kit shows the short bio to copy', async () => {
     const page = await renderPage('/mara/press')
     expect(page.text()).toContain('Short bio')
-    expect(page.text()).toContain('the Saltmarsh trilogy')
+    expect(page.text()).toContain('signs, identities and small apps')
   })
 
   it('says the site is being set up when the API has no content yet', async () => {
@@ -105,7 +108,7 @@ describe('public pages', () => {
   it('links menu items inside the person site', async () => {
     const page = await renderPage('/mara')
     const menu = page.findAll('nav[aria-label="Main"] a').map((link) => link.attributes('href'))
-    expect(menu[0]).toBe('/mara/books')
+    expect(menu[0]).toBe('/mara/work')
   })
 
   it('an unknown address shows the not-found page', async () => {

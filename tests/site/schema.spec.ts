@@ -3,8 +3,8 @@ import { demoContent } from '@shared/demo-content'
 import { siteContentSchema } from '@shared/schema'
 
 function withFirstBuyLink(url: string) {
-  const [first, ...rest] = demoContent.books
-  return { ...demoContent, books: [{ ...first!, buyLinks: [{ label: 'Shop', url }] }, ...rest] }
+  const [first, ...rest] = demoContent.works
+  return { ...demoContent, works: [{ ...first!, links: [{ label: 'Shop', url }] }, ...rest] }
 }
 
 function withHeroButton(buttonUrl: string) {
@@ -31,18 +31,18 @@ describe('site content schema', () => {
   })
 
   it('rejects a buy link without https://', () => {
-    expect(siteContentSchema.safeParse(withFirstBuyLink('amazon.com/book')).success).toBe(false)
+    expect(siteContentSchema.safeParse(withFirstBuyLink('amazon.com/work')).success).toBe(false)
   })
 
-  it('asks for a title when a book has none', () => {
-    const [first, ...rest] = demoContent.books
-    const untitled = { ...demoContent, books: [{ ...first!, title: '   ' }, ...rest] }
-    expect(firstErrorMessage(untitled)).toBe('Add the book title.')
+  it('asks for a title when a work has none', () => {
+    const [first, ...rest] = demoContent.works
+    const untitled = { ...demoContent, works: [{ ...first!, title: '   ' }, ...rest] }
+    expect(firstErrorMessage(untitled)).toBe('Add a title.')
   })
 
   it('rejects an image key outside the images folder', () => {
-    const author = { ...demoContent.author, photoKey: '../secrets.txt' }
-    expect(siteContentSchema.safeParse({ ...demoContent, author }).success).toBe(false)
+    const profile = { ...demoContent.profile, photoKey: '../secrets.txt' }
+    expect(siteContentSchema.safeParse({ ...demoContent, profile }).success).toBe(false)
   })
 
   it('needs a front page', () => {
@@ -53,7 +53,7 @@ describe('site content schema', () => {
   it('refuses two pages at the same address', () => {
     const copy = { ...demoContent.pages[1]!, id: crypto.randomUUID() }
     expect(firstErrorMessage({ ...demoContent, pages: [...demoContent.pages, copy] })).toBe(
-      'Two pages use /books. Change one.',
+      'Two pages use /work. Change one.',
     )
   })
 
@@ -69,7 +69,7 @@ describe('site content schema', () => {
   })
 
   it('rejects a banner button starting with //, which browsers treat as another site (here 127.0.0.1)', () => {
-    expect(withHeroButton('//2130706433/books').success).toBe(false)
+    expect(withHeroButton('//2130706433/works').success).toBe(false)
   })
 
   it('rejects a javascript: banner button', () => {
@@ -84,7 +84,7 @@ describe('site content schema', () => {
   })
 
   it('allows an empty contact email and newsletter address', () => {
-    const author = { ...demoContent.author, contactEmail: '', newsletterUrl: '' }
-    expect(siteContentSchema.safeParse({ ...demoContent, author }).success).toBe(true)
+    const profile = { ...demoContent.profile, contactEmail: '', newsletterUrl: '' }
+    expect(siteContentSchema.safeParse({ ...demoContent, profile }).success).toBe(true)
   })
 })

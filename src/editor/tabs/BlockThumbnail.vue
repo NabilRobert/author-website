@@ -46,7 +46,7 @@ defineProps<{ type: BlockType }>()
         <rect x="30" y="19" width="20" height="9" rx="4.5" class="fill-action" />
         <rect x="54" y="19" width="20" height="9" rx="4.5" class="fill-action" />
       </template>
-      <template v-else-if="type === 'books'">
+      <template v-else-if="type === 'works'">
         <rect x="8" y="6" width="22" height="34" rx="1" class="fill-panel-muted" />
         <rect x="36" y="8" width="32" height="5" class="fill-panel-muted" />
         <rect x="36" y="18" width="36" height="3" />
@@ -70,9 +70,9 @@ defineProps<{ type: BlockType }>()
       <template v-else>
         <rect x="6" y="6" width="68" height="8" rx="1" />
         <rect
-          v-for="cover in 4"
-          :key="cover"
-          :x="cover * 17 - 11"
+          v-for="card in 4"
+          :key="card"
+          :x="card * 17 - 11"
           y="19"
           width="13"
           height="22"

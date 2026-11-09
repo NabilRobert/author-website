@@ -4,8 +4,8 @@
  */
 import type { Env } from './env'
 import { findSiteByOwner } from './sites'
+import { SITE_CONTENT_TABLES } from './content-write'
 
-const SITE_TABLES = ['blocks', 'pages', 'news', 'reviews', 'buy_links', 'books', 'social_links', 'theme', 'author']
 const SITE_RECORDS = ['images', 'reports']
 
 export async function deleteAccount(env: Env, userId: string): Promise<void> {
@@ -17,7 +17,7 @@ export async function deleteAccount(env: Env, userId: string): Promise<void> {
   }
   const bySite = (table: string) => env.DB.prepare(`DELETE FROM ${table} WHERE site_id = ?`).bind(site?.id ?? '')
   await env.DB.batch([
-    ...[...SITE_TABLES, ...SITE_RECORDS].map(bySite),
+    ...[...SITE_CONTENT_TABLES, ...SITE_RECORDS].map(bySite),
     env.DB.prepare('DELETE FROM sites WHERE owner_user_id = ?').bind(userId),
     env.DB.prepare('DELETE FROM session WHERE "userId" = ?').bind(userId),
     env.DB.prepare('DELETE FROM account WHERE "userId" = ?').bind(userId),

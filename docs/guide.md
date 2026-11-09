@@ -4,13 +4,13 @@ How Framed works, in plain words. Framed gives anyone a portfolio page
 they build from blocks, at `framed.my.id/<name>`. Read the flows first,
 then use the glossary and "where to change things" as a reference.
 
-## The flow: a visitor opens /mara/about
+## The flow: a visitor opens /alex/about
 
 ```mermaid
 flowchart TD
-  A[Browser asks for /mara/about] --> B[src/router/index.ts: site = 'mara', page = 'about']
-  B --> C[src/views/SiteLayout.vue: load mara's site, wear its theme]
-  C --> D[GET /api/sites/mara/content]
+  A[Browser asks for /alex/about] --> B[src/router/index.ts: site = 'alex', page = 'about']
+  B --> C[src/views/SiteLayout.vue: load alex's site, wear its theme]
+  C --> D[GET /api/sites/alex/content]
   C --> E[src/views/PageView.vue: find the page whose slug is 'about']
   E --> F[src/components/blocks/PageBlocks.vue: one component per block]
 ```
@@ -23,18 +23,18 @@ flowchart TD
    loadSiteContent`). Until it arrives it shows "Loading…"; for a name
    nobody has, an unsaved site or a failure, it says so. It puts the site's
    theme on its own box (`src/content/themeVariables.ts`) and tells the
-   components the site's name, so their links (`/books`) become
-   `/mara/books` (`src/content/sitePath.ts`).
+   components the site's name, so their links (`/work`) become
+   `/alex/work` (`src/content/sitePath.ts`).
 3. **Find the page** (`src/views/PageView.vue`): looks through
    `content.pages` for the slug (`''` for the front page). No match shows
    the not-found page.
 4. **Stack the blocks** (`src/components/blocks/PageBlocks.vue`): for each
    block, picks the component for its `type` and passes it the block (and,
-   for books, news, contact and press kit, the content they show).
+   for work, news, contact and press kit, the content they show).
 5. **Each block draws itself**, for example
    `src/components/blocks/ImageTextBlock.vue` puts the picture beside the
-   text. Books come from `src/components/books/BookList.vue`, in exactly the
-   order the owner arranged them; neighbouring books of one series share a
+   text. Work comes from `src/components/works/WorkList.vue`, in exactly the
+   order the owner arranged it; neighbouring works of one group share a
    heading (`src/content/format.ts: groupAdjacentSeries`). In the editor the
    owner drags them into order (`vue-draggable-plus`) or uses Up and Down.
 
@@ -52,8 +52,8 @@ flowchart LR
    address; it hands the request to the Hono app (`server/app.ts`).
 2. The route finds the site by name (`server/sites.ts`); a hidden site
    answers 404. `loadContent` (`server/content-read.ts`) reads every table
-   in one D1 batch, only that site's rows (each row carries `site_id`), and rebuilds the document: author, theme, books with their buy
-   links and reviews, news, and pages with their blocks.
+   in one D1 batch, only that site's rows (each row carries `site_id`), and rebuilds the document: profile, theme, works with their
+   links and quotes, news, and pages with their blocks.
 3. It checks the result against the schema, so a bad row becomes a plain
    "something went wrong" (500) rather than a broken page.
 4. The answer may be cached for 60 seconds, so a saved change can take a
@@ -81,7 +81,7 @@ sequenceDiagram
   L->>A: log in with it
   A-->>B: login cookie (HttpOnly, a week)
   L->>S: POST /api/me/site (first time: claim a name)
-  B->>E: /mara/edit
+  B->>E: /alex/edit
   E->>S: GET /api/me, then GET /api/me/content
   B->>E: edit, Save changes
   E->>S: PUT /api/me/content
@@ -104,7 +104,7 @@ sequenceDiagram
 4. **Edit mode**: the app knows who is logged in on every page
    (`src/auth/useAccount.ts`). On their own page the owner sees a small bar
    (`src/components/layout/OwnerBar.vue`): "Edit this page" opens the
-   editor on that page (`/<name>/edit?page=books`), and the editor's "Done"
+   editor on that page (`/<name>/edit?page=work`), and the editor's "Done"
    goes back, asking first if anything is unsaved. Edit mode only changes
    what the screen shows; the server checks the login on every save.
 5. **Loading** (`src/editor/useEditor.ts: createEditor` →
@@ -135,7 +135,7 @@ sequenceDiagram
    the site's allowance (200 pictures, 200 MB), stores it in R2 as
    `images/<random id>.<jpg|png|webp>` and records it in the `images`
    table.
-3. The returned key goes into the draft (a cover, a photo, a banner); the
+3. The returned key goes into the draft (a picture of work, a photo, a banner); the
    preview shows it straight away. It goes live when the owner saves.
 4. Visitors load it from `GET /api/images/<id>.png`, cached for a year (a
    key is never reused, so the picture behind it never changes).
@@ -182,7 +182,7 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Slug**: the part of the address after the `/`. The front page's is
   empty. `edit` and `api` are kept for the site itself.
 - **Content document**: everything on the site as one object
-  (`SiteContent`): author, theme, books, news, pages and `updatedAt`.
+  (`SiteContent`): profile, theme, works, news, pages and `updatedAt`.
 - **Zod schema**: a description of the content's shape that can also check
   it. The same schema checks the editor's draft and the API's input, and
   its messages are what the owner sees.
@@ -198,8 +198,11 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   colours and fonts.
 - **Container query**: a style rule that depends on the width of a box on
   the page rather than the whole window (`@container`).
-- **Typeset cover**: the plain title-on-colour cover shown until a book has
-  a cover image (`src/components/books/BookCover.vue`).
+- **Work**: anything someone shows: a project, book, building, painting or
+  app (`shared/schema.ts: workSchema`), with a picture whose shape the
+  owner picks for the whole site (portrait, landscape, square, wide).
+- **Typeset card**: the plain title-on-colour card shown until a work has a
+  picture (`src/components/works/WorkPicture.vue`).
 - **D1**: Cloudflare's SQLite database. The tables are in
   `migrations/0001_create_content_tables.sql`.
 - **Binding**: how the API reaches a Cloudflare resource, like `env.DB` for

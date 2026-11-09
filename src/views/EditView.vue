@@ -41,7 +41,7 @@ const DIVIDER = [
   '[&>[class*=splitter]]:after:rounded-full [&>[class*=splitter]]:after:bg-panel-muted',
 ]
 
-// Preview the page the owner was viewing (?page=books), or the front page.
+// Preview the page the owner was viewing (?page=works), or the front page.
 watch(status, () => {
   const wanted = draft.value.pages.find((page) => page.slug === String(route.query.page ?? ''))
   previewPageId.value ||= wanted?.id ?? draft.value.pages[0]?.id ?? ''

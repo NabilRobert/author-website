@@ -6,7 +6,7 @@ import ImageTextForm from '@/editor/block-forms/ImageTextForm.vue'
 import ListForm from '@/editor/block-forms/ListForm.vue'
 import QuoteForm from '@/editor/block-forms/QuoteForm.vue'
 import ButtonsForm from '@/editor/block-forms/ButtonsForm.vue'
-import BooksForm from '@/editor/block-forms/BooksForm.vue'
+import WorksForm from '@/editor/block-forms/WorksForm.vue'
 import NewsForm from '@/editor/block-forms/NewsForm.vue'
 import HeadingOnlyForm from '@/editor/block-forms/HeadingOnlyForm.vue'
 
@@ -22,7 +22,7 @@ const block = defineModel<Block>({ required: true })
   <ListForm v-else-if="block.type === 'list'" v-model="block" />
   <QuoteForm v-else-if="block.type === 'quote'" v-model="block" />
   <ButtonsForm v-else-if="block.type === 'buttons'" v-model="block" />
-  <BooksForm v-else-if="block.type === 'books'" v-model="block" />
+  <WorksForm v-else-if="block.type === 'works'" v-model="block" />
   <NewsForm v-else-if="block.type === 'news'" v-model="block" />
   <HeadingOnlyForm v-else v-model="block" />
 </template>

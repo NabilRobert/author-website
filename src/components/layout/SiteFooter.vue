@@ -12,12 +12,12 @@ const year = new Date().getFullYear()
   <footer class="mt-24 border-t border-line">
     <div class="page-width flex flex-col gap-4 py-10 font-sans text-sm text-muted @2xl:flex-row @2xl:justify-between">
       <div>
-        <p>© {{ year }} {{ content.author.name }}</p>
+        <p>© {{ year }} {{ content.profile.name }}</p>
         <FramedCredit class="mt-1 text-xs" />
       </div>
       <a
-        v-if="content.author.newsletterUrl"
-        :href="content.author.newsletterUrl"
+        v-if="content.profile.newsletterUrl"
+        :href="content.profile.newsletterUrl"
         rel="noopener"
         class="text-accent underline"
         >Get the newsletter</a

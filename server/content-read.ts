@@ -7,11 +7,11 @@
  * read from the same moment.
  */
 import { siteContentSchema } from '../shared/schema'
-import type { Book, NewsItem, Page, SiteContent } from '../shared/schema'
+import type { Work, NewsItem, Page, SiteContent } from '../shared/schema'
 import { centredCrop } from '../shared/fields'
 import type { ImageCrop } from '../shared/fields'
 
-interface AuthorRow {
+interface ProfileRow {
   name: string
   bio_short: string
   photo_key: string | null
@@ -29,6 +29,7 @@ interface ThemeRow {
   heading_font: string
   body_font: string
   background_pattern: string
+  work_shape: string
   pattern_colours: string | null
   background_image_key: string | null
 }
@@ -36,21 +37,21 @@ interface LinkRow {
   label: string
   url: string
 }
-interface BookRow {
+interface WorkRow {
   id: string
   title: string
-  series_name: string
-  series_position: number | null
-  published_on: string
-  blurb: string
-  cover_key: string | null
-  cover_crop: string | null
+  group_name: string
+  subtitle: string
+  dated_on: string
+  description: string
+  image_key: string | null
+  image_crop: string | null
 }
-interface BookLinkRow extends LinkRow {
-  book_id: string
+interface WorkLinkRow extends LinkRow {
+  work_id: string
 }
-interface ReviewRow {
-  book_id: string
+interface QuoteRow {
+  work_id: string
   quote: string
   source: string
 }
@@ -86,35 +87,35 @@ export class StoredContentError extends Error {}
  */
 export async function loadContent(db: D1Database, siteId: string): Promise<SiteContent | null> {
   const query = (sql: string) => db.prepare(sql).bind(siteId)
-  const [author, theme, socialLinks, books, buyLinks, reviews, news, pages, blocks] = await db.batch([
-    query('SELECT * FROM author WHERE site_id = ?'),
+  const [profile, theme, socialLinks, works, links, quotes, news, pages, blocks] = await db.batch([
+    query('SELECT * FROM profile WHERE site_id = ?'),
     query('SELECT * FROM theme WHERE site_id = ?'),
     query('SELECT label, url FROM social_links WHERE site_id = ? ORDER BY position'),
-    query('SELECT * FROM books WHERE site_id = ? ORDER BY position'),
-    query('SELECT book_id, label, url FROM buy_links WHERE site_id = ? ORDER BY book_id, position'),
-    query('SELECT book_id, quote, source FROM reviews WHERE site_id = ? ORDER BY book_id, position'),
+    query('SELECT * FROM works WHERE site_id = ? ORDER BY position'),
+    query('SELECT work_id, label, url FROM work_links WHERE site_id = ? ORDER BY work_id, position'),
+    query('SELECT work_id, quote, source FROM work_quotes WHERE site_id = ? ORDER BY work_id, position'),
     query('SELECT * FROM news WHERE site_id = ? ORDER BY position'),
     query('SELECT * FROM pages WHERE site_id = ? ORDER BY position'),
     query('SELECT page_id, id, type, fields_json FROM blocks WHERE site_id = ? ORDER BY page_id, position'),
   ])
-  const authorRow = rowsOf<AuthorRow>(author)[0]
-  if (!authorRow) return null
+  const profileRow = rowsOf<ProfileRow>(profile)[0]
+  if (!profileRow) return null
 
   const document = {
-    author: {
-      name: authorRow.name,
-      bioShort: authorRow.bio_short,
-      photoKey: authorRow.photo_key,
-      photoCrop: readCrop(authorRow.photo_crop),
-      contactEmail: authorRow.contact_email,
-      newsletterUrl: authorRow.newsletter_url,
+    profile: {
+      name: profileRow.name,
+      bioShort: profileRow.bio_short,
+      photoKey: profileRow.photo_key,
+      photoCrop: readCrop(profileRow.photo_crop),
+      contactEmail: profileRow.contact_email,
+      newsletterUrl: profileRow.newsletter_url,
       socialLinks: rowsOf<LinkRow>(socialLinks),
     },
     theme: toTheme(rowsOf<ThemeRow>(theme)[0]),
-    books: assembleBooks(rowsOf(books), rowsOf(buyLinks), rowsOf(reviews)),
+    works: assembleWorks(rowsOf(works), rowsOf(links), rowsOf(quotes)),
     news: rowsOf<NewsRow>(news).map(toNewsItem),
     pages: assemblePages(rowsOf(pages), rowsOf(blocks)),
-    updatedAt: authorRow.updated_at,
+    updatedAt: profileRow.updated_at,
   }
   return parseStored(document)
 }
@@ -141,24 +142,25 @@ function toTheme(row: ThemeRow | undefined) {
     headingFont: row.heading_font,
     bodyFont: row.body_font,
     backgroundPattern: row.background_pattern,
+    workShape: row.work_shape,
     // JSON, or NULL (saved before pattern colours existed) for the schema default.
     patternColours: row.pattern_colours ? (JSON.parse(row.pattern_colours) as unknown) : undefined,
     backgroundImageKey: row.background_image_key,
   }
 }
 
-function assembleBooks(books: BookRow[], buyLinks: BookLinkRow[], reviews: ReviewRow[]): Book[] {
-  return books.map((row) => ({
+function assembleWorks(works: WorkRow[], links: WorkLinkRow[], quotes: QuoteRow[]): Work[] {
+  return works.map((row) => ({
     id: row.id,
     title: row.title,
-    seriesName: row.series_name,
-    seriesPosition: row.series_position,
-    publishedOn: row.published_on,
-    blurb: row.blurb,
-    coverKey: row.cover_key,
-    coverCrop: readCrop(row.cover_crop),
-    buyLinks: buyLinks.filter((link) => link.book_id === row.id).map(({ label, url }) => ({ label, url })),
-    reviews: reviews.filter((review) => review.book_id === row.id).map(({ quote, source }) => ({ quote, source })),
+    group: row.group_name,
+    subtitle: row.subtitle,
+    date: row.dated_on,
+    description: row.description,
+    imageKey: row.image_key,
+    imageCrop: readCrop(row.image_crop),
+    links: links.filter((link) => link.work_id === row.id).map(({ label, url }) => ({ label, url })),
+    quotes: quotes.filter((quote) => quote.work_id === row.id).map(({ quote, source }) => ({ quote, source })),
   }))
 }
 

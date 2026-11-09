@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FRAME_CLASSES } from '@/content/frames'
 import type { BlockOf } from '@shared/blocks'
 import TextField from '@/editor/fields/TextField.vue'
 import ChoiceField from '@/editor/fields/ChoiceField.vue'
@@ -15,7 +16,12 @@ const SIDES = [
   <div class="space-y-4">
     <TextField v-model="block.heading" label="Heading" hint="Optional." />
     <TextField v-model="block.body" label="Text" hint="Leave a blank line to start a new paragraph." multiline />
-    <ImageField v-model="block.imageKey" v-model:crop="block.imageCrop" shape="picture" label="Picture" />
+    <ImageField
+      v-model="block.imageKey"
+      v-model:crop="block.imageCrop"
+      :frame-class="FRAME_CLASSES.picture"
+      label="Picture"
+    />
     <TextField
       v-model="block.imageDescription"
       label="What the picture shows"

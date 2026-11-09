@@ -17,13 +17,12 @@ const FIELD_NAMES: Record<string, string> = {
   contactEmail: 'Contact email',
   newsletterUrl: 'Newsletter address',
   socialLinks: 'Social links',
-  buyLinks: 'Where to buy',
-  reviews: 'Review quotes',
+  quotes: 'Quotes',
   title: 'Title',
-  seriesName: 'Series',
-  seriesPosition: 'Number in series',
-  publishedOn: 'Published on',
-  blurb: 'Blurb',
+  subtitle: 'Line under the title',
+  group: 'Group',
+  date: 'Date',
+  description: 'Description',
   happensOn: 'Date',
   place: 'Place',
   linkUrl: 'Link',
@@ -36,7 +35,7 @@ const FIELD_NAMES: Record<string, string> = {
   items: 'List items',
   quote: 'Quote',
   source: 'Who said it',
-  links: 'Buttons',
+  links: 'Links',
   label: 'Name',
   url: 'Web address',
 }
@@ -46,11 +45,11 @@ type Path = readonly PropertyKey[]
 export function describeLocation(path: Path, content: SiteContent): string {
   const [area, index, ...rest] = path
   const at = typeof index === 'number' ? index : -1
-  if (area === 'books') return join(['Books', content.books[at]?.title], rest)
+  if (area === 'works') return join(['Work', content.works[at]?.title], rest)
   if (area === 'news') return join(['News', content.news[at]?.title], rest)
   if (area === 'pages') return describePageLocation(content, at, rest)
   if (area === 'theme') return 'Look'
-  if (area === 'author') return join(['About you'], [index ?? '', ...rest])
+  if (area === 'profile') return join(['About you'], [index ?? '', ...rest])
   return 'The site'
 }
 

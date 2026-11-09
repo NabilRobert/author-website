@@ -57,7 +57,7 @@ describe('opening the editor', () => {
   it('has nothing unsaved right after loading the saved site', async () => {
     const editor = await loadedEditor()
     expect(editor.isDirty.value).toBe(false)
-    editor.draft.value.author.name = 'Someone Else'
+    editor.draft.value.profile.name = 'Someone Else'
     expect(editor.isDirty.value).toBe(true)
   })
 })
@@ -65,13 +65,13 @@ describe('opening the editor', () => {
 describe('saving', () => {
   it('lists each field to fix, with where it is, and sends nothing', async () => {
     const editor = await loadedEditor()
-    editor.draft.value.books[0]!.buyLinks[0]!.url = 'amazon.com/book'
+    editor.draft.value.works[0]!.links[0]!.url = 'amazon.com/work'
     await editor.save()
     expect(editor.lastSave.value).toMatchObject({
       isSaved: false,
       problems: [
         {
-          location: 'Books › The Lantern Year › Where to buy › no. 1 › Web address',
+          location: 'Work › Lantern › Links › no. 1 › Web address',
           message: 'Enter a full web address starting with https://',
         },
       ],
@@ -80,8 +80,8 @@ describe('saving', () => {
 
   it('keeps the saved version and clears the unsaved flag', async () => {
     const editor = await loadedEditor()
-    editor.draft.value.author.name = 'New Name'
-    const newer = { ...savedContent, author: { ...savedContent.author, name: 'New Name' }, updatedAt: 'later' }
+    editor.draft.value.profile.name = 'New Name'
+    const newer = { ...savedContent, profile: { ...savedContent.profile, name: 'New Name' }, updatedAt: 'later' }
     api({ 'PUT /api/me/content': json(newer) })
     await editor.save()
     expect(editor.lastSave.value?.isSaved).toBe(true)
@@ -91,7 +91,7 @@ describe('saving', () => {
 
   it('explains a save refused because the site changed in another tab', async () => {
     const editor = await loadedEditor()
-    editor.draft.value.author.name = 'New Name'
+    editor.draft.value.profile.name = 'New Name'
     api({ 'PUT /api/me/content': json({ error: 'The site was changed in another tab.' }, 409) })
     await editor.save()
     expect(editor.lastSave.value).toMatchObject({ isSaved: false, text: 'The site was changed in another tab.' })
@@ -99,10 +99,10 @@ describe('saving', () => {
 
   it('keeps the changes and says so when the connection drops', async () => {
     const editor = await loadedEditor()
-    editor.draft.value.author.name = 'New Name'
+    editor.draft.value.profile.name = 'New Name'
     api({ 'PUT /api/me/content': offline })
     await editor.save()
     expect(editor.lastSave.value?.text).toContain('Your changes are still here.')
-    expect(editor.draft.value.author.name).toBe('New Name')
+    expect(editor.draft.value.profile.name).toBe('New Name')
   })
 })

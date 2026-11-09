@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FRAME_CLASSES } from '@/content/frames'
 import type { BlockOf } from '@shared/blocks'
 import TextField from '@/editor/fields/TextField.vue'
 import ColourField from '@/editor/fields/ColourField.vue'
@@ -15,12 +16,12 @@ const block = defineModel<BlockOf<'hero'>>({ required: true })
     <TextField
       v-model="block.buttonUrl"
       label="Button link"
-      hint="A page on this site, like /books, or a full web address."
+      hint="A page on this site, like /work, or a full web address."
     />
     <ImageField
       v-model="block.imageKey"
       v-model:crop="block.imageCrop"
-      shape="banner"
+      :frame-class="FRAME_CLASSES.banner"
       label="Background picture"
       hint="Optional. It is dimmed so the words stay readable."
     />

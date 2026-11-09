@@ -1,6 +1,6 @@
 /**
- * Links inside someone's site. The owner writes them as "/books"; on
- * Framed that page lives at "/<name>/books". SiteLayout provides the
+ * Links inside someone's site. The owner writes them as "/works"; on
+ * Framed that page lives at "/<name>/works". SiteLayout provides the
  * site's name; components turn their links into full paths with
  * `useSitePath()`. Outside a site (tests, the landing page) paths are
  * left as they are.
@@ -14,7 +14,7 @@ export function provideSiteName(name: string): void {
   provide(SITE_NAME, name)
 }
 
-/** "/books" → "/mara/books", "/" → "/mara"; other links are unchanged. */
+/** "/work" → "/alex/work", "/" → "/alex"; other links are unchanged. */
 export function useSitePath(): (path: string) => string {
   const name = inject(SITE_NAME, '')
   return (path: string) => {

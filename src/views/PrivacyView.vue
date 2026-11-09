@@ -3,7 +3,7 @@ import { useHead } from '@unhead/vue'
 import FramedShell from '@/components/layout/FramedShell.vue'
 
 // What Framed keeps about people, and why, in plain words (Indonesia's
-// personal data protection law, UU PDP). A draft for Arthur to review.
+// personal data protection law, UU PDP). A draft for Arthur to quote.
 useHead({ title: 'Privacy · Framed' })
 </script>
 

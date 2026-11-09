@@ -14,10 +14,10 @@ const DESCRIPTIONS: Record<BlockType, string> = {
   list: 'Bullet points or a numbered list',
   quote: 'A large quotation',
   buttons: 'A row of buttons linking anywhere',
-  books: 'Your books, in the order of the Books tab',
+  works: 'Your work, in the order of the Work tab',
   news: 'Your news and events, from the News tab',
   contact: 'Your email, social links and newsletter',
-  pressKit: 'Short bio, photo and covers for journalists',
+  pressKit: 'Short bio, photo and pictures of your work for the press',
 }
 const TYPES = Object.keys(BLOCK_NAMES) as BlockType[]
 </script>

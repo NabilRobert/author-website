@@ -1,5 +1,5 @@
 /**
- * The site's content as one document: the author's details, the books, the
+ * The site's content as one document: the profile's details, the works, the
  * news, and the pages built from blocks (shared/blocks.ts).
  *
  * One Zod schema serves three places: the public site renders it, the
@@ -22,19 +22,19 @@ import {
   webAddress,
 } from './fields'
 
-/** Caps that keep one save small; far above what an author site needs. */
+/** Caps that keep one save small; far above what an profile site needs. */
 export const MAX_PAGES = 30
 export const MAX_BLOCKS_PER_PAGE = 40
 
 // Addresses the site itself uses, so a page cannot take them.
 const RESERVED_SLUGS = new Set(['edit', 'api'])
 
-export const reviewSchema = z.object({
+export const quoteSchema = z.object({
   quote: longText.min(1, 'Add the quote.'),
-  source: requiredText('Say who said it, like "Kirkus Reviews".'),
+  source: requiredText('Say who said it, like a client, a reviewer or a magazine.'),
 })
 
-export const authorSchema = z.object({
+export const profileSchema = z.object({
   name: requiredText('Add your name.'),
   // Used by the press kit and as the site's description in search results.
   bioShort: longText,
@@ -46,18 +46,22 @@ export const authorSchema = z.object({
   socialLinks: z.array(linkSchema.extend({ url: webAddress })),
 })
 
-export const bookSchema = z.object({
+export const workSchema = z.object({
   id: itemId,
-  title: requiredText('Add the book title.'),
-  // Empty for a book that is not part of a series.
-  seriesName: shortText,
-  seriesPosition: z.number().int().positive('The number in the series starts at 1.').nullable(),
-  publishedOn: z.union([z.literal(''), calendarDate]),
-  blurb: longText,
-  coverKey: imageKey,
-  coverCrop: imageCrop,
-  buyLinks: z.array(linkSchema.extend({ url: webAddress })),
-  reviews: z.array(reviewSchema),
+  title: requiredText('Add a title.'),
+  // A line under the title, like "House, Jakarta" or "Novel".
+  subtitle: shortText,
+  // Works with the same group (a series, collection or client) that sit
+  // next to each other share a heading. Empty for none.
+  group: shortText,
+  // Optional; the "newest" choice of a works block uses it.
+  date: z.union([z.literal(''), calendarDate]),
+  description: longText,
+  imageKey,
+  imageCrop,
+  // Like where to buy it, the live site, a video or the source code.
+  links: z.array(linkSchema.extend({ url: webAddress })),
+  quotes: z.array(quoteSchema),
 })
 
 export const newsItemSchema = z.object({
@@ -72,12 +76,12 @@ export const newsItemSchema = z.object({
 
 export const pageSchema = z.object({
   id: itemId,
-  // The page's address: '' is the front page, 'books' is /books.
+  // The page's address: '' is the front page, 'works' is /works.
   slug: z.union([
     z.literal(''),
     z
       .string()
-      .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use lower-case letters, numbers and dashes, like "my-books".')
+      .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use lower-case letters, numbers and dashes, like "my-works".')
       .refine((slug) => !RESERVED_SLUGS.has(slug), 'That address is used by the site itself. Pick another.'),
   ]),
   title: requiredText('Give the page a name.'),
@@ -87,10 +91,10 @@ export const pageSchema = z.object({
 
 export const siteContentSchema = z
   .object({
-    author: authorSchema,
+    profile: profileSchema,
     theme: themeSchema,
-    // Books and news in the order the owner arranged them.
-    books: z.array(bookSchema),
+    // Works and news in the order the owner arranged them.
+    works: z.array(workSchema),
     news: z.array(newsItemSchema),
     // Pages in menu order.
     pages: z.array(pageSchema).max(MAX_PAGES, `The site can have up to ${MAX_PAGES} pages.`),
@@ -114,9 +118,9 @@ function checkPageAddresses(content: { pages: { slug: string }[] }, context: z.R
 }
 
 export type { Link } from './fields'
-export type Review = z.infer<typeof reviewSchema>
-export type Author = z.infer<typeof authorSchema>
-export type Book = z.infer<typeof bookSchema>
+export type Quote = z.infer<typeof quoteSchema>
+export type Profile = z.infer<typeof profileSchema>
+export type Work = z.infer<typeof workSchema>
 export type NewsItem = z.infer<typeof newsItemSchema>
 export type Page = z.infer<typeof pageSchema>
 export type { Theme } from './theme'

@@ -13,7 +13,7 @@ const block = defineModel<BlockOf<'buttons'>>({ required: true })
       v-model="block.links"
       label="Buttons"
       add-label="Add a button"
-      url-hint="A page on this site, like /books, or a full web address."
+      url-hint="A page on this site, like /work, or a full web address."
     />
   </div>
 </template>

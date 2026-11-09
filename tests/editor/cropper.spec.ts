@@ -12,7 +12,7 @@ function mountCropper(crop: ImageCrop = { x: 50, y: 50, zoom: 1 }) {
   const cropper = mount(ImageCropper, {
     props: {
       imageKey: KEY,
-      shape: 'cover',
+      frameClass: 'aspect-[2/3]',
       modelValue: crop,
       'onUpdate:modelValue': (next: ImageCrop) => updates.push(next),
     },

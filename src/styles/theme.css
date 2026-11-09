@@ -13,13 +13,14 @@
   --color-muted: color-mix(in srgb, #1f1b16 72%, #f7f2e8);
   --color-line: color-mix(in srgb, #1f1b16 18%, #f7f2e8);
   --color-paper-deep: color-mix(in srgb, #1f1b16 6%, #f7f2e8);
-  /* Typeset covers: cream title text on each colour is at least 9:1. */
+  /* Typeset cards (a work without a picture): cream title text on each
+     colour is at least 9:1. */
   --color-cream: #fbf7ef;
   --color-ok: #24572f;
-  --color-cover-1: #2e3b4e;
-  --color-cover-2: #4a2c2a;
-  --color-cover-3: #2f4a3a;
-  --color-cover-4: #3d3350;
+  --color-card-1: #2e3b4e;
+  --color-card-2: #4a2c2a;
+  --color-card-3: #2f4a3a;
+  --color-card-4: #3d3350;
 
   /* The editor's own colours, the same whatever theme the owner picks.
      Contrast on panel white: text 17.7:1, muted 7.7:1, action 6.7:1,
@@ -38,7 +39,7 @@
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Small letter-spaced capitals: labels, dates, the series line. */
+/* Small letter-spaced capitals: labels, dates, kinds of news. */
 @utility small-caps {
   font-family: var(--font-sans);
   font-size: 0.75rem;

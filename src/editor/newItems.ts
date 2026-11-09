@@ -1,9 +1,9 @@
 /**
  * Blank items the editor adds when the owner presses "Add …": a block of
- * any type, a book, a news item or a page. Each gets a fresh id.
+ * any type, a work, a news item or a page. Each gets a fresh id.
  */
 import type { BlockOf, BlockType } from '@shared/blocks'
-import type { Book, NewsItem, Page } from '@shared/schema'
+import type { Work, NewsItem, Page } from '@shared/schema'
 import { centredCrop } from '@shared/fields'
 
 type BlockFields = { [T in BlockType]: Omit<BlockOf<T>, 'id' | 'type'> }
@@ -32,7 +32,7 @@ const NEW_BLOCK_FIELDS: { [T in BlockType]: () => BlockFields[T] } = {
   list: () => ({ heading: '', numbered: false, items: ['First item'] }),
   quote: () => ({ quote: 'The quote.', source: '' }),
   buttons: () => ({ heading: '', links: [{ label: 'Button', url: '/' }] }),
-  books: () => ({ heading: 'Books', show: 'all' }),
+  works: () => ({ heading: 'Work', show: 'all' }),
   news: () => ({ heading: 'News and events', limit: 3 }),
   contact: () => ({ heading: 'Get in touch' }),
   pressKit: () => ({ heading: 'Press kit' }),
@@ -45,18 +45,18 @@ export function newBlock<T extends BlockType>(type: T): BlockOf<T> {
   return block as unknown as BlockOf<T>
 }
 
-export function newBook(): Book {
+export function newWork(): Work {
   return {
     id: crypto.randomUUID(),
-    title: 'New book',
-    seriesName: '',
-    seriesPosition: null,
-    publishedOn: '',
-    blurb: '',
-    coverKey: null,
-    coverCrop: centredCrop(),
-    buyLinks: [],
-    reviews: [],
+    title: 'New work',
+    subtitle: '',
+    group: '',
+    date: '',
+    description: '',
+    imageKey: null,
+    imageCrop: centredCrop(),
+    links: [],
+    quotes: [],
   }
 }
 
