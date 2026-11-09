@@ -8,6 +8,7 @@
  */
 import { siteContentSchema } from '../shared/schema'
 import type { Block } from '../shared/blocks'
+import { uniqueSlug } from '../shared/addresses'
 import type { Work, NewsItem, Page, SiteContent } from '../shared/schema'
 import { centredCrop } from '../shared/fields'
 import type { ImageCrop } from '../shared/fields'
@@ -49,6 +50,13 @@ interface WorkRow {
   image_key: string | null
   image_crop: string | null
   page_slug: string
+  show_page: number
+}
+interface WorkPictureRow {
+  work_id: string
+  image_key: string
+  image_crop: string | null
+  description: string
 }
 interface WorkLinkRow extends LinkRow {
   work_id: string
@@ -89,19 +97,10 @@ export class StoredContentError extends Error {}
  * than breaking a page.
  */
 export async function loadContent(db: D1Database, siteId: string): Promise<SiteContent | null> {
-  const query = (sql: string) => db.prepare(sql).bind(siteId)
-  const [profile, theme, socialLinks, works, links, quotes, news, pages, blocks, layouts] = await db.batch([
-    query('SELECT * FROM profile WHERE site_id = ?'),
-    query('SELECT * FROM theme WHERE site_id = ?'),
-    query('SELECT label, url FROM social_links WHERE site_id = ? ORDER BY position'),
-    query('SELECT * FROM works WHERE site_id = ? ORDER BY position'),
-    query('SELECT work_id, label, url FROM work_links WHERE site_id = ? ORDER BY work_id, position'),
-    query('SELECT work_id, quote, source FROM work_quotes WHERE site_id = ? ORDER BY work_id, position'),
-    query('SELECT * FROM news WHERE site_id = ? ORDER BY position'),
-    query('SELECT * FROM pages WHERE site_id = ? ORDER BY position'),
-    query('SELECT page_id, id, type, fields_json FROM blocks WHERE site_id = ? ORDER BY page_id, position'),
-    query('SELECT id, name FROM saved_layouts WHERE site_id = ? ORDER BY position'),
-  ])
+  const [profile, theme, socialLinks, works, links, quotes, pictures, news, pages, blocks, layouts] = await readRows(
+    db,
+    siteId,
+  )
   const profileRow = rowsOf<ProfileRow>(profile)[0]
   if (!profileRow) return null
 
@@ -116,7 +115,13 @@ export async function loadContent(db: D1Database, siteId: string): Promise<SiteC
       socialLinks: rowsOf<LinkRow>(socialLinks),
     },
     theme: toTheme(rowsOf<ThemeRow>(theme)[0]),
-    works: assembleWorks(rowsOf(works), rowsOf(links), rowsOf(quotes), rowsOf(blocks)),
+    works: assembleWorks({
+      works: rowsOf(works),
+      links: rowsOf(links),
+      quotes: rowsOf(quotes),
+      pictures: rowsOf(pictures),
+      blocks: rowsOf(blocks),
+    }),
     news: rowsOf<NewsRow>(news).map(toNewsItem),
     pages: assemblePages(rowsOf(pages), rowsOf(blocks)),
     savedLayouts: rowsOf<{ id: string; name: string }>(layouts).map((row) => ({
@@ -126,6 +131,24 @@ export async function loadContent(db: D1Database, siteId: string): Promise<SiteC
     updatedAt: profileRow.updated_at,
   }
   return parseStored(document)
+}
+
+// Every table of the site, in one batch, in the order loadContent unpacks them.
+function readRows(db: D1Database, siteId: string) {
+  const query = (sql: string) => db.prepare(sql).bind(siteId)
+  return db.batch([
+    query('SELECT * FROM profile WHERE site_id = ?'),
+    query('SELECT * FROM theme WHERE site_id = ?'),
+    query('SELECT label, url FROM social_links WHERE site_id = ? ORDER BY position'),
+    query('SELECT * FROM works WHERE site_id = ? ORDER BY position'),
+    query('SELECT work_id, label, url FROM work_links WHERE site_id = ? ORDER BY work_id, position'),
+    query('SELECT work_id, quote, source FROM work_quotes WHERE site_id = ? ORDER BY work_id, position'),
+    query('SELECT * FROM work_pictures WHERE site_id = ? ORDER BY work_id, position'),
+    query('SELECT * FROM news WHERE site_id = ? ORDER BY position'),
+    query('SELECT * FROM pages WHERE site_id = ? ORDER BY position'),
+    query('SELECT page_id, id, type, fields_json FROM blocks WHERE site_id = ? ORDER BY page_id, position'),
+    query('SELECT id, name FROM saved_layouts WHERE site_id = ? ORDER BY position'),
+  ])
 }
 
 // Stored as JSON; NULL (saved before cropping existed) means centred. The
@@ -159,8 +182,16 @@ function toTheme(row: ThemeRow | undefined) {
   }
 }
 
-function assembleWorks(works: WorkRow[], links: WorkLinkRow[], quotes: QuoteRow[], blocks: BlockRow[]): Work[] {
-  return works.map((row) => ({
+interface WorkRows {
+  works: WorkRow[]
+  links: WorkLinkRow[]
+  quotes: QuoteRow[]
+  pictures: WorkPictureRow[]
+  blocks: BlockRow[]
+}
+
+function assembleWorks({ works, links, quotes, pictures, blocks }: WorkRows): Work[] {
+  const assembled = works.map((row) => ({
     id: row.id,
     title: row.title,
     group: row.group_name,
@@ -172,8 +203,29 @@ function assembleWorks(works: WorkRow[], links: WorkLinkRow[], quotes: QuoteRow[
     links: links.filter((link) => link.work_id === row.id).map(({ label, url }) => ({ label, url })),
     quotes: quotes.filter((quote) => quote.work_id === row.id).map(({ quote, source }) => ({ quote, source })),
     pageSlug: row.page_slug,
+    showPage: row.show_page === 1,
+    morePictures: pictures
+      .filter((picture) => picture.work_id === row.id)
+      .map((picture) => ({
+        imageKey: picture.image_key,
+        imageCrop: readCrop(picture.image_crop),
+        description: picture.description,
+      })),
     pageBlocks: blocksOf(blocks, row.id),
   }))
+  return withAddresses(assembled)
+}
+
+// Works saved before every work had a page have no address (''): give
+// each one from its title, as the editor would, until the owner saves.
+function withAddresses(works: Work[]): Work[] {
+  const taken = works.map((work) => work.pageSlug).filter(Boolean)
+  return works.map((work) => {
+    if (work.pageSlug) return work
+    const pageSlug = uniqueSlug(work.title, taken, 'work')
+    taken.push(pageSlug)
+    return { ...work, pageSlug }
+  })
 }
 
 function toNewsItem(row: NewsRow): NewsItem {

@@ -27,8 +27,8 @@ watch(useBlockSelection(), (picked) => {
   if (picked?.source === 'preview') activeTab.value = 'pages'
 })
 
-// "Edit its page" in the Work tab: that page, in the Pages tab.
-function editWorkPage(workId: string) {
+// "Open" in the Work tab: that work and its page, in the Pages tab.
+function openWork(workId: string) {
   previewPageId.value = workId
   activeTab.value = 'pages'
 }
@@ -50,7 +50,7 @@ function editWorkPage(workId: string) {
       </button>
     </div>
     <PagesTab v-if="activeTab === 'pages'" v-model:page-id="previewPageId" />
-    <WorksTab v-else-if="activeTab === 'works'" @edit-page="editWorkPage" />
+    <WorksTab v-else-if="activeTab === 'works'" @open-work="openWork" />
     <NewsTab v-else-if="activeTab === 'news'" />
     <ProfileTab v-else-if="activeTab === 'profile'" :site="site" />
     <LookTab v-else />

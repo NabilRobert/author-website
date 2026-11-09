@@ -71,7 +71,7 @@ export const GALLERY_COLUMNS = [2, 3, 4] as const
 
 // A picture in a gallery: the upload, its crop, and what it shows (read
 // aloud to visitors who can't see it, and shown under it).
-const galleryPicture = z
+export const galleryPictureSchema = z
   .object({ imageKey, imageCrop, description: shortText })
   .refine((picture) => picture.imageKey !== null, {
     message: 'Upload a picture, or remove this one.',
@@ -84,7 +84,7 @@ const galleryBlock = z.object({
   type: z.literal('gallery'),
   heading: shortText,
   pictures: z
-    .array(galleryPicture)
+    .array(galleryPictureSchema)
     .max(MAX_GALLERY_PICTURES, `A gallery can hold up to ${MAX_GALLERY_PICTURES} pictures.`),
   // How many pictures sit side by side on a wide screen; a phone shows 2.
   columns: z.union([z.literal(2), z.literal(3), z.literal(4)]),
@@ -166,6 +166,7 @@ export const blockSchema = z.discriminatedUnion('type', [
 ])
 
 export type Block = z.infer<typeof blockSchema>
+export type GalleryPicture = z.infer<typeof galleryPictureSchema>
 export type BlockType = Block['type']
 /** One block type's fields, for that block's component: `BlockOf<'hero'>`. */
 export type BlockOf<T extends BlockType> = Extract<Block, { type: T }>

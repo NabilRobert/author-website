@@ -45,6 +45,8 @@ export const demoContent: SiteContent = {
       ],
       quotes: [{ quote: 'The first ferry app my mother could use.', source: 'An example review' }],
       pageSlug: 'lantern',
+      showPage: true,
+      morePictures: [],
       pageBlocks: [
         {
           id: id(901),
@@ -73,7 +75,9 @@ export const demoContent: SiteContent = {
       imageCrop: centredCrop(),
       links: [{ label: 'Photos', url: 'https://example.com/harbour-library' }],
       quotes: [{ quote: 'Nobody asks us where the toilets are any more.', source: 'An example librarian' }],
-      pageSlug: '',
+      pageSlug: 'harbour-library',
+      showPage: true,
+      morePictures: [],
       pageBlocks: [],
     },
     {
@@ -87,7 +91,9 @@ export const demoContent: SiteContent = {
       imageCrop: centredCrop(),
       links: [{ label: 'Photos', url: 'https://example.com/tidewater-market' }],
       quotes: [],
-      pageSlug: '',
+      pageSlug: 'tidewater-market',
+      showPage: true,
+      morePictures: [],
       pageBlocks: [],
     },
     {
@@ -101,7 +107,9 @@ export const demoContent: SiteContent = {
       imageCrop: centredCrop(),
       links: [],
       quotes: [],
-      pageSlug: '',
+      pageSlug: 'ferry-posters',
+      showPage: true,
+      morePictures: [],
       pageBlocks: [],
     },
   ],

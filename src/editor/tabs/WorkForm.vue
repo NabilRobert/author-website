@@ -6,12 +6,11 @@ import TextField from '@/editor/fields/TextField.vue'
 import ImageField from '@/editor/fields/ImageField.vue'
 import LinkListField from '@/editor/fields/LinkListField.vue'
 import QuoteListField from '@/editor/tabs/QuoteListField.vue'
-import WorkPageFields from '@/editor/tabs/WorkPageFields.vue'
 
-// Everything about one piece of work: a book, a building, a painting, an
-// app. The picture's shape is chosen for all work in the Look tab.
+// The details of one piece of work (a book, a building, a painting, an
+// app): what lists show and what tops its page. The cover's shape is
+// chosen for all work in the Look tab. Part of WorkEditor.
 const work = defineModel<Work>({ required: true })
-const emit = defineEmits<{ editPage: [] }>()
 const draft = useDraft()
 </script>
 
@@ -27,8 +26,8 @@ const draft = useDraft()
       v-model="work.imageKey"
       v-model:crop="work.imageCrop"
       :frame-class="WORK_SHAPE_CLASSES[draft.theme.workShape]"
-      label="Picture"
-      hint="Until you add one, the site shows a plain card with the title. Its shape is set in the Look tab."
+      label="Cover picture"
+      hint="Shown in lists of your work and at the top of its page. Until you add one, the site shows a plain card with the title. Its shape is set in the Look tab."
     />
     <TextField
       v-model="work.group"
@@ -49,6 +48,5 @@ const draft = useDraft()
       url-hint="Like where to buy it, the live site, a video or the code, starting with https://"
     />
     <QuoteListField v-model="work.quotes" />
-    <WorkPageFields v-model="work" @edit-page="emit('editPage')" />
   </div>
 </template>

@@ -231,13 +231,17 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   use when unused ones are tidied (`server/image-limits.ts`). Clicking a
   picture opens it whole in a full-size view (`GalleryLightbox.vue`, the
   browser's own `<dialog>`), with Previous / Next, the arrow keys and Esc.
-- **Work page**: a work's own page at `/<site>/work/<pageSlug>`
-  (`src/components/works/WorkPage.vue`): the work's details on top, then
-  blocks. It is made in the Work tab (`WorkPageFields.vue`) and edited in
-  the Pages tab like any page (`WorkPageEditor.vue`). Its blocks
-  sit in the `blocks` table with the work's id as `page_id`
-  (`migrations/0004`). A work with a page links to it from every list, and
-  each work page links to the previous and next works that have pages.
+- **Work page**: every work's own page at `/<site>/work/<pageSlug>`
+  (`src/components/works/WorkPage.vue`), unless "Show a page for this
+  work" is off (`showPage`): its details, its more pictures as a gallery
+  (`PictureGrid.vue`), then its blocks, then links to the previous and next
+  work. A work and its page are edited together in the Pages tab
+  (`src/editor/tabs/WorkEditor.vue`); the Work tab only orders works and
+  opens them, and "+ Add a project" in the Pages tab makes a new one from
+  a layout. More pictures live in `work_pictures`, page blocks in `blocks`
+  under the work's id (`migrations/0004`, `0006`). Works saved before every
+  work had a page get an address from their title when read
+  (`server/content-read.ts: withAddresses`).
 - **Picked works**: a works block set to "Only the ones I tick" shows the
   works in its `pickedWorkIds`, in the Work tab's order.
 - **No colour**: a fill (the content box, part of a pattern, a banner) set

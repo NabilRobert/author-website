@@ -120,6 +120,22 @@ describe('the editor page', () => {
 })
 
 describe('the Works tab', () => {
+  it('opens a work in the Pages tab, with its details, pictures and page together', async () => {
+    const editor = await openEditor()
+    await editor
+      .findAll('[role="tab"]')
+      .find((tab) => tab.text() === 'Work')!
+      .trigger('click')
+    const harbourRow = editor.findAll('[data-work-title]').find((title) => title.text() === 'Harbour Library')!
+    await harbourRow.element.closest('div')!.querySelector<HTMLButtonElement>('button')!.click()
+    await flushPromises()
+    expect(editor.find('[role="tab"][aria-selected="true"]').text()).toBe('Pages')
+    const headings = editor.findAll('section[aria-label="Edit"] h2').map((heading) => heading.text())
+    expect(headings).toEqual(expect.arrayContaining(['“Harbour Library”', 'More pictures', 'Its page']))
+    expect(editor.find('section[aria-label="Preview"] h1').text()).toBe('Harbour Library')
+    editor.unmount()
+  })
+
   it('gives every work a drag handle and keeps Up and Down', async () => {
     const editor = await openEditor()
     await editor
@@ -129,13 +145,8 @@ describe('the Works tab', () => {
     expect(editor.findAll('.drag-handle')).toHaveLength(4)
     const moveDown = editor.find('button[aria-label="Move “Lantern” down"]')
     await moveDown.trigger('click')
-    const titles = editor.findAll('.drag-handle').map((handle) => handle.element.parentElement!.textContent!)
-    expect(titles.map((title) => title.replace('⠿', '').trim())).toEqual([
-      'Harbour Library',
-      'Lantern',
-      'Tidewater Market',
-      'Ferry Posters',
-    ])
+    const titles = editor.findAll('[data-work-title]').map((title) => title.text())
+    expect(titles).toEqual(['Harbour Library', 'Lantern', 'Tidewater Market', 'Ferry Posters'])
     editor.unmount()
   })
 })
@@ -175,30 +186,41 @@ describe('saving a page as a layout', () => {
   })
 })
 
-describe("a work's own page", () => {
-  it('gives a work a page from a layout, then edits it in the Pages tab like any page', async () => {
+describe('adding a project in the Pages tab', () => {
+  async function addProject(editor: Awaited<ReturnType<typeof openEditor>>, layout: string) {
+    const button = (text: string) => editor.findAll('button').find((candidate) => candidate.text().startsWith(text))!
+    await button('+ Add a project').trigger('click')
+    await button(layout).trigger('click')
+  }
+
+  it('makes a new work with a page from the layout, and opens it', async () => {
     const editor = await openEditor()
-    await editor
-      .findAll('[role="tab"]')
-      .find((tab) => tab.text() === 'Work')!
-      .trigger('click')
-    const harbour = editor.findAll('details').find((details) => details.text().includes('Harbour Library'))!
-    const button = (text: string) => harbour.findAll('button').find((candidate) => candidate.text().startsWith(text))!
-    await button('Give this work its own page').trigger('click')
-    await button('Case study').trigger('click')
-    expect(editor.find('[role="tab"][aria-selected="true"]').text()).toBe('Pages')
-    const pageButton = editor.findAll('button').find((candidate) => candidate.text().includes('/work/harbour-library'))!
-    expect(pageButton.attributes('aria-pressed')).toBe('true')
-    expect(editor.find('h2').text()).toBe('Your pages')
-    expect(editor.text()).toContain('Page of “Harbour Library”')
-    expect(editor.findAll('section[aria-label^="Block "]')).toHaveLength(4)
-    expect(editor.find('section[aria-label="Preview"] h1').text()).toBe('Harbour Library')
+    await addProject(editor, 'Case study')
+    expect(editor.find('section[aria-label="Edit"] h2').text()).toBe('Your pages')
+    expect(editor.text()).toContain('“New project”')
+    expect(editor.findAll('section[aria-label^="Block "]')).toHaveLength(3)
+    expect(editor.find('section[aria-label="Preview"] h1').text()).toBe('New project')
+    editor.unmount()
+  })
+
+  it("gives a new project's address its title, until the address is changed", async () => {
+    const editor = await openEditor()
+    await addProject(editor, 'Just the details')
+    const field = (label: string) =>
+      editor.find(
+        `#${editor
+          .findAll('label')
+          .find((candidate) => candidate.text() === label)!
+          .attributes('for')}`,
+      )
+    await field('Title').setValue('Harbour Ferry')
+    expect((field('Its address').element as HTMLInputElement).value).toBe('harbour-ferry')
     editor.unmount()
   })
 })
 
-describe("editing a work's own page in the Pages tab", () => {
-  async function openLanternPage() {
+describe('editing a work in the Pages tab', () => {
+  async function openLantern() {
     const editor = await openEditor()
     await editor
       .findAll('button')
@@ -209,24 +231,34 @@ describe("editing a work's own page in the Pages tab", () => {
   const addressBox = (editor: Awaited<ReturnType<typeof openEditor>>) =>
     editor.findAll('label').find((label) => label.text() === 'Its address')!
 
-  it("keeps the address when it is emptied, so the page doesn't vanish while typing", async () => {
-    const editor = await openLanternPage()
+  it('keeps the address when it is emptied, so the work never has none', async () => {
+    const editor = await openLantern()
     const input = editor.find(`#${addressBox(editor).attributes('for')}`)
     await input.setValue('')
-    expect(editor.text()).toContain('Page of “Lantern”')
+    expect(editor.text()).toContain('/work/lantern')
     await input.setValue('lantern-app')
     expect(editor.text()).toContain('/work/lantern-app')
     editor.unmount()
   })
 
-  it('removes the page after asking, and goes back to the front page', async () => {
+  it('turns its page off, which the preview says and the list shows', async () => {
+    const editor = await openLantern()
+    const showPage = editor.findAll('label').find((label) => label.text().startsWith('Show a page'))!
+    const checkbox = showPage.find('input[type="checkbox"]')
+    await checkbox.setValue(false)
+    expect(editor.find('section[aria-label="Preview"]').text()).toContain("Visitors can't see this page")
+    expect(editor.text()).toContain('Lantern (no page)')
+    editor.unmount()
+  })
+
+  it('removes the work after asking, and goes back to the front page', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true)
-    const editor = await openLanternPage()
+    const editor = await openLantern()
     await editor
       .findAll('button')
-      .find((button) => button.text() === 'Remove its page')!
+      .find((button) => button.text() === 'Remove this work')!
       .trigger('click')
-    expect(editor.text()).not.toContain('Pages of your work')
+    expect(editor.text()).not.toContain('/work/lantern')
     expect(editor.find('button[aria-pressed="true"]').text()).toContain('Home')
     vi.restoreAllMocks()
     editor.unmount()
@@ -268,7 +300,7 @@ describe('click to edit', () => {
     await editor.find(`[data-block-id="${lantern.pageBlocks[1]!.id}"] p`).trigger('click')
     await flushPromises()
     expect(editor.find('[role="tab"][aria-selected="true"]').text()).toBe('Pages')
-    expect(editor.text()).toContain('Page of “Lantern”')
+    expect(editor.text()).toContain('“Lantern”')
     expect(editor.find(`[data-block-form="${lantern.pageBlocks[1]!.id}"]`).attributes('data-selected')).toBeDefined()
     editor.unmount()
   })

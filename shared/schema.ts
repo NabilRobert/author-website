@@ -7,7 +7,7 @@
  * checks it again before writing to the database.
  */
 import { z } from 'zod'
-import { blockSchema } from './blocks'
+import { blockSchema, galleryPictureSchema, MAX_GALLERY_PICTURES } from './blocks'
 import { themeSchema } from './theme'
 import {
   calendarDate,
@@ -70,9 +70,16 @@ export const workSchema = z.object({
   // Like where to buy it, the live site, a video or the source code.
   links: z.array(linkSchema.extend({ url: webAddress })),
   quotes: z.array(quoteSchema),
-  // The work's own page, at /<name>/work/<pageSlug>, with these blocks below
-  // its details; '' for none. Added after the first saves, hence the defaults.
-  pageSlug: z.union([z.literal(''), addressPart]).default(''),
+  // Every work has its own page at /<name>/work/<pageSlug>, unless
+  // showPage is off: its details, morePictures as a gallery, then
+  // pageBlocks. Added after the first saves, hence the defaults; works saved
+  // before addresses existed get one when read (server/content-read.ts).
+  pageSlug: addressPart,
+  showPage: z.boolean().default(true),
+  morePictures: z
+    .array(galleryPictureSchema)
+    .max(MAX_GALLERY_PICTURES, `A work can have up to ${MAX_GALLERY_PICTURES} more pictures.`)
+    .default([]),
   pageBlocks: blocksSchema.default([]),
 })
 
@@ -144,7 +151,7 @@ function checkPageAddresses(content: { pages: { slug: string }[] }, context: z.R
 
 /** No two works' own pages at the same address. */
 function checkWorkPageAddresses(content: { works: { pageSlug: string }[] }, context: z.RefinementCtx) {
-  const slugs = content.works.map((work) => work.pageSlug).filter(Boolean)
+  const slugs = content.works.map((work) => work.pageSlug)
   const duplicate = slugs.find((slug, index) => slugs.indexOf(slug) !== index)
   if (duplicate !== undefined) {
     context.addIssue({

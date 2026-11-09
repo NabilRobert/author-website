@@ -2,6 +2,7 @@
  * Blank items the editor adds when the owner presses "Add …": a block of
  * any type, a work, a news item or a page. Each gets a fresh id.
  */
+import { uniqueSlug } from '@shared/addresses'
 import type { BlockOf, BlockType } from '@shared/blocks'
 import type { Work, NewsItem, Page } from '@shared/schema'
 import { centredCrop } from '@shared/fields'
@@ -51,10 +52,11 @@ export function newBlock<T extends BlockType>(type: T): BlockOf<T> {
   return block as unknown as BlockOf<T>
 }
 
-export function newWork(): Work {
+/** A new work, with its own page at a free address made from `title`. */
+export function newWork(title: string, takenSlugs: string[]): Work {
   return {
     id: crypto.randomUUID(),
-    title: 'New work',
+    title,
     subtitle: '',
     group: '',
     date: '',
@@ -63,7 +65,9 @@ export function newWork(): Work {
     imageCrop: centredCrop(),
     links: [],
     quotes: [],
-    pageSlug: '',
+    pageSlug: uniqueSlug(title, takenSlugs, 'work'),
+    showPage: true,
+    morePictures: [],
     pageBlocks: [],
   }
 }
@@ -83,24 +87,6 @@ export function newNewsItem(today: Date): NewsItem {
 /** A new page with a free address based on its title: "New page" → /new-page, /new-page-2, … */
 export function newPage(title: string, takenSlugs: string[]): Page {
   return { id: crypto.randomUUID(), slug: uniqueSlug(title, takenSlugs, 'page'), title, showInMenu: true, blocks: [] }
-}
-
-/** An address made from `title` that isn't taken yet: "about", then "about-2", "about-3"… */
-export function uniqueSlug(title: string, takenSlugs: string[], fallback: string): string {
-  const base = slugify(title) || fallback
-  let slug = base
-  for (let suffix = 2; takenSlugs.includes(slug); suffix++) slug = `${base}-${suffix}`
-  return slug
-}
-
-/** "Tour Dates 2027!" → "tour-dates-2027"; accents are dropped ("Café" → "cafe"). */
-export function slugify(text: string): string {
-  return text
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
 
 /** Moves the item at `index` one place up (-1) or down (+1); does nothing at the ends. */

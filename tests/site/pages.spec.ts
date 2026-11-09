@@ -39,50 +39,55 @@ describe('public pages', () => {
     expect(page.find('a[href="https://example.com/lantern"]').exists()).toBe(true)
   })
 
-  it('a work with its own page links to it from the list', async () => {
-    const page = await renderPage('/mara/work')
-    expect(page.find('article h3 a[href="/mara/work/lantern"]').text()).toBe('Lantern')
-    expect(page.findAll('a').some((link) => link.text() === 'See the whole project')).toBe(true)
-    expect(page.find('article h3 a[href="/mara/work/harbour-library"]').exists()).toBe(false)
-  })
-
-  it("a work's own page shows its details, then its blocks", async () => {
-    const page = await renderPage('/mara/work/lantern')
-    expect(page.find('h1').text()).toBe('Lantern')
-    expect(page.text()).toContain('The brief')
-    expect(page.text()).toContain('What I did')
-    const back = page.findAll('a').find((link) => link.text().includes('All work'))
-    expect(back?.attributes('href')).toBe('/mara/work')
-  })
-
-  describe('links to the previous and next work', () => {
-    // Lantern and Tidewater Market have pages; Harbour Library, between them, doesn't.
+  describe("works' own pages", () => {
+    // Harbour Library has its page switched off.
     const [lantern, harbour, tidewater, posters] = demoContent.works
-    const content = { ...demoContent, works: [lantern!, harbour!, { ...tidewater!, pageSlug: 'tidewater' }, posters!] }
-    const moreWork = async (path: string) => (await renderPage(path, json(content))).find('nav[aria-label="More work"]')
+    const IMAGE = 'images/0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e01.jpg'
+    const morePictures = [{ imageKey: IMAGE, imageCrop: { x: 50, y: 50, zoom: 1 }, description: 'The app on a phone' }]
+    const works = [{ ...lantern!, morePictures }, { ...harbour!, showPage: false }, tidewater!, posters!]
+    const content = json({ ...demoContent, works })
+    const moreWork = async (path: string) => (await renderPage(path, content)).find('nav[aria-label="More work"]')
 
-    it('skips works without a page, and has no "previous" on the first', async () => {
+    it('every work links to its page from the list, unless its page is off', async () => {
+      const page = await renderPage('/mara/work', content)
+      expect(page.find('article h3 a[href="/mara/work/lantern"]').text()).toBe('Lantern')
+      expect(page.find('article h3 a[href="/mara/work/tidewater-market"]').exists()).toBe(true)
+      expect(page.find('article h3 a[href="/mara/work/harbour-library"]').exists()).toBe(false)
+      expect(page.findAll('a').filter((link) => link.text() === 'See the whole project')).toHaveLength(3)
+    })
+
+    it('shows the details, then the more pictures, then the blocks', async () => {
+      const page = await renderPage('/mara/work/lantern', content)
+      expect(page.find('h1').text()).toBe('Lantern')
+      expect(page.find('button[aria-label="Open The app on a phone full size"]').exists()).toBe(true)
+      expect(page.text()).toContain('The brief')
+      const back = page.findAll('a').find((link) => link.text().includes('All work'))
+      expect(back?.attributes('href')).toBe('/mara/work')
+    })
+
+    it('says not found for a work whose page is off', async () => {
+      const page = await renderPage('/mara/work/harbour-library', content)
+      expect(page.find('h1').text()).toBe('Page not found')
+    })
+
+    it('links to the previous and next work, skipping pages that are off', async () => {
       const links = (await moreWork('/mara/work/lantern')).findAll('a')
       expect(links.map((link) => [link.attributes('rel'), link.attributes('href')])).toEqual([
-        ['next', '/mara/work/tidewater'],
+        ['next', '/mara/work/tidewater-market'],
       ])
     })
 
     it('has no "next" on the last', async () => {
-      const links = (await moreWork('/mara/work/tidewater')).findAll('a')
+      const links = (await moreWork('/mara/work/ferry-posters')).findAll('a')
       expect(links.map((link) => link.attributes('rel'))).toEqual(['prev'])
-      expect(links[0]!.text()).toContain('Lantern')
+      expect(links[0]!.text()).toContain('Tidewater Market')
     })
 
-    it('is left out when no other work has a page', async () => {
-      const page = await renderPage('/mara/work/lantern')
+    it('leaves the links out when no other work has a page', async () => {
+      const alone = json({ ...demoContent, works: works.map((work, index) => ({ ...work, showPage: index === 0 })) })
+      const page = await renderPage('/mara/work/lantern', alone)
       expect(page.find('nav[aria-label="More work"]').exists()).toBe(false)
     })
-  })
-
-  it('says not found for a work that has no page', async () => {
-    const page = await renderPage('/mara/work/harbour-library')
-    expect(page.find('h1').text()).toBe('Page not found')
   })
 
   it('work without a picture gets a typeset card in the site picture shape', async () => {

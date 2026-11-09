@@ -19,9 +19,8 @@ const emit = defineEmits<{ selectBlock: [blockId: string] }>()
 const previewRoot = ref<HTMLElement>()
 
 const page = computed(() => props.content.pages.find((candidate) => candidate.id === props.pageId))
-const workWithPage = computed(() =>
-  props.content.works.find((work) => work.id === props.pageId && work.pageSlug !== ''),
-)
+// A work's page shows here even when switched off, so the owner can work on it.
+const workWithPage = computed(() => props.content.works.find((work) => work.id === props.pageId))
 const startsWithBanner = computed(() => page.value?.blocks[0]?.type === 'hero')
 const style = computed(() => themeVariables(props.content.theme))
 
@@ -71,12 +70,12 @@ watchEffect(() => loadFonts([props.content.theme.headingFont, props.content.them
             <SectionHeading v-if="!startsWithBanner" :title="page.title" />
             <PageBlocks :blocks="page.blocks" :content="content" :selected-block-id="selectedBlockId" />
           </template>
-          <WorkPage
-            v-else-if="workWithPage"
-            :work="workWithPage"
-            :content="content"
-            :selected-block-id="selectedBlockId"
-          />
+          <template v-else-if="workWithPage">
+            <p v-if="!workWithPage.showPage" class="mb-6 rounded-md bg-notice p-3 font-sans text-sm">
+              Visitors can't see this page: "Show a page for this work" is off.
+            </p>
+            <WorkPage :work="workWithPage" :content="content" :selected-block-id="selectedBlockId" />
+          </template>
         </div>
         <SiteFooter :content="content" />
       </div>

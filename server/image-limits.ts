@@ -60,6 +60,7 @@ export function usedImageKeys(content: SiteContent): Set<string> {
     content.profile.photoKey,
     content.theme.backgroundImageKey,
     ...content.works.map((work) => work.imageKey),
+    ...content.works.flatMap((work) => work.morePictures.map((picture) => picture.imageKey)),
     ...content.works.flatMap((work) => work.pageBlocks.flatMap(blockImageKeys)),
     ...content.savedLayouts.flatMap((layout) => layout.blocks.flatMap(blockImageKeys)),
     ...content.pages.flatMap((page) => page.blocks.flatMap(blockImageKeys)),

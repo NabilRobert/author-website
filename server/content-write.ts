@@ -23,6 +23,7 @@ export const SITE_CONTENT_TABLES = [
   'saved_layouts',
   'pages',
   'news',
+  'work_pictures',
   'work_quotes',
   'work_links',
   'works',
@@ -112,10 +113,18 @@ function themeStatement(insert: Insert, theme: Theme): D1PreparedStatement {
 }
 
 function workStatements(insert: Insert, work: Work, position: number): D1PreparedStatement[] {
-  const workRow = insert(
+  return [
+    workRowStatement(insert, work, position),
+    ...workDetailStatements(insert, work),
+    ...blockStatements(insert, work.id, work.pageBlocks),
+  ]
+}
+
+function workRowStatement(insert: Insert, work: Work, position: number): D1PreparedStatement {
+  return insert(
     `INSERT INTO works (site_id, id, position, title, subtitle, group_name, dated_on, description,
-       image_key, image_crop, page_slug)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       image_key, image_crop, page_slug, show_page)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     work.id,
     position,
     work.title,
@@ -126,7 +135,12 @@ function workStatements(insert: Insert, work: Work, position: number): D1Prepare
     work.imageKey,
     JSON.stringify(work.imageCrop),
     work.pageSlug,
+    work.showPage ? 1 : 0,
   )
+}
+
+// A work's links, quotes and more pictures, each in its own table.
+function workDetailStatements(insert: Insert, work: Work): D1PreparedStatement[] {
   const links = work.links.map((link, linkPosition) =>
     insert(
       'INSERT INTO work_links (site_id, work_id, position, label, url) VALUES (?, ?, ?, ?, ?)',
@@ -145,7 +159,18 @@ function workStatements(insert: Insert, work: Work, position: number): D1Prepare
       quote.source,
     ),
   )
-  return [workRow, ...links, ...quotes, ...blockStatements(insert, work.id, work.pageBlocks)]
+  const pictures = work.morePictures.map((picture, picturePosition) =>
+    insert(
+      `INSERT INTO work_pictures (site_id, work_id, position, image_key, image_crop, description)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      work.id,
+      picturePosition,
+      picture.imageKey,
+      JSON.stringify(picture.imageCrop),
+      picture.description,
+    ),
+  )
+  return [...links, ...quotes, ...pictures]
 }
 
 function newsStatement(insert: Insert, item: NewsItem, position: number): D1PreparedStatement {

@@ -21,7 +21,7 @@ const props = defineProps<{
 }>()
 const sitePath = useSitePath()
 const pageLink = computed(() =>
-  props.work.pageSlug && !props.isPageTitle ? sitePath(`/work/${props.work.pageSlug}`) : null,
+  props.work.showPage && !props.isPageTitle ? sitePath(`/work/${props.work.pageSlug}`) : null,
 )
 </script>
 

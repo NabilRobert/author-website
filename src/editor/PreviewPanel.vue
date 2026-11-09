@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { SiteContent } from '@shared/schema'
 import SitePreview from '@/editor/SitePreview.vue'
 import { useBlockSelection } from '@/editor/blockSelection'
 
 // The preview side: which page to show, and the page itself. Its layout
 // follows the panel's width, like a phone, tablet or computer screen.
-const props = defineProps<{ content: SiteContent }>()
+defineProps<{ content: SiteContent }>()
 const pageId = defineModel<string>('pageId', { required: true })
 const selection = useBlockSelection()
-const workPages = computed(() => props.content.works.filter((work) => work.pageSlug !== ''))
 
 function selectFromPreview(blockId: string) {
   selection.value = { blockId, source: 'preview' }
@@ -24,8 +22,8 @@ function selectFromPreview(blockId: string) {
       Page:
       <select v-model="pageId" class="rounded-md border border-panel-line bg-panel p-2">
         <option v-for="page in content.pages" :key="page.id" :value="page.id">{{ page.title }}</option>
-        <optgroup v-if="workPages.length" label="Pages of your work">
-          <option v-for="work in workPages" :key="work.id" :value="work.id">{{ work.title }}</option>
+        <optgroup v-if="content.works.length" label="Pages of your work">
+          <option v-for="work in content.works" :key="work.id" :value="work.id">{{ work.title }}</option>
         </optgroup>
       </select>
     </label>

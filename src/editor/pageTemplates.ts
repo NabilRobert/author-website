@@ -102,26 +102,20 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
 ]
 
 /**
- * For a work's own page (the Work tab). The work's title, picture,
- * description and links already sit at the top, so these start below them.
+ * For a work's page (a new project in the Pages tab). The work's title,
+ * cover, description, links and more pictures already sit at the top, so
+ * these are the blocks below them.
  */
 export const WORK_PAGE_TEMPLATES: LayoutTemplate[] = [
   {
     key: 'case-study',
     name: 'Case study',
-    description: 'The brief, pictures, what you did, and what people said',
+    description: 'The brief, what you did, and what people said',
     blocks: () => [
       text('The brief', 'What was asked for, and why it mattered.'),
-      blockWith('gallery', { heading: '' }),
       text('What I did', 'Your part, the choices you made, and how it turned out.'),
       blockWith('quote', { quote: 'What the client or a visitor said.', source: 'Who said it' }),
     ],
-  },
-  {
-    key: 'gallery-first',
-    name: 'Pictures first',
-    description: 'A big grid of pictures, then a few words',
-    blocks: () => [blockWith('gallery', { heading: '', columns: 2 }), text('', 'A few words about this work.')],
   },
   {
     key: 'story',
@@ -133,5 +127,5 @@ export const WORK_PAGE_TEMPLATES: LayoutTemplate[] = [
       blockWith('imageText', { heading: 'The result', body: 'Where it ended up.', imageSide: 'left' }),
     ],
   },
-  BLANK,
+  { ...BLANK, name: 'Just the details', description: 'The details and pictures, nothing more' },
 ]
