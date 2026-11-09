@@ -17,7 +17,22 @@ export function readSetting(
   const fromEnvironment = environment[name]
   if (fromEnvironment) return fromEnvironment
   const secretFile = join(secretsDir, name.toLowerCase())
-  return existsSync(secretFile) ? readFileSync(secretFile, 'utf8').trim() : undefined
+  return existsSync(secretFile) ? readSecretFile(secretFile) : undefined
+}
+
+// Compose bind-mounts secret files with the host's owner and mode, so a file
+// only its host owner can read is unreadable to the container's user (10001).
+function readSecretFile(secretFile: string): string {
+  try {
+    return readFileSync(secretFile, 'utf8').trim()
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EACCES') throw error
+    throw new Error(
+      `${secretFile} exists but the server can't read it: run ops/make-secrets.sh again ` +
+        '(it makes the files readable inside a private folder), then restart.',
+      { cause: error },
+    )
+  }
 }
 
 export function requireSetting(name: string, environment?: NodeJS.ProcessEnv, secretsDir?: string): string {

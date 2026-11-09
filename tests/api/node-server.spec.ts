@@ -1,5 +1,6 @@
 // @vitest-environment node
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -60,6 +61,24 @@ describe('settings for the Node version', () => {
     expect(readSetting('BETTER_AUTH_SECRET', {}, secrets)).toBe('from-a-file')
     expect(readSetting('BETTER_AUTH_SECRET', { BETTER_AUTH_SECRET: 'from-env' }, secrets)).toBe('from-env')
     expect(readSetting('RESEND_API_KEY', {}, secrets)).toBeUndefined()
+  })
+
+  // Root reads any file, so the refusal can only be seen as another user.
+  it.skipIf(process.getuid?.() === 0)('says how to fix a secret file the server cannot read', () => {
+    const secrets = mkdtempSync(join(tmpdir(), 'framed-secrets-'))
+    writeFileSync(join(secrets, 'better_auth_secret'), 'unreadable\n')
+    chmodSync(join(secrets, 'better_auth_secret'), 0o000)
+    expect(() => readSetting('BETTER_AUTH_SECRET', {}, secrets)).toThrow(/can't read it: run ops\/make-secrets.sh/)
+  })
+
+  it('make-secrets.sh leaves files the container user can read, in a folder only the owner can open', () => {
+    const opsCopy = mkdtempSync(join(tmpdir(), 'framed-ops-'))
+    copyFileSync('ops/make-secrets.sh', join(opsCopy, 'make-secrets.sh'))
+    execFileSync('bash', [join(opsCopy, 'make-secrets.sh')], { input: 're_example_key\n', stdio: 'pipe' })
+    const modeOf = (path: string) => statSync(join(opsCopy, 'secrets', path)).mode & 0o777
+    expect(modeOf('.')).toBe(0o700)
+    expect(modeOf('better_auth_secret')).toBe(0o644)
+    expect(modeOf('resend_api_key')).toBe(0o644)
   })
 })
 
