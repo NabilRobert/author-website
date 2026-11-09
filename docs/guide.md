@@ -330,7 +330,8 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   request. `csrf()` (`server/me-routes.ts`) refuses writes whose Origin
   isn't Framed, on top of the cookie's SameSite rule.
 - **Test account**: `test@framed.local`, which owns `/test` in the local
-  database only (`npm run db:seed:test`, which also sets its password).
+  database only (`npm run db:seed:test`, which sets its password from
+  `LOCAL_DEV_TEST_PASSWORD` in your `.dev.vars`).
 - **Fail closed**: when something is missing or wrong, refuse rather than
   allow.
 - **Draft backup**: a copy of unsaved changes in the browser's
