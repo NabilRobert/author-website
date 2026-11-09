@@ -9,6 +9,7 @@ import type { BlockType } from '@shared/blocks'
 import { demoContent } from '@shared/demo-content'
 import { pageSchema } from '@shared/schema'
 import { PAGE_TEMPLATES, WORK_PAGE_TEMPLATES } from '@/editor/pageTemplates'
+import { copyBlocks } from '@/editor/savedLayouts'
 
 describe('slugify', () => {
   it('turns a page name into an address', () => {
@@ -89,5 +90,16 @@ describe('page layouts', () => {
     const project = PAGE_TEMPLATES.find((template) => template.key === 'project')!
     const firstIds = project.blocks().map((block) => block.id)
     expect(project.blocks().some((block) => firstIds.includes(block.id))).toBe(false)
+  })
+})
+
+describe('copyBlocks', () => {
+  it('gives every copy a new id and shares nothing with the original', () => {
+    const original = demoContent.pages[2]!.blocks
+    const copies = copyBlocks(original)
+    expect(copies.map((block) => block.id)).not.toContain(original[0]!.id)
+    const list = copies.find((block) => block.type === 'list')!
+    if (list.type === 'list') list.items.push('Only in the copy')
+    expect(JSON.stringify(original)).not.toContain('Only in the copy')
   })
 })

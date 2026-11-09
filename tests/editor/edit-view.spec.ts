@@ -7,6 +7,8 @@ import EditView from '@/views/EditView.vue'
 import { demoContent } from '@shared/demo-content'
 import { fakeApi, json } from '../fake-api'
 
+// Each test starts without the draft backup an earlier one left (src/editor/draftBackup.ts).
+beforeEach(() => localStorage.clear())
 afterEach(() => vi.unstubAllGlobals())
 
 function pretendScreenIsWide() {
@@ -134,6 +136,41 @@ describe('the Works tab', () => {
       'Tidewater Market',
       'Ferry Posters',
     ])
+    editor.unmount()
+  })
+})
+
+describe('saving a page as a layout', () => {
+  const clickButton = async (editor: Awaited<ReturnType<typeof openEditor>>, text: string) =>
+    editor
+      .findAll('button')
+      .find((button) => button.text().startsWith(text))!
+      .trigger('click')
+
+  it('offers the saved layout when adding a page, with copies of its blocks', async () => {
+    const editor = await openEditor()
+    const homeBlockIds = demoContent.pages[0]!.blocks.map((block) => block.id)
+    await clickButton(editor, 'Save as a layout')
+    await clickButton(editor, 'Save layout')
+    expect(editor.text()).toContain('Saved “Home layout”')
+    await clickButton(editor, '+ Add a page')
+    await clickButton(editor, 'Home layout')
+    const newBlocks = editor.findAll('section[aria-label^="Block "]')
+    expect(newBlocks).toHaveLength(homeBlockIds.length)
+    const newIds = newBlocks.map((block) => block.attributes('data-block-form'))
+    expect(newIds.some((id) => homeBlockIds.includes(id!))).toBe(false)
+    editor.unmount()
+  })
+
+  it('removes a saved layout from the picker after asking', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const editor = await openEditor()
+    await clickButton(editor, 'Save as a layout')
+    await clickButton(editor, 'Save layout')
+    await clickButton(editor, '+ Add a page')
+    await editor.find('button[aria-label="Remove the layout Home layout"]').trigger('click')
+    expect(editor.find('button[aria-label="Remove the layout Home layout"]').exists()).toBe(false)
+    vi.restoreAllMocks()
     editor.unmount()
   })
 })

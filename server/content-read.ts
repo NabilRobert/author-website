@@ -90,7 +90,7 @@ export class StoredContentError extends Error {}
  */
 export async function loadContent(db: D1Database, siteId: string): Promise<SiteContent | null> {
   const query = (sql: string) => db.prepare(sql).bind(siteId)
-  const [profile, theme, socialLinks, works, links, quotes, news, pages, blocks] = await db.batch([
+  const [profile, theme, socialLinks, works, links, quotes, news, pages, blocks, layouts] = await db.batch([
     query('SELECT * FROM profile WHERE site_id = ?'),
     query('SELECT * FROM theme WHERE site_id = ?'),
     query('SELECT label, url FROM social_links WHERE site_id = ? ORDER BY position'),
@@ -100,6 +100,7 @@ export async function loadContent(db: D1Database, siteId: string): Promise<SiteC
     query('SELECT * FROM news WHERE site_id = ? ORDER BY position'),
     query('SELECT * FROM pages WHERE site_id = ? ORDER BY position'),
     query('SELECT page_id, id, type, fields_json FROM blocks WHERE site_id = ? ORDER BY page_id, position'),
+    query('SELECT id, name FROM saved_layouts WHERE site_id = ? ORDER BY position'),
   ])
   const profileRow = rowsOf<ProfileRow>(profile)[0]
   if (!profileRow) return null
@@ -118,6 +119,10 @@ export async function loadContent(db: D1Database, siteId: string): Promise<SiteC
     works: assembleWorks(rowsOf(works), rowsOf(links), rowsOf(quotes), rowsOf(blocks)),
     news: rowsOf<NewsRow>(news).map(toNewsItem),
     pages: assemblePages(rowsOf(pages), rowsOf(blocks)),
+    savedLayouts: rowsOf<{ id: string; name: string }>(layouts).map((row) => ({
+      ...row,
+      blocks: blocksOf(rowsOf(blocks), row.id),
+    })),
     updatedAt: profileRow.updated_at,
   }
   return parseStored(document)
@@ -193,8 +198,8 @@ function assemblePages(pages: PageRow[], blocks: BlockRow[]): Page[] {
   }))
 }
 
-// The blocks of one page, or of one work's own page (stored with the work's
-// id as page_id). Checked against the block schema with the rest of the document.
+// The blocks of one page, of one work's own page, or of a saved layout
+// (stored with the work's or layout's id as page_id). Checked against the block schema with the rest of the document.
 function blocksOf(blocks: BlockRow[], ownerId: string): Block[] {
   return blocks
     .filter((block) => block.page_id === ownerId)

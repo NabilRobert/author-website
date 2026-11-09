@@ -28,7 +28,8 @@ publicRoutes.get('/sites/:name/content', async (c) => {
   const content = await loadContent(c.env.DB, site.id)
   if (!content) return c.json({ error: 'This page is being set up.', reason: 'not-set-up' }, 404)
   c.header('Cache-Control', PUBLIC_CACHE)
-  return c.json(content)
+  // Saved layouts are the owner's tools, not part of the page visitors see.
+  return c.json({ ...content, savedLayouts: [] })
 })
 
 publicRoutes.post('/sites/:name/report', async (c) => {

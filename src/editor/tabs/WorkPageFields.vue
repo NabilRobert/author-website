@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { Work } from '@shared/schema'
 import { useDraft } from '@/editor/useEditor'
 import { uniqueSlug } from '@/editor/newItems'
@@ -8,6 +8,8 @@ import type { LayoutTemplate } from '@/editor/pageTemplates'
 import TextField from '@/editor/fields/TextField.vue'
 import TemplatePicker from '@/editor/tabs/TemplatePicker.vue'
 import PageBlocksEditor from '@/editor/tabs/PageBlocksEditor.vue'
+import SaveAsLayout from '@/editor/fields/SaveAsLayout.vue'
+import { removeSavedLayout, savedLayoutChoices } from '@/editor/savedLayouts'
 
 // A work's own page: off, or on with its address and its blocks. Turning it
 // on picks a layout (src/editor/pageTemplates.ts) and shows the page in the
@@ -16,6 +18,7 @@ const work = defineModel<Work>({ required: true })
 const emit = defineEmits<{ preview: [] }>()
 const draft = useDraft()
 const isChoosingLayout = ref(false)
+const layoutChoices = computed(() => [...WORK_PAGE_TEMPLATES, ...savedLayoutChoices(draft.value.savedLayouts)])
 
 function givePage(template: LayoutTemplate) {
   const takenSlugs = draft.value.works.filter((other) => other.id !== work.value.id).map((other) => other.pageSlug)
@@ -42,8 +45,9 @@ function removePage() {
       <TemplatePicker
         v-if="isChoosingLayout"
         title="Choose a layout for its page"
-        :templates="WORK_PAGE_TEMPLATES"
+        :templates="layoutChoices"
         @pick="givePage"
+        @remove="(layoutId) => removeSavedLayout(draft, layoutId)"
         @cancel="isChoosingLayout = false"
       />
       <button
@@ -73,6 +77,7 @@ function removePage() {
         The title, picture, description and links above sit at the top of the page; these blocks follow.
       </p>
       <PageBlocksEditor v-model="work.pageBlocks" />
+      <SaveAsLayout :blocks="work.pageBlocks" :default-name="`${work.title} layout`" />
     </template>
   </section>
 </template>

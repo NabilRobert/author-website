@@ -9,6 +9,8 @@ import PageBlocksEditor from '@/editor/tabs/PageBlocksEditor.vue'
 import TemplatePicker from '@/editor/tabs/TemplatePicker.vue'
 import { PAGE_TEMPLATES } from '@/editor/pageTemplates'
 import type { PageTemplate } from '@/editor/pageTemplates'
+import { removeSavedLayout, savedLayoutChoices } from '@/editor/savedLayouts'
+import SaveAsLayout from '@/editor/fields/SaveAsLayout.vue'
 
 // Pages: pick a page, change its settings and blocks, add, reorder or
 // remove pages. A new page starts from a layout (src/editor/pageTemplates.ts).
@@ -19,6 +21,7 @@ const selectedPageId = defineModel<string>('pageId', { required: true })
 const selectedIndex = computed(() => draft.value.pages.findIndex((page) => page.id === selectedPageId.value))
 
 const isChoosingLayout = ref(false)
+const layoutChoices = computed(() => [...PAGE_TEMPLATES, ...savedLayoutChoices(draft.value.savedLayouts)])
 
 function addPage(template: PageTemplate) {
   const takenSlugs = draft.value.pages.map((existing) => existing.slug)
@@ -65,8 +68,9 @@ function removeSelectedPage() {
     <TemplatePicker
       v-if="isChoosingLayout"
       title="Choose a layout for the new page"
-      :templates="PAGE_TEMPLATES"
+      :templates="layoutChoices"
       @pick="addPage"
+      @remove="(layoutId) => removeSavedLayout(draft, layoutId)"
       @cancel="isChoosingLayout = false"
     />
 
@@ -81,6 +85,10 @@ function removeSelectedPage() {
           :is-last="selectedIndex === draft.pages.length - 1"
           @move="(offset) => moveItem(draft.pages, selectedIndex, offset)"
           @remove="removeSelectedPage"
+        />
+        <SaveAsLayout
+          :blocks="draft.pages[selectedIndex]!.blocks"
+          :default-name="`${draft.pages[selectedIndex]!.title} layout`"
         />
       </section>
       <section>

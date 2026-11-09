@@ -220,6 +220,12 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   text, picked when adding a page (`src/editor/pageTemplates.ts`,
   `TemplatePicker.vue`). Only a starting point: the page isn't linked to it
   afterwards.
+- **Saved layout**: a page (or a work's page) the owner saved with "Save as
+  a layout"; it is offered next to the ready-made layouts
+  (`src/editor/savedLayouts.ts`, `SaveAsLayout.vue`). Its blocks are copies
+  with new ids, stored in the `blocks` table under the layout's id
+  (`migrations/0005`), and visitors never receive them
+  (`server/public-routes.ts`).
 - **Gallery block**: a grid of uploaded pictures in one shape, each with a
   caption (`GalleryBlock.vue`, `GalleryForm.vue`); its pictures count as in
   use when unused ones are tidied (`server/image-limits.ts`). Clicking a

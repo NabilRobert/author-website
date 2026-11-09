@@ -140,7 +140,7 @@ describe('pictures nobody uses', () => {
 })
 
 describe('which pictures are in use', () => {
-  it("counts a gallery's pictures, on a page or a work's own page, so tidying up never deletes them", () => {
+  it("counts a gallery's pictures, on a page, a work's own page or a saved layout, so tidying up never deletes them", () => {
     const key = 'images/0b8e2f4c-3a1d-4c6b-8e7f-2d9a5c1b3e01.jpg'
     const gallery = blockSchema.parse({
       id: demoContent.works[0]!.id,
@@ -155,5 +155,7 @@ describe('which pictures are in use', () => {
     expect(usedImageKeys(content).has(key)).toBe(true)
     const onWorkPage = { ...demoContent, works: [{ ...demoContent.works[0]!, pageBlocks: [gallery] }] }
     expect(usedImageKeys(onWorkPage).has(key)).toBe(true)
+    const inLayout = { ...demoContent, savedLayouts: [{ id: crypto.randomUUID(), name: 'Mine', blocks: [gallery] }] }
+    expect(usedImageKeys(inLayout).has(key)).toBe(true)
   })
 })

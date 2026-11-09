@@ -8,7 +8,7 @@
  * site is small: a save writes about 50 to 150 rows, against the free
  * plan's 100,000 a day.
  */
-import type { Work, NewsItem, Page, SiteContent, Theme } from '../shared/schema'
+import type { Work, NewsItem, Page, SavedLayout, SiteContent, Theme } from '../shared/schema'
 import type { Block } from '../shared/blocks'
 
 /** Prepares a statement with the site's id bound as its first value. */
@@ -20,6 +20,7 @@ export class StaleSaveError extends Error {}
 // Children before parents, so foreign keys never point at a deleted row.
 export const SITE_CONTENT_TABLES = [
   'blocks',
+  'saved_layouts',
   'pages',
   'news',
   'work_quotes',
@@ -61,6 +62,7 @@ export async function saveContent(
     ...saved.works.flatMap((work, position) => workStatements(insert, work, position)),
     ...saved.news.map((item, position) => newsStatement(insert, item, position)),
     ...saved.pages.flatMap((page, position) => pageStatements(insert, page, position)),
+    ...saved.savedLayouts.flatMap((layout, position) => savedLayoutStatements(insert, layout, position)),
   ])
   return saved
 }
@@ -173,7 +175,17 @@ function pageStatements(insert: Insert, page: Page, position: number): D1Prepare
   return [pageRow, ...blockStatements(insert, page.id, page.blocks)]
 }
 
-// A page's blocks, or a work's own page's: `ownerId` is the page's or the work's id.
+function savedLayoutStatements(insert: Insert, layout: SavedLayout, position: number): D1PreparedStatement[] {
+  const layoutRow = insert(
+    'INSERT INTO saved_layouts (site_id, id, position, name) VALUES (?, ?, ?, ?)',
+    layout.id,
+    position,
+    layout.name,
+  )
+  return [layoutRow, ...blockStatements(insert, layout.id, layout.blocks)]
+}
+
+// A page's blocks, or a work's own page's, or a saved layout's: `ownerId` is its id.
 function blockStatements(insert: Insert, ownerId: string, blocks: Block[]): D1PreparedStatement[] {
   return blocks.map((block, position) => {
     const { id, type, ...fields } = block

@@ -25,6 +25,7 @@ import {
 /** Caps that keep one save small; far above what an profile site needs. */
 export const MAX_PAGES = 30
 export const MAX_BLOCKS_PER_PAGE = 40
+export const MAX_SAVED_LAYOUTS = 20
 
 // Addresses the site itself uses, so a page cannot take them.
 const RESERVED_SLUGS = new Set(['edit', 'api'])
@@ -97,6 +98,16 @@ export const pageSchema = z.object({
   blocks: blocksSchema,
 })
 
+/**
+ * A page the owner saved as a layout, offered with the ready-made ones when
+ * adding a page or giving a work its own page. Its blocks are copies.
+ */
+export const savedLayoutSchema = z.object({
+  id: itemId,
+  name: requiredText('Give the layout a name.'),
+  blocks: blocksSchema,
+})
+
 export const siteContentSchema = z
   .object({
     profile: profileSchema,
@@ -106,6 +117,11 @@ export const siteContentSchema = z
     news: z.array(newsItemSchema),
     // Pages in menu order.
     pages: z.array(pageSchema).max(MAX_PAGES, `The site can have up to ${MAX_PAGES} pages.`),
+    // Only the owner's editor shows these; added later, hence the default.
+    savedLayouts: z
+      .array(savedLayoutSchema)
+      .max(MAX_SAVED_LAYOUTS, `You can keep up to ${MAX_SAVED_LAYOUTS} layouts. Remove one first.`)
+      .default([]),
     // When the content was last saved; the API refuses a save made from an
     // older copy, so a forgotten tab cannot undo newer changes.
     updatedAt: z.string(),
@@ -145,5 +161,6 @@ export type Profile = z.infer<typeof profileSchema>
 export type Work = z.infer<typeof workSchema>
 export type NewsItem = z.infer<typeof newsItemSchema>
 export type Page = z.infer<typeof pageSchema>
+export type SavedLayout = z.infer<typeof savedLayoutSchema>
 export type { Theme } from './theme'
 export type SiteContent = z.infer<typeof siteContentSchema>

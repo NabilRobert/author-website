@@ -255,5 +255,6 @@ export const demoContent: SiteContent = {
       ],
     },
   ],
+  savedLayouts: [],
   updatedAt: '',
 }

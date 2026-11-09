@@ -174,6 +174,17 @@ describe('/api/me/content', () => {
     expect(pageBlockIds).not.toContain(lantern.pageBlocks[0]!.id)
   })
 
+  it('keeps saved layouts with their blocks for the owner, and never shows them to visitors', async () => {
+    const cookie = await api.signUp('mara@example.com', 'mara')
+    const blocks = demoContent.pages[0]!.blocks.map((block) => ({ ...block, id: crypto.randomUUID() }))
+    const layout = { id: crypto.randomUUID(), name: 'My home', blocks }
+    expect((await putContent({ ...demoContent, savedLayouts: [layout] }, cookie)).status).toBe(200)
+    const own = (await (await api.request('/api/me/content', {}, cookie)).json()) as SiteContent
+    expect(own.savedLayouts).toEqual([layout])
+    const visitors = (await (await api.request('/api/sites/mara/content')).json()) as SiteContent
+    expect(visitors.savedLayouts).toEqual([])
+  })
+
   it("refuses two works' pages at the same address", async () => {
     const cookie = await api.signUp('mara@example.com', 'mara')
     const [first, second, ...rest] = demoContent.works

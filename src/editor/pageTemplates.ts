@@ -13,6 +13,8 @@ export interface LayoutTemplate {
   name: string
   description: string
   blocks: () => Block[]
+  // Set for the owner's own saved layouts (src/editor/savedLayouts.ts), which can be removed.
+  savedLayoutId?: string
 }
 
 /** A layout for a new site page, with its title (and so its address). */
