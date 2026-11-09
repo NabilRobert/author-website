@@ -30,6 +30,7 @@ interface ThemeRow {
   body_font: string
   background_pattern: string
   work_shape: string
+  panel: string | null
   pattern_colours: string | null
   background_image_key: string | null
 }
@@ -143,6 +144,8 @@ function toTheme(row: ThemeRow | undefined) {
     bodyFont: row.body_font,
     backgroundPattern: row.background_pattern,
     workShape: row.work_shape,
+    // JSON, or NULL (saved before the setting existed) for the schema default.
+    panel: row.panel ? (JSON.parse(row.panel) as unknown) : undefined,
     // JSON, or NULL (saved before pattern colours existed) for the schema default.
     patternColours: row.pattern_colours ? (JSON.parse(row.pattern_colours) as unknown) : undefined,
     backgroundImageKey: row.background_image_key,

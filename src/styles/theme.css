@@ -78,8 +78,19 @@
 @utility site-panel {
   width: min(76rem, 100% - 2 * var(--site-panel-inset, 0px));
   margin: var(--site-panel-inset, 0px) auto;
-  border-radius: var(--site-panel-inset, 0px);
+  border-radius: var(--site-panel-radius, 0px);
   background: var(--site-panel-background, transparent);
+}
+
+/* A block's box (src/components/blocks/BlockBox.vue, boxVariables): the
+   fill and pattern on their own layer, so opacity fades them, not the text. */
+@utility box-fill {
+  border-radius: var(--box-radius, 0px);
+  background-color: var(--box-colour, transparent);
+  background-image: var(--box-image, none);
+  background-size: var(--box-size, auto);
+  background-position: var(--box-position, center);
+  opacity: var(--box-opacity, 1);
 }
 
 /* Running text: comfortable measure and spacing between paragraphs. */

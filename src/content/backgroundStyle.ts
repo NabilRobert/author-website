@@ -7,7 +7,7 @@
  * these variables.
  */
 import { PATTERN_BASE_COLOUR } from '@shared/theme'
-import type { BackgroundPattern, Theme } from '@shared/theme'
+import type { BackgroundPattern, BoxStyle, PatternColours, Theme } from '@shared/theme'
 import { imageUrl } from '@/content/format'
 
 /**
@@ -69,26 +69,54 @@ const NO_BACKGROUND = {
   '--site-pattern-base': 'transparent',
   '--site-panel-background': 'transparent',
   '--site-panel-inset': '0px',
+  '--site-panel-radius': '0px',
 }
 
 // Automatic colours: the first faint, the others fainter still; the
 // "other diamonds" of argyle stay clear so the page shows through.
 const AUTOMATIC_SHARES = [9, 6, 6]
 const CLEAR_BY_DEFAULT: Partial<Record<BackgroundPattern, number[]>> = { argyle: [1] }
+const ROUNDED_RADIUS = '1.5rem'
+
+/** A pattern's layers as three CSS values (image, size, position). */
+export function patternCss(pattern: BackgroundPattern, paints: Paints) {
+  if (pattern === 'none') return { image: 'none', size: 'auto', position: 'center' }
+  const layers = PATTERNS[pattern](paints)
+  return {
+    image: layers.map((layer) => layer.image).join(', '),
+    size: layers.map((layer) => layer.size).join(', '),
+    position: layers.map((layer) => layer.position ?? 'center').join(', '),
+  }
+}
+
+/**
+ * The pattern's three paint colours: the owner's, or automatic ones mixed
+ * from `ink` (a colour, or "currentColor" to follow the text).
+ */
+export function resolvePaints(pattern: BackgroundPattern, colours: PatternColours, ink: string): Paints {
+  const clear = CLEAR_BY_DEFAULT[pattern] ?? []
+  const automatic = (index: number) =>
+    clear.includes(index) ? 'transparent' : `color-mix(in srgb, ${ink} ${AUTOMATIC_SHARES[index]}%, transparent)`
+  const paint = (index: number) => colours[index] || automatic(index)
+  return [paint(0), paint(1), paint(2)]
+}
 
 export function backgroundVariables(theme: Theme): Record<string, string> {
   if (theme.backgroundImageKey) return pictureVariables(theme, theme.backgroundImageKey)
   if (theme.backgroundPattern === 'none') return NO_BACKGROUND
-  const layers = PATTERNS[theme.backgroundPattern](resolvePaints(theme))
+  const css = patternCss(
+    theme.backgroundPattern,
+    resolvePaints(theme.backgroundPattern, theme.patternColours, theme.textColour),
+  )
   return {
     ...NO_BACKGROUND,
-    '--site-background-image': layers.map((layer) => layer.image).join(', '),
-    '--site-background-size': layers.map((layer) => layer.size).join(', '),
-    '--site-background-position': layers.map((layer) => layer.position ?? 'center').join(', '),
+    '--site-background-image': css.image,
+    '--site-background-size': css.size,
+    '--site-background-position': css.position,
     '--site-pattern-base': theme.patternColours[PATTERN_BASE_COLOUR] || 'transparent',
     // Owner-picked pattern colours can be strong, so the content then sits on
-    // a light panel, as it does over a picture; faint automatic ones need none.
-    ...(hasOwnColours(theme) ? readablePanel(theme) : {}),
+    // the content box, as it does over a picture; faint automatic ones need none.
+    ...(hasOwnColours(theme) ? panelVariables(theme) : {}),
   }
 }
 
@@ -96,30 +124,63 @@ function hasOwnColours(theme: Theme): boolean {
   return theme.patternColours.slice(0, PATTERN_BASE_COLOUR).some(Boolean)
 }
 
-/** A light panel behind the content, set in from the edges so the background frames it. */
-function readablePanel(theme: Theme): Record<string, string> {
+/**
+ * The content box over the background, as the owner set it: its colour
+ * ('' = the page background) at their opacity, framed by the background or
+ * all the way across, with rounded or sharp corners.
+ */
+function panelVariables(theme: Theme): Record<string, string> {
+  const { colour, opacity, corners, width } = theme.panel
   return {
-    '--site-panel-background': `color-mix(in srgb, ${theme.backgroundColour} 93%, transparent)`,
-    '--site-panel-inset': 'clamp(0.75rem, 4cqw, 3rem)',
+    '--site-panel-background': `color-mix(in srgb, ${colour || theme.backgroundColour} ${opacity}%, transparent)`,
+    '--site-panel-inset': width === 'full' ? '0px' : 'clamp(0.75rem, 4cqw, 3rem)',
+    '--site-panel-radius': corners === 'sharp' ? '0px' : ROUNDED_RADIUS,
   }
 }
 
-function resolvePaints(theme: Theme): Paints {
-  const clear = CLEAR_BY_DEFAULT[theme.backgroundPattern] ?? []
-  const automatic = (index: number) =>
-    clear.includes(index)
-      ? 'transparent'
-      : `color-mix(in srgb, ${theme.textColour} ${AUTOMATIC_SHARES[index]}%, transparent)`
-  const paint = (index: number) => theme.patternColours[index] || automatic(index)
-  return [paint(0), paint(1), paint(2)]
-}
-
-// Any picture can sit behind the content, so it always gets the panel.
+// Any picture can sit behind the content, so it always gets the content box.
 function pictureVariables(theme: Theme, key: string): Record<string, string> {
   return {
     ...NO_BACKGROUND,
     '--site-background-image': `url("${imageUrl(key)}")`,
     '--site-background-size': 'cover',
-    ...readablePanel(theme),
+    ...panelVariables(theme),
+  }
+}
+
+/** Whether a block's box has anything to draw (a fill colour or a pattern). */
+export function hasBoxFill(style: BoxStyle): boolean {
+  return Boolean(style.background) || style.pattern !== 'none'
+}
+
+/**
+ * A block's box as CSS variables (the `box-fill` utility reads them). An
+ * automatic pattern follows the box's text colour.
+ */
+export function boxVariables(style: BoxStyle): Record<string, string> {
+  const css = patternCss(style.pattern, resolvePaints(style.pattern, style.patternColours, 'currentColor'))
+  return {
+    '--box-colour': style.background || 'transparent',
+    '--box-image': css.image,
+    '--box-size': css.size,
+    '--box-position': css.position,
+    '--box-opacity': String(style.opacity / 100),
+    '--box-radius': style.corners === 'sharp' ? '0px' : ROUNDED_RADIUS,
+    ...(style.text ? boxTextVariables(style.text) : {}),
+  }
+}
+
+/**
+ * A box's own text colour, and the colours drawn from the site's text
+ * colour (muted lines, rules, links) re-mixed from it, so nothing inside
+ * the box keeps a colour meant for the page behind it.
+ */
+function boxTextVariables(text: string): Record<string, string> {
+  return {
+    '--box-text': text,
+    '--color-ink': text,
+    '--color-muted': `color-mix(in srgb, ${text} 75%, transparent)`,
+    '--color-line': `color-mix(in srgb, ${text} 25%, transparent)`,
+    '--color-accent': text,
   }
 }

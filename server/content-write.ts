@@ -91,8 +91,8 @@ function profileStatements(insert: Insert, content: SiteContent): D1PreparedStat
 function themeStatement(insert: Insert, theme: Theme): D1PreparedStatement {
   return insert(
     `INSERT INTO theme (site_id, background_colour, text_colour, accent_colour, button_colour, button_text_colour,
-       heading_font, body_font, background_pattern, pattern_colours, work_shape, background_image_key)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       heading_font, body_font, background_pattern, pattern_colours, work_shape, background_image_key, panel)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     theme.backgroundColour,
     theme.textColour,
     theme.accentColour,
@@ -104,6 +104,7 @@ function themeStatement(insert: Insert, theme: Theme): D1PreparedStatement {
     JSON.stringify(theme.patternColours),
     theme.workShape,
     theme.backgroundImageKey,
+    JSON.stringify(theme.panel),
   )
 }
 

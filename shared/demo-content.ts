@@ -4,7 +4,7 @@
  * tests have a full site to check. Nothing here describes a real person.
  */
 import type { SiteContent } from './schema'
-import { DEFAULT_THEME } from './theme'
+import { DEFAULT_THEME, plainBox } from './theme'
 import { centredCrop } from './fields'
 
 // Fixed ids so the example is the same on every load; any valid UUID works.
@@ -111,6 +111,7 @@ export const demoContent: SiteContent = {
       blocks: [
         {
           id: id(101),
+          style: plainBox(),
           type: 'hero',
           heading: 'Alex Rowan',
           subheading: 'Signs, identities and small apps for public places.',
@@ -121,8 +122,8 @@ export const demoContent: SiteContent = {
           backgroundColour: '',
           textColour: '',
         },
-        { id: id(102), type: 'works', heading: 'Latest work', show: 'newest' },
-        { id: id(103), type: 'news', heading: 'Latest news', limit: 2 },
+        { id: id(102), style: plainBox(), type: 'works', heading: 'Latest work', show: 'newest' },
+        { id: id(103), style: plainBox(), type: 'news', heading: 'Latest news', limit: 2 },
       ],
     },
     {
@@ -130,7 +131,7 @@ export const demoContent: SiteContent = {
       slug: 'work',
       title: 'Work',
       showInMenu: true,
-      blocks: [{ id: id(201), type: 'works', heading: '', show: 'all' }],
+      blocks: [{ id: id(201), style: plainBox(), type: 'works', heading: '', show: 'all' }],
     },
     {
       id: id(3),
@@ -140,6 +141,7 @@ export const demoContent: SiteContent = {
       blocks: [
         {
           id: id(301),
+          style: plainBox(),
           type: 'imageText',
           heading: 'About Alex',
           body: ABOUT_TEXT,
@@ -150,12 +152,19 @@ export const demoContent: SiteContent = {
         },
         {
           id: id(302),
+          style: plainBox(),
           type: 'list',
           heading: 'What I make',
           numbered: false,
           items: ['Signs and wayfinding', 'Names, logos and identities', 'Small, plain apps'],
         },
-        { id: id(303), type: 'quote', quote: 'A good sign is one nobody notices.', source: 'Alex Rowan' },
+        {
+          id: id(303),
+          style: plainBox(),
+          type: 'quote',
+          quote: 'A good sign is one nobody notices.',
+          source: 'Alex Rowan',
+        },
       ],
     },
     {
@@ -163,14 +172,16 @@ export const demoContent: SiteContent = {
       slug: 'news',
       title: 'News',
       showInMenu: true,
-      blocks: [{ id: id(401), type: 'news', heading: '', limit: null }],
+      blocks: [{ id: id(401), style: plainBox(), type: 'news', heading: '', limit: null }],
     },
     {
       id: id(5),
       slug: 'press',
       title: 'Press',
       showInMenu: true,
-      blocks: [{ id: id(501), type: 'pressKit', heading: 'For journalists, clients and organisers' }],
+      blocks: [
+        { id: id(501), style: plainBox(), type: 'pressKit', heading: 'For journalists, clients and organisers' },
+      ],
     },
     {
       id: id(6),
@@ -178,8 +189,14 @@ export const demoContent: SiteContent = {
       title: 'Contact',
       showInMenu: true,
       blocks: [
-        { id: id(601), type: 'text', heading: '', body: 'For projects, talks and interviews, email me.' },
-        { id: id(602), type: 'contact', heading: '' },
+        {
+          id: id(601),
+          style: plainBox(),
+          type: 'text',
+          heading: '',
+          body: 'For projects, talks and interviews, email me.',
+        },
+        { id: id(602), style: plainBox(), type: 'contact', heading: '' },
       ],
     },
   ],

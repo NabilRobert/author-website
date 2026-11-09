@@ -69,6 +69,59 @@ export const colour = z.string().regex(/^#[0-9a-f]{6}$/i, 'Pick a colour.')
 /** A colour, or '' for "use the site's colours". */
 export const optionalColour = z.union([z.literal(''), colour])
 
+const patternSchema = z.enum(Object.keys(BACKGROUND_PATTERNS) as [BackgroundPattern, ...BackgroundPattern[]])
+
+/** Four pattern colours (see PATTERN_COLOUR_ROLES); '' means automatic. */
+export type PatternColours = [string, string, string, string]
+const noPatternColours = (): PatternColours => ['', '', '', '']
+const patternColoursSchema = z.tuple([optionalColour, optionalColour, optionalColour, optionalColour])
+
+export const CORNERS = { rounded: 'Rounded', sharp: 'Sharp' } as const
+export type Corners = keyof typeof CORNERS
+const cornersSchema = z.enum(Object.keys(CORNERS) as [Corners, ...Corners[]])
+const OPACITY_RANGE = 'Opacity is between 0 and 100.'
+const opacitySchema = z.number().int().min(0, OPACITY_RANGE).max(100, OPACITY_RANGE)
+
+/**
+ * A box around any block: its own fill colour and pattern, how see-through
+ * that fill is (the text stays solid), its text colour and its corners.
+ * The plain style (no fill, no pattern) draws no box at all.
+ */
+export const boxStyleSchema = z.object({
+  background: optionalColour,
+  text: optionalColour,
+  opacity: opacitySchema,
+  corners: cornersSchema,
+  pattern: patternSchema,
+  patternColours: patternColoursSchema,
+})
+export type BoxStyle = z.infer<typeof boxStyleSchema>
+export const plainBox = (): BoxStyle => ({
+  background: '',
+  text: '',
+  opacity: 100,
+  corners: 'rounded',
+  pattern: 'none',
+  patternColours: noPatternColours(),
+})
+
+export const PANEL_WIDTHS = { framed: 'Framed, with the background around it', full: 'All the way across' } as const
+export type PanelWidth = keyof typeof PANEL_WIDTHS
+
+/**
+ * The content box over a background picture or a strong pattern: its colour
+ * ('' = the page background), how see-through it is, its corners, and
+ * whether it is framed by the background or spans the whole width.
+ */
+export const panelSchema = z.object({
+  colour: optionalColour,
+  opacity: opacitySchema,
+  corners: cornersSchema,
+  width: z.enum(Object.keys(PANEL_WIDTHS) as [PanelWidth, ...PanelWidth[]]),
+})
+export type Panel = z.infer<typeof panelSchema>
+export const DEFAULT_PANEL: Panel = { colour: '', opacity: 93, corners: 'rounded', width: 'framed' }
+
 export const themeSchema = z.object({
   backgroundColour: colour,
   textColour: colour,
@@ -79,15 +132,12 @@ export const themeSchema = z.object({
   headingFont: fontKey,
   bodyFont: fontKey,
   // Added after the first saves, hence the defaults.
-  backgroundPattern: z
-    .enum(Object.keys(BACKGROUND_PATTERNS) as [BackgroundPattern, ...BackgroundPattern[]])
-    .default('none'),
-  patternColours: z
-    .tuple([optionalColour, optionalColour, optionalColour, optionalColour])
-    .default((): [string, string, string, string] => ['', '', '', '']),
+  backgroundPattern: patternSchema.default('none'),
+  patternColours: patternColoursSchema.default(noPatternColours),
   workShape: z.enum(Object.keys(WORK_SHAPES) as [WorkShape, ...WorkShape[]]).default('landscape'),
   // A picture behind the whole site; it replaces the pattern.
   backgroundImageKey: imageKey.default(null),
+  panel: panelSchema.default(() => ({ ...DEFAULT_PANEL })),
 })
 
 export type Theme = z.infer<typeof themeSchema>
@@ -105,6 +155,7 @@ export const DEFAULT_THEME: Theme = {
   patternColours: ['', '', '', ''],
   workShape: 'landscape',
   backgroundImageKey: null,
+  panel: DEFAULT_PANEL,
 }
 
 /** WCAG's minimum contrast for body text; the editor warns below it. */

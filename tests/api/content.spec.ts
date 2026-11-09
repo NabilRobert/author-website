@@ -37,6 +37,25 @@ describe('content store', () => {
     expect(await loadContent(api.db, id)).toEqual(saved)
   })
 
+  it("keeps a block's box style and the content-box settings", async () => {
+    await api.signUp('alex@example.com', 'alex')
+    const id = await siteId('alex')
+    const [home, ...rest] = demoContent.pages
+    const style = {
+      ...home!.blocks[0]!.style,
+      background: '#123456',
+      opacity: 40,
+      corners: 'sharp' as const,
+      pattern: 'argyle' as const,
+    }
+    const pages = [{ ...home!, blocks: [{ ...home!.blocks[0]!, style }, ...home!.blocks.slice(1)] }, ...rest]
+    const panel = { colour: '#ffffff', opacity: 70, corners: 'sharp' as const, width: 'full' as const }
+    await saveContent(api.db, id, { ...demoContent, pages, theme: { ...demoContent.theme, panel } }, SAVED_AT)
+    const stored = await loadContent(api.db, id)
+    expect(stored?.pages[0]?.blocks[0]?.style).toEqual(style)
+    expect(stored?.theme.panel).toEqual(panel)
+  })
+
   it('keeps two sites apart, even with the same ids inside', async () => {
     await api.signUp('a@example.com', 'site-a')
     await api.signUp('b@example.com', 'site-b')

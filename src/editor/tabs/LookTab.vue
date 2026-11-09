@@ -6,6 +6,7 @@ import { useDraft } from '@/editor/useEditor'
 import ColourField from '@/editor/fields/ColourField.vue'
 import ChoiceField from '@/editor/fields/ChoiceField.vue'
 import PatternField from '@/editor/fields/PatternField.vue'
+import PanelFields from '@/editor/fields/PanelFields.vue'
 import ImageField from '@/editor/fields/ImageField.vue'
 
 // The site's colours and fonts, with a warning when text would be hard to
@@ -44,12 +45,24 @@ function resetTheme() {
         Hard to read: {{ hardToRead.join(', ') }}. Pick colours further apart (one darker, one lighter).
       </p>
     </div>
-    <PatternField v-model="draft.theme" />
+    <PatternField
+      v-model:pattern="draft.theme.backgroundPattern"
+      v-model:colours="draft.theme.patternColours"
+      label="Background pattern"
+      :preview-background="draft.theme.backgroundColour"
+      :preview-ink="draft.theme.textColour"
+      behind-name="the page background"
+    >
+      <p v-if="draft.theme.backgroundImageKey" class="mt-2 rounded-md bg-notice p-3 text-sm">
+        Your background picture (below) is showing instead of the pattern. Remove the picture to use a pattern.
+      </p>
+    </PatternField>
     <ImageField
       v-model="draft.theme.backgroundImageKey"
       label="Background picture"
-      hint="Optional. It replaces the pattern; the text sits on a light panel over it so it stays readable."
+      hint="Optional. It replaces the pattern; the content sits in the content box over it (set below) so it stays readable."
     />
+    <PanelFields v-model="draft.theme.panel" />
     <ChoiceField v-model="draft.theme.workShape" label="Shape of pictures of your work" :options="SHAPE_OPTIONS" />
     <ChoiceField v-model="draft.theme.headingFont" label="Font for headings" :options="FONT_OPTIONS" />
     <ChoiceField v-model="draft.theme.bodyFont" label="Font for text" :options="FONT_OPTIONS" />

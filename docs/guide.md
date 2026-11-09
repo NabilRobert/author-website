@@ -193,6 +193,13 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   read; setting it once changes every place that uses it.
 - **Contrast ratio**: how readable text is on its background, from 1 to 21.
   4.5 or more is readable (`shared/theme.ts: contrastRatio`).
+- **Box style**: any block's own box: fill colour, pattern, opacity (of the
+  fill only; text stays solid), text colour and corners
+  (`shared/theme.ts: boxStyleSchema`, `src/components/blocks/BlockBox.vue`).
+  A plain style draws no box.
+- **Content box**: the panel over a background picture or a strongly
+  coloured pattern; its colour, opacity, corners and width (framed or all
+  the way across) are in the Look tab (`theme.panel`).
 - **Background pattern**: dots, graph paper, pinstripes, argyle or linen,
   made of CSS gradients in a faint mix of the text colour, so they suit any
   colours and fonts.

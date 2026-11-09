@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { contrastRatio, DEFAULT_THEME, themeSchema } from '@shared/theme'
+import { contrastRatio, DEFAULT_THEME, plainBox, themeSchema } from '@shared/theme'
 import { themeVariables } from '@/content/themeVariables'
 import HeroBlock from '@/components/blocks/HeroBlock.vue'
 import type { BlockOf } from '@shared/blocks'
@@ -40,6 +40,7 @@ describe('HeroBlock', () => {
   const hero: BlockOf<'hero'> = {
     id: crypto.randomUUID(),
     type: 'hero',
+    style: plainBox(),
     heading: 'Welcome',
     subheading: '',
     imageKey: null,

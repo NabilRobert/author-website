@@ -5,6 +5,7 @@ import type { Page } from '@shared/schema'
 import { MAX_BLOCKS_PER_PAGE } from '@shared/schema'
 import { moveItem, newBlock } from '@/editor/newItems'
 import BlockForm from '@/editor/block-forms/BlockForm.vue'
+import BoxStyleFields from '@/editor/fields/BoxStyleFields.vue'
 import ItemControls from '@/editor/fields/ItemControls.vue'
 import AddBlockPicker from '@/editor/tabs/AddBlockPicker.vue'
 
@@ -39,6 +40,10 @@ function addBlock(type: BlockType) {
         />
       </div>
       <BlockForm v-model="page.blocks[index]!" />
+      <details class="mt-4 rounded-md border border-panel-line p-3">
+        <summary class="cursor-pointer font-semibold">Box style: colour, pattern, opacity, corners</summary>
+        <div class="mt-4"><BoxStyleFields v-model="page.blocks[index]!.style" /></div>
+      </details>
     </section>
     <AddBlockPicker v-if="page.blocks.length < MAX_BLOCKS_PER_PAGE" @add="addBlock" />
   </div>

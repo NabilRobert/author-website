@@ -11,11 +11,16 @@
  * a name in `BLOCK_NAMES`, and add a component in src/components/blocks/.
  */
 import { z } from 'zod'
-import { optionalColour } from './theme'
+import { boxStyleSchema, optionalColour, plainBox } from './theme'
 import { imageCrop, imageKey, itemId, linkSchema, linkTarget, longText, requiredText, shortText } from './fields'
+
+// Every block's box (shared/theme.ts: boxStyleSchema); plain unless the
+// owner styles it, and plain for blocks saved before boxes existed.
+const blockStyle = boxStyleSchema.default(plainBox)
 
 const heroBlock = z.object({
   id: itemId,
+  style: blockStyle,
   type: z.literal('hero'),
   heading: requiredText('Add a heading for the banner.'),
   subheading: shortText,
@@ -30,6 +35,7 @@ const heroBlock = z.object({
 
 const textBlock = z.object({
   id: itemId,
+  style: blockStyle,
   type: z.literal('text'),
   heading: shortText,
   body: longText.min(1, 'Add some text, or remove this block.'),
@@ -37,6 +43,7 @@ const textBlock = z.object({
 
 const imageTextBlock = z.object({
   id: itemId,
+  style: blockStyle,
   type: z.literal('imageText'),
   heading: shortText,
   body: longText,
@@ -50,6 +57,7 @@ const imageTextBlock = z.object({
 
 const listBlock = z.object({
   id: itemId,
+  style: blockStyle,
   type: z.literal('list'),
   heading: shortText,
   numbered: z.boolean(),
@@ -58,6 +66,7 @@ const listBlock = z.object({
 
 const quoteBlock = z.object({
   id: itemId,
+  style: blockStyle,
   type: z.literal('quote'),
   quote: longText.min(1, 'Add the quote.'),
   source: shortText,
@@ -65,6 +74,7 @@ const quoteBlock = z.object({
 
 const buttonsBlock = z.object({
   id: itemId,
+  style: blockStyle,
   type: z.literal('buttons'),
   heading: shortText,
   links: z.array(linkSchema).min(1, 'Add at least one button.'),
@@ -72,6 +82,7 @@ const buttonsBlock = z.object({
 
 const booksBlock = z.object({
   id: itemId,
+  style: blockStyle,
   type: z.literal('works'),
   heading: shortText,
   show: z.enum(['all', 'newest']),
@@ -79,14 +90,15 @@ const booksBlock = z.object({
 
 const newsBlock = z.object({
   id: itemId,
+  style: blockStyle,
   type: z.literal('news'),
   heading: shortText,
   // How many of the latest items to show; null shows them all.
   limit: z.number().int().positive().nullable(),
 })
 
-const contactBlock = z.object({ id: itemId, type: z.literal('contact'), heading: shortText })
-const pressKitBlock = z.object({ id: itemId, type: z.literal('pressKit'), heading: shortText })
+const contactBlock = z.object({ id: itemId, style: blockStyle, type: z.literal('contact'), heading: shortText })
+const pressKitBlock = z.object({ id: itemId, style: blockStyle, type: z.literal('pressKit'), heading: shortText })
 
 export const blockSchema = z.discriminatedUnion('type', [
   heroBlock,

@@ -5,8 +5,9 @@
 import type { BlockOf, BlockType } from '@shared/blocks'
 import type { Work, NewsItem, Page } from '@shared/schema'
 import { centredCrop } from '@shared/fields'
+import { plainBox } from '@shared/theme'
 
-type BlockFields = { [T in BlockType]: Omit<BlockOf<T>, 'id' | 'type'> }
+type BlockFields = { [T in BlockType]: Omit<BlockOf<T>, 'id' | 'type' | 'style'> }
 
 // What each new block starts with: empty text, or a sensible choice.
 const NEW_BLOCK_FIELDS: { [T in BlockType]: () => BlockFields[T] } = {
@@ -39,7 +40,7 @@ const NEW_BLOCK_FIELDS: { [T in BlockType]: () => BlockFields[T] } = {
 }
 
 export function newBlock<T extends BlockType>(type: T): BlockOf<T> {
-  const block = { id: crypto.randomUUID(), type, ...NEW_BLOCK_FIELDS[type]() }
+  const block = { id: crypto.randomUUID(), type, style: plainBox(), ...NEW_BLOCK_FIELDS[type]() }
   // TypeScript can't follow a generic spread back to one member of the
   // union; NEW_BLOCK_FIELDS's type already ties each type to its fields.
   return block as unknown as BlockOf<T>

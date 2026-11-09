@@ -1,48 +1,50 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useId } from 'vue'
 import { BACKGROUND_PATTERNS, PATTERN_BASE_COLOUR, PATTERN_COLOUR_ROLES } from '@shared/theme'
-import type { BackgroundPattern, Theme } from '@shared/theme'
-import { backgroundVariables } from '@/content/backgroundStyle'
+import type { BackgroundPattern, PatternColours } from '@shared/theme'
+import { patternCss, resolvePaints } from '@/content/backgroundStyle'
 import ColourField from '@/editor/fields/ColourField.vue'
 
-// The background patterns as tiles, each drawn in the draft's own colours,
-// then a colour picker for each part of the chosen pattern (up to three)
-// and one for what shows behind it. Colours left automatic are a faint mix
-// of the text colour, which suits any theme.
-const theme = defineModel<Theme>({ required: true })
+// A pattern picker: tiles drawing each pattern in the colours it would
+// have, then a colour picker for each part of the chosen pattern and one
+// for what shows behind it. Used for the site background and for every
+// block's box. Colours left automatic are a faint mix of the text colour.
+const props = defineProps<{ label: string; previewBackground: string; previewInk: string; behindName: string }>()
+const pattern = defineModel<BackgroundPattern>('pattern', { required: true })
+const colours = defineModel<PatternColours>('colours', { required: true })
+// Each picker on the page needs its own radio group.
+const groupName = useId()
 
 const tiles = computed(() =>
-  (Object.keys(BACKGROUND_PATTERNS) as BackgroundPattern[]).map((key) => ({
-    key,
-    name: BACKGROUND_PATTERNS[key],
-    variables: {
-      ...backgroundVariables({ ...theme.value, backgroundPattern: key, backgroundImageKey: null }),
-      '--color-paper': theme.value.backgroundColour,
-    },
-  })),
+  (Object.keys(BACKGROUND_PATTERNS) as BackgroundPattern[]).map((key) => {
+    const css = patternCss(key, resolvePaints(key, colours.value, props.previewInk))
+    return {
+      key,
+      name: BACKGROUND_PATTERNS[key],
+      variables: {
+        '--site-background-image': css.image,
+        '--site-background-size': css.size,
+        '--site-background-position': css.position,
+        '--site-pattern-base': colours.value[PATTERN_BASE_COLOUR] || 'transparent',
+        '--color-paper': props.previewBackground,
+      },
+    }
+  }),
 )
-const roles = computed(() => PATTERN_COLOUR_ROLES[theme.value.backgroundPattern])
+const roles = computed(() => PATTERN_COLOUR_ROLES[pattern.value])
 </script>
 
 <template>
   <fieldset>
-    <legend class="font-semibold">Background pattern</legend>
-    <p v-if="theme.backgroundImageKey" class="mt-2 rounded-md bg-notice p-3 text-sm">
-      Your background picture (below) is showing instead of the pattern. Remove the picture to use a pattern.
-    </p>
+    <legend class="font-semibold">{{ label }}</legend>
+    <slot />
     <div class="mt-2 grid grid-cols-3 gap-3">
       <label
         v-for="tile in tiles"
         :key="tile.key"
         class="cursor-pointer rounded-md border-2 border-panel-line bg-panel p-1 text-center text-sm has-checked:border-action has-focus-visible:outline-3"
       >
-        <input
-          v-model="theme.backgroundPattern"
-          type="radio"
-          name="background-pattern"
-          :value="tile.key"
-          class="sr-only"
-        />
+        <input v-model="pattern" type="radio" :name="groupName" :value="tile.key" class="sr-only" />
         <span class="site-background block h-14 rounded" :style="tile.variables" aria-hidden="true" />
         <span class="mt-1 block">{{ tile.name }}</span>
       </label>
@@ -55,16 +57,16 @@ const roles = computed(() => PATTERN_COLOUR_ROLES[theme.value.backgroundPattern]
       <ColourField
         v-for="(role, index) in roles"
         :key="role"
-        v-model="theme.patternColours[index]!"
+        v-model="colours[index]!"
         :label="role"
         can-be-empty
         empty-name="automatic"
       />
       <ColourField
-        v-model="theme.patternColours[PATTERN_BASE_COLOUR]!"
+        v-model="colours[PATTERN_BASE_COLOUR]!"
         label="Behind the pattern"
         can-be-empty
-        empty-name="the page background"
+        :empty-name="behindName"
       />
     </div>
   </fieldset>
