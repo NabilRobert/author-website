@@ -58,6 +58,48 @@ save made from an older copy (so a forgotten tab can't undo newer work),
 then deletes every content row and inserts the new ones in **one D1
 batch**, which D1 runs as one transaction.
 
+## The second flow: the owner edits and saves
+
+```mermaid
+sequenceDiagram
+  participant O as Owner's browser
+  participant A as Cloudflare Access
+  participant E as Editor (src/views/EditView.vue)
+  participant S as API (server/admin-routes.ts)
+  participant D as D1
+  O->>A: open /edit
+  A-->>O: email code, then the page (with a signed token cookie)
+  E->>S: GET /api/admin/content
+  S->>S: requireOwner checks the token (server/access.ts)
+  S->>D: loadContent
+  E-->>O: forms + live preview
+  O->>E: edit, press Save changes
+  E->>E: check the draft with the schema
+  E->>S: PUT /api/admin/content
+  S->>S: requireOwner, schema check, stale check
+  S->>D: saveContent (one batch)
+  S-->>E: saved content with new updatedAt
+```
+
+1. **Sign-in** happens before our code runs: Cloudflare Access asks for the
+   owner's email, sends a one-time code, and only then lets `/edit` and
+   `/api/admin/*` through, adding a signed token to each request.
+2. **The guard** (`server/access.ts: requireOwner`) checks that token again
+   with `jose`. With no Access settings it refuses (503), so a forgotten
+   Access policy can't leave the editor open.
+3. **Loading** (`src/editor/useEditor.ts: createEditor` →
+   `src/editor/editorApi.ts: fetchDraft`): the saved site becomes the
+   draft. A brand-new site starts from the example content.
+4. **Editing**: the tabs (`src/editor/tabs/`) change the draft directly;
+   each block type has its form (`src/editor/block-forms/`). The draft is
+   shared through `provide`/`inject` (`useDraft`).
+5. **Preview** (`src/editor/SitePreview.vue`): the same components as the
+   public site draw the draft, in the draft's colours and fonts.
+6. **Saving** (`createEditor: save`): the draft is checked with the schema
+   first, so mistakes are listed right away, each with where it is
+   (`src/editor/problems.ts`). Then `sendDraft` sends it; the API checks
+   it again, refuses a save from an older copy (409), and writes it.
+
 The site's colours and fonts come from `content.theme`:
 `src/composables/useSiteTheme.ts` turns them into CSS variables
 (`src/content/themeVariables.ts`) on the page and loads the chosen fonts
@@ -101,6 +143,18 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   one transaction (all or nothing).
 - **Miniflare**: Cloudflare's local simulator; the API tests use it for a
   real local D1 (`tests/api/test-database.ts`).
+- **Cloudflare Access**: Cloudflare's sign-in gate. It sits in front of
+  `/edit` and `/api/admin/*` and lets in only the emails on its list, using
+  a one-time code sent by email.
+- **Access token (JWT)**: a signed note Access adds to each request
+  (`Cf-Access-Jwt-Assertion`) saying who signed in. `server/access.ts`
+  checks its signature, issuer, audience and expiry.
+- **Fail closed**: when something is missing or wrong, refuse rather than
+  allow. The editor's API refuses all saves if Access isn't configured.
+- **Draft**: the editor's working copy of the content; nothing changes on
+  the site until it is saved.
+- **Stale save**: a save made from an older copy than the one stored; the
+  API refuses it (409) so it can't undo newer changes.
 - **Image key**: the name an uploaded image is stored under, like
   `images/<id>.jpg`; the site loads it from `/api/images/<key>`.
 
@@ -108,7 +162,10 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 
 - **Add a block type:** add its schema to `shared/blocks.ts` (and to
   `blockSchema` and `BLOCK_NAMES`), add a component in
-  `src/components/blocks/`, and add a line for it in `PageBlocks.vue`.
+  `src/components/blocks/` and a line for it in `PageBlocks.vue`, add a
+  form in `src/editor/block-forms/` and a line in `BlockForm.vue`, and give
+  it starting values in `src/editor/newItems.ts` and a description in
+  `src/editor/tabs/AddBlockPicker.vue`.
 - **Change the default colours or fonts:** `DEFAULT_THEME` in
   `shared/theme.ts`, and the same values in `src/styles/theme.css` (shown
   before the content loads).
@@ -118,6 +175,12 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Change a field's rules or its error message:** `shared/fields.ts` or the
   schema that uses it.
 - **Change the demo content:** `shared/demo-content.ts`.
+- **Change a label or hint in the editor:** the form components in
+  `src/editor/tabs/` and `src/editor/block-forms/`.
+- **Change an error message the owner sees:** field rules in
+  `shared/fields.ts` and the schemas; server messages in
+  `server/admin-routes.ts` and `server/access.ts`; connection messages in
+  `src/editor/editorApi.ts`.
 - **Add an API address:** a route in `server/app.ts`, with a test in
   `tests/api/`.
 - **Change the database tables:** add a new numbered file in `migrations/`
