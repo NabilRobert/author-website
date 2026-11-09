@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "npm run build && wrangler pages dev --port 8788",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",

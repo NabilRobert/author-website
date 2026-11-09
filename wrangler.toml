@@ -1,0 +1,12 @@
+# Cloudflare Pages settings: the built site, the API function's bindings,
+# and the database migrations. Only placeholders here; Arthur fills in the
+# real database id when he creates the D1 database (README checklist).
+name = "author-website"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "author-website"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"

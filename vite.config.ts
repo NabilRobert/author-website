@@ -14,6 +14,8 @@ export default defineConfig({
   server: {
     port: Number(process.env.PORT) || 5173,
     strictPort: true,
+    // The API runs in `wrangler pages dev` (npm run dev:api) on port 8788.
+    proxy: { '/api': 'http://localhost:8788' },
   },
   test: {
     environment: 'jsdom',
