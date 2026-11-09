@@ -1,7 +1,7 @@
 # Cloudflare Pages settings for Framed: the built site, the API function's
-# bindings and public settings, and the database migrations. Only
-# placeholders for ids; secrets (BETTER_AUTH_SECRET, RESEND_API_KEY) are
-# encrypted settings on the Pages project, never in this file (README).
+# bindings and public settings, and the database migrations. Ids aren't
+# secret; secrets (BETTER_AUTH_SECRET, RESEND_API_KEY) are encrypted
+# settings on the Pages project, never in this file (README).
 name = "framed"
 pages_build_output_dir = "./dist"
 compatibility_date = "2026-11-01"
