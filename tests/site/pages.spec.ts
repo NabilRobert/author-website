@@ -55,6 +55,31 @@ describe('public pages', () => {
     expect(back?.attributes('href')).toBe('/mara/work')
   })
 
+  describe('links to the previous and next work', () => {
+    // Lantern and Tidewater Market have pages; Harbour Library, between them, doesn't.
+    const [lantern, harbour, tidewater, posters] = demoContent.works
+    const content = { ...demoContent, works: [lantern!, harbour!, { ...tidewater!, pageSlug: 'tidewater' }, posters!] }
+    const moreWork = async (path: string) => (await renderPage(path, json(content))).find('nav[aria-label="More work"]')
+
+    it('skips works without a page, and has no "previous" on the first', async () => {
+      const links = (await moreWork('/mara/work/lantern')).findAll('a')
+      expect(links.map((link) => [link.attributes('rel'), link.attributes('href')])).toEqual([
+        ['next', '/mara/work/tidewater'],
+      ])
+    })
+
+    it('has no "next" on the last', async () => {
+      const links = (await moreWork('/mara/work/tidewater')).findAll('a')
+      expect(links.map((link) => link.attributes('rel'))).toEqual(['prev'])
+      expect(links[0]!.text()).toContain('Lantern')
+    })
+
+    it('is left out when no other work has a page', async () => {
+      const page = await renderPage('/mara/work/lantern')
+      expect(page.find('nav[aria-label="More work"]').exists()).toBe(false)
+    })
+  })
+
   it('says not found for a work that has no page', async () => {
     const page = await renderPage('/mara/work/harbour-library')
     expect(page.find('h1').text()).toBe('Page not found')

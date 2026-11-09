@@ -227,7 +227,8 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   (`src/components/works/WorkPage.vue`): the work's details on top, then
   blocks the owner adds in the Work tab (`WorkPageFields.vue`). Its blocks
   sit in the `blocks` table with the work's id as `page_id`
-  (`migrations/0004`). A work with a page links to it from every list.
+  (`migrations/0004`). A work with a page links to it from every list, and
+  each work page links to the previous and next works that have pages.
 - **Picked works**: a works block set to "Only the ones I tick" shows the
   works in its `pickedWorkIds`, in the Work tab's order.
 - **No colour**: a fill (the content box, part of a pattern, a banner) set
