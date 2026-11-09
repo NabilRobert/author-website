@@ -67,8 +67,9 @@ these once, in order. Steps 2–4 run in this folder after `npx wrangler login`.
 1. **Domain.** Register `framed.my.id` (check that `.my.id`'s rules allow a
    service for other people) and add it to Cloudflare. Turn on **two-factor
    login for the Cloudflare account**: whoever gets in sees every account.
-2. **Database.** `npx wrangler d1 create framed`; put the `database_id` it
-   prints into `wrangler.toml`, then `npx wrangler d1 migrations apply DB --remote`.
+2. **Database.** `npx wrangler d1 create frameddatabase` (done: its name and
+   `database_id` are in `wrangler.toml`), then
+   `npx wrangler d1 migrations apply DB --remote` to create the tables.
 3. **Picture storage.** `npx wrangler r2 bucket create framed-images`. Keep
    it private; Framed serves pictures itself.
 4. **Login secret.** Make 32+ random characters (`openssl rand -base64 32`).
