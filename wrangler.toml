@@ -1,6 +1,10 @@
 # Cloudflare Pages settings: the built site, the API function's bindings,
 # and the database migrations. Only placeholders here; Arthur fills in the
 # real database id when he creates the D1 database (README checklist).
+#
+# The Access settings (ACCESS_TEAM_DOMAIN, ACCESS_AUD) are not here: they
+# are encrypted secrets on the Pages project, so they stay out of the repo
+# and survive deploys.
 name = "author-website"
 pages_build_output_dir = "./dist"
 compatibility_date = "2026-11-01"
