@@ -24,7 +24,11 @@ useHead({ title: 'Privacy · Framed' })
         <li>Your login sessions (which device, until when), so you stay logged in for up to a week.</li>
       </ul>
       <h2 class="text-xl font-semibold">What we don't do</h2>
-      <p>No ads, no tracking, no selling or sharing your data. Codes are emailed through Resend, an email service.</p>
+      <p>
+        No ads, no tracking, no selling or sharing your data. Codes are emailed through Resend, an email service. A
+        video on a page loads from YouTube (without its tracking cookies) or Vimeo (with do-not-track) only when a
+        visitor presses play.
+      </p>
       <h2 class="text-xl font-semibold">Where it is kept</h2>
       <p>On Cloudflare's servers. Emailed codes are stored scrambled (hashed) and expire after 10 minutes.</p>
       <h2 class="text-xl font-semibold">Deleting everything</h2>

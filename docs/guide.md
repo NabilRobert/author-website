@@ -226,6 +226,10 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   with new ids, stored in the `blocks` table under the layout's id
   (`migrations/0005`), and visitors never receive them
   (`server/public-routes.ts`).
+- **Video block**: a YouTube or Vimeo link (`shared/videos.ts:
+  parseVideoUrl`). Until a visitor presses play it is only a button on our
+  site; then the player loads from youtube-nocookie.com or Vimeo with
+  do-not-track (`VideoBlock.vue`).
 - **Gallery block**: a grid of uploaded pictures in one shape, each with a
   caption (`GalleryBlock.vue`, `GalleryForm.vue`); its pictures count as in
   use when unused ones are tidied (`server/image-limits.ts`). Clicking a

@@ -12,6 +12,7 @@ const DESCRIPTIONS: Record<BlockType, string> = {
   text: 'A heading and paragraphs',
   imageText: 'A picture beside some text',
   gallery: 'A grid of pictures, each with a caption',
+  video: 'A YouTube or Vimeo video',
   list: 'Bullet points or a numbered list',
   quote: 'A large quotation',
   buttons: 'A row of buttons linking anywhere',

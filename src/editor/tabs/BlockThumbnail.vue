@@ -42,6 +42,10 @@ defineProps<{ type: BlockType }>()
           />
         </template>
       </template>
+      <template v-else-if="type === 'video'">
+        <rect x="8" y="6" width="64" height="36" rx="2" class="fill-panel-muted" />
+        <path d="M35 16 L49 24 L35 32 Z" class="fill-panel-back" />
+      </template>
       <template v-else-if="type === 'list'">
         <template v-for="row in 3" :key="row">
           <circle cx="12" :cy="6 + row * 9" r="2" class="fill-panel-muted" />

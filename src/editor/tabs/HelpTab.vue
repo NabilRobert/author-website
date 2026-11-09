@@ -26,7 +26,8 @@ const HOW_TOS: HowTo[] = [
   {
     title: 'Add, move and remove blocks',
     steps: [
-      'Pages are made of blocks: a banner, text, a picture gallery, a list and so on.',
+      'Pages are made of blocks: a banner, text, a picture gallery, a video, a list and so on.',
+      'For a video, paste its YouTube or Vimeo link into a Video block.',
       'Pick one under "Add a block to this page" at the bottom of the page’s blocks.',
       'Up and Down move a block; Remove takes it away.',
       'The ▾ button folds a block away, and Minimise all folds them all, to see the order at a glance.',

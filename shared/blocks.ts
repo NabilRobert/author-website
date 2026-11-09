@@ -12,6 +12,7 @@
  */
 import { z } from 'zod'
 import { boxStyleSchema, fillColour, optionalColour, pictureCornersSchema, plainBox, workShapeSchema } from './theme'
+import { parseVideoUrl } from './videos'
 import { imageCrop, imageKey, itemId, linkSchema, linkTarget, longText, requiredText, shortText } from './fields'
 
 // Every block's box (shared/theme.ts: boxStyleSchema); plain unless the
@@ -92,6 +93,27 @@ const galleryBlock = z.object({
   pictureCorners,
 })
 
+// '' while the owner hasn't pasted a link yet; the block then shows nothing.
+const videoUrl = z.union([
+  z.literal(''),
+  z
+    .string()
+    .trim()
+    .refine(
+      (link) => parseVideoUrl(link) !== null,
+      'Paste a YouTube or Vimeo link, like https://youtu.be/abc123XYZ_0.',
+    ),
+])
+
+const videoBlock = z.object({
+  id: itemId,
+  style: blockStyle,
+  type: z.literal('video'),
+  heading: shortText,
+  url: videoUrl,
+  caption: shortText,
+})
+
 const listBlock = z.object({
   id: itemId,
   style: blockStyle,
@@ -156,6 +178,7 @@ export const blockSchema = z.discriminatedUnion('type', [
   textBlock,
   imageTextBlock,
   galleryBlock,
+  videoBlock,
   listBlock,
   quoteBlock,
   buttonsBlock,
@@ -177,6 +200,7 @@ export const BLOCK_NAMES: Record<BlockType, string> = {
   text: 'Text',
   imageText: 'Picture and text',
   gallery: 'Picture gallery',
+  video: 'Video',
   list: 'List',
   quote: 'Quote',
   buttons: 'Buttons',
