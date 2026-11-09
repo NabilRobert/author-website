@@ -1,30 +1,33 @@
 # Guide
 
-How the site works, in plain words. Read the flow first, then use the
-glossary and "where to change things" as a reference.
+How Framed works, in plain words. Framed gives anyone a portfolio page
+they build from blocks, at `framed.my.id/<name>`. Read the flows first,
+then use the glossary and "where to change things" as a reference.
 
-## The flow: a visitor opens /about
+## The flow: a visitor opens /mara/about
 
 ```mermaid
 flowchart TD
-  A[Browser asks for /about] --> B[src/router/index.ts: route 'page', slug = 'about']
-  B --> C[src/views/PageView.vue: find the page whose slug is 'about']
-  C --> D[src/content/useSiteContent.ts: the site's content]
-  C --> E[src/components/blocks/PageBlocks.vue: one component per block]
-  E --> F[ImageTextBlock, ListBlock, QuoteBlock ...]
+  A[Browser asks for /mara/about] --> B[src/router/index.ts: site = 'mara', page = 'about']
+  B --> C[src/views/SiteLayout.vue: load mara's site, wear its theme]
+  C --> D[GET /api/sites/mara/content]
+  C --> E[src/views/PageView.vue: find the page whose slug is 'about']
+  E --> F[src/components/blocks/PageBlocks.vue: one component per block]
 ```
 
-1. **Router** (`src/router/index.ts`): every address that looks like a page
-   (`/`, `/about`, `/my-new-page`) goes to `PageView` with its `slug`
-   (`''` for the front page).
-2. **Find the page** (`src/views/PageView.vue`): looks through
-   `content.pages` for that slug. No match shows the not-found page. A page
-   that doesn't start with a big banner gets its title as the `h1`.
-3. **The content** (`src/content/useSiteContent.ts: loadSiteContent`): at
-   start-up (`src/main.ts`) the site asks the API for the whole site in one
-   request, `GET /api/content`. Until it arrives, `App.vue` shows "Loading…";
-   if the site has no content yet or the API fails, it says so instead.
-   Every page then shares that one document (`useSiteContent`).
+1. **Router** (`src/router/index.ts`): fixed pages (`/`, `/login`, `/terms`,
+   `/privacy`) come first. Anything else is `/<site>`, `/<site>/<page>` or
+   `/<site>/edit`.
+2. **The site** (`src/views/SiteLayout.vue`): asks the API for that site's
+   whole content in one request (`src/content/useSiteContent.ts:
+   loadSiteContent`). Until it arrives it shows "Loading…"; for a name
+   nobody has, an unsaved site or a failure, it says so. It puts the site's
+   theme on its own box (`src/content/themeVariables.ts`) and tells the
+   components the site's name, so their links (`/books`) become
+   `/mara/books` (`src/content/sitePath.ts`).
+3. **Find the page** (`src/views/PageView.vue`): looks through
+   `content.pages` for the slug (`''` for the front page). No match shows
+   the not-found page.
 4. **Stack the blocks** (`src/components/blocks/PageBlocks.vue`): for each
    block, picks the component for its `type` and passes it the block (and,
    for books, news, contact and press kit, the content they show).
@@ -35,7 +38,7 @@ flowchart TD
    heading (`src/content/format.ts: groupAdjacentSeries`). In the editor the
    owner drags them into order (`vue-draggable-plus`) or uses Up and Down.
 
-### Behind GET /api/content
+### Behind GET /api/sites/&lt;name&gt;/content
 
 ```mermaid
 flowchart LR
@@ -47,8 +50,9 @@ flowchart LR
 
 1. Cloudflare Pages runs `functions/api/[[path]].ts` for every `/api/…`
    address; it hands the request to the Hono app (`server/app.ts`).
-2. `loadContent` (`server/content-read.ts`) reads every table in one D1
-   batch and rebuilds the document: author, theme, books with their buy
+2. The route finds the site by name (`server/sites.ts`); a hidden site
+   answers 404. `loadContent` (`server/content-read.ts`) reads every table
+   in one D1 batch, only that site's rows (each row carries `site_id`), and rebuilds the document: author, theme, books with their buy
    links and reviews, news, and pages with their blocks.
 3. It checks the result against the schema, so a bad row becomes a plain
    "something went wrong" (500) rather than a broken page.
@@ -60,64 +64,71 @@ save made from an older copy (so a forgotten tab can't undo newer work),
 then deletes every content row and inserts the new ones in **one D1
 batch**, which D1 runs as one transaction.
 
-## The second flow: the owner edits and saves
+## The second flow: someone logs in, edits and saves
 
 ```mermaid
 sequenceDiagram
-  participant O as Owner's browser
-  participant A as Cloudflare Access
+  participant B as Browser
+  participant L as Login page (src/views/LoginView.vue)
+  participant A as Better Auth (server/auth.ts)
   participant E as Editor (src/views/EditView.vue)
-  participant S as API (server/admin-routes.ts)
+  participant S as API (server/me-routes.ts)
   participant D as D1
-  O->>A: open /edit
-  A-->>O: email code, then the page (with a signed token cookie)
-  E->>S: GET /api/admin/content
-  S->>S: requireOwner checks the token (server/access.ts)
-  S->>D: loadContent
-  E-->>O: forms + live preview
-  O->>E: edit, press Save changes
-  E->>E: check the draft with the schema
-  E->>S: PUT /api/admin/content
-  S->>S: requireOwner, schema check, stale check
-  S->>D: saveContent (one batch)
-  S-->>E: saved content with new updatedAt
+  B->>L: email
+  L->>A: send a code
+  A-->>B: 6-digit code by email (Resend)
+  B->>L: the code
+  L->>A: log in with it
+  A-->>B: login cookie (HttpOnly, a week)
+  L->>S: POST /api/me/site (first time: claim a name)
+  B->>E: /mara/edit
+  E->>S: GET /api/me, then GET /api/me/content
+  B->>E: edit, Save changes
+  E->>S: PUT /api/me/content
+  S->>D: saveContent for the logged-in person's site only
 ```
 
-1. **Sign-in** happens before our code runs: Cloudflare Access asks for the
-   owner's email, sends a one-time code, and only then lets `/edit` and
-   `/api/admin/*` through, adding a signed token to each request.
-2. **The guard** (`server/access.ts: requireOwner`) checks that token again
-   with `jose`. With no Access settings it refuses (503), so a forgotten
-   Access policy can't leave the editor open.
-3. **Loading** (`src/editor/useEditor.ts: createEditor` →
-   `src/editor/editorApi.ts: fetchDraft`): the saved site becomes the
-   draft. A brand-new site starts from the example content.
-4. **Editing**: the tabs (`src/editor/tabs/`) change the draft directly;
+1. **Login** (`src/auth/useLogin.ts`, `src/auth/authClient.ts`): the
+   person types their email, gets a code from Better Auth, and types it in.
+   No passwords exist. Codes are stored hashed, expire after 10 minutes,
+   allow 5 tries, and can be asked for 3 times a minute (`server/auth.ts`).
+   Locally the code is printed in the terminal (`server/email.ts`).
+2. **A name** (first time only): `POST /api/me/site` claims
+   `framed.my.id/<name>` (`server/sites.ts: createSite`); the rules are in
+   `shared/names.ts`, checked in the form and again by the API.
+3. **Whose site** (`server/session.ts`): every `/api/me/…` route first
+   checks the login cookie (`requireUser`), then finds that person's own
+   site (`requireSite`). The site never comes from the request, so nobody
+   can write to someone else's. Writes must also come from Framed's own
+   pages (`csrf()` checks the Origin header).
+4. **Loading** (`src/editor/useEditor.ts: createEditor` →
+   `src/editor/editorApi.ts: fetchDraft`): the editor asks who is logged in;
+   on someone else's page it says so and links to theirs. A new site starts
+   from the example content.
+5. **Editing**: the tabs (`src/editor/tabs/`) change the draft directly;
    each block type has its form (`src/editor/block-forms/`). The draft is
    shared through `provide`/`inject` (`useDraft`).
-5. **Preview** (`src/editor/SitePreview.vue`): the same components as the
+6. **Preview** (`src/editor/SitePreview.vue`): the same components as the
    public site draw the draft, in the draft's colours and fonts.
-6. **Saving** (`createEditor: save`): the draft is checked with the schema
-   first, so mistakes are listed right away, each with where it is
-   (`src/editor/problems.ts`). Then `sendDraft` sends it; the API checks
-   it again, refuses a save from an older copy (409), and writes it.
-7. **Short sign-ins** (the owner signs in for each editing visit; README,
-   step 7): every unsaved change is also kept in the browser
-   (`src/editor/draftBackup.ts`). If the sign-in expires mid-edit, the save
-   is refused with "Your sign-in has expired"; after signing in again the
-   editor brings the changes back, unless the site was saved elsewhere in
-   between. The editor's requests carry `X-Requested-With`, which makes
-   Access answer an expired sign-in with 401 instead of a login redirect the
-   editor couldn't show.
+7. **Saving** (`saveDraft`): checked with the schema first, so mistakes are
+   listed right away with where they are (`src/editor/problems.ts`); the API
+   checks again, refuses a save from an older copy (409), writes it, and
+   tidies pictures the site no longer uses (`server/image-limits.ts`).
+8. **Unsaved changes are kept** in the browser (`src/editor/draftBackup.ts`,
+   one backup per site), so an expired login or a closed tab loses nothing.
+9. **Deleting an account** (`server/account-deletion.ts`) removes the
+   person's pictures, site, logins and account at once.
 
 ### Pictures
 
 1. In a picture field (`src/editor/fields/ImageField.vue`) the owner picks
    a file. The editor checks its type and size first (`shared/images.ts`).
 2. `uploadImage` (`src/editor/editorApi.ts`) sends it to
-   `POST /api/admin/images` (`server/image-routes.ts`), behind the same
-   sign-in check. The API checks again, including the file's first bytes,
-   and stores it in R2 as `images/<random id>.<jpg|png|webp>`.
+   `POST /api/me/images` (`server/image-routes.ts`), behind the same login
+   check. The API checks again, including the file's first bytes, checks
+   the site's allowance (200 pictures, 200 MB), stores it in R2 as
+   `images/<random id>.<jpg|png|webp>` and records it in the `images`
+   table.
 3. The returned key goes into the draft (a cover, a photo, a banner); the
    preview shows it straight away. It goes live when the owner saves.
 4. Visitors load it from `GET /api/images/<id>.png`, cached for a year (a
@@ -133,8 +144,8 @@ the focus point, a slider sets the zoom. Because only these three numbers
 are stored, one crop fits a frame of any size (the banner changes shape
 with the screen), and the press kit still offers the whole original.
 
-A picture uploaded but never saved stays in R2 unused. At this size that's
-harmless.
+A picture uploaded but never used is deleted after a later save, once it
+is a day old (`server/image-limits.ts: pruneUnusedImages`).
 
 ### Colours, fonts and the menu
 
@@ -195,17 +206,19 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   one transaction (all or nothing).
 - **Miniflare**: Cloudflare's local simulator; the API tests use it for a
   real local D1 (`tests/api/test-database.ts`).
-- **Cloudflare Access**: Cloudflare's sign-in gate. It sits in front of
-  `/edit` and `/api/admin/*` and lets in only the emails on its list, using
-  a one-time code sent by email.
-- **Access token (JWT)**: a signed note Access adds to each request
-  (`Cf-Access-Jwt-Assertion`) saying who signed in. `server/access.ts`
-  checks its signature, issuer, audience and expiry.
+- **Better Auth**: the login library (`server/auth.ts`). It runs in our own
+  Worker and keeps its tables (`user`, `session`, `verification`, `account`,
+  `rateLimit`) in our D1 (`migrations/0001`). No passwords.
+- **Login code (OTP)**: the 6-digit one-time code emailed to log in.
+- **Session**: a login, remembered by an HttpOnly cookie for a week; "Log
+  out" ends it at once.
+- **Site name**: the part of the address after `framed.my.id/`
+  (`shared/names.ts`); one per person.
+- **CSRF**: a hostile website making a logged-in person's browser send a
+  request. `csrf()` (`server/me-routes.ts`) refuses writes whose Origin
+  isn't Framed, on top of the cookie's SameSite rule.
 - **Fail closed**: when something is missing or wrong, refuse rather than
-  allow. The editor's API refuses all saves if Access isn't configured.
-- **Session**: how long a sign-in lasts before Access asks for a new
-  email code (set in Cloudflare, README step 7). "Sign out" in the editor
-  ends it at once.
+  allow.
 - **Draft backup**: a copy of unsaved changes in the browser's
   `localStorage`, brought back after a reload or a new sign-in.
 - **Draft**: the editor's working copy of the content; nothing changes on
@@ -244,12 +257,17 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Change the demo content:** `shared/demo-content.ts`.
 - **Change a label or hint in the editor:** the form components in
   `src/editor/tabs/` and `src/editor/block-forms/`.
-- **Change an error message the owner sees:** field rules in
-  `shared/fields.ts` and the schemas; server messages in
-  `server/admin-routes.ts` and `server/access.ts`; connection messages in
-  `src/editor/editorApi.ts`.
-- **Add an API address:** a route in `server/app.ts`, with a test in
-  `tests/api/`.
+- **Change an error message people see:** field rules in
+  `shared/fields.ts`, `shared/names.ts` and the schemas; server messages in
+  `server/me-routes.ts`, `server/content-routes.ts`, `server/session.ts`
+  and `server/image-limits.ts`; login messages in `src/auth/useLogin.ts`;
+  connection messages in `src/editor/editorApi.ts`.
+- **Change the login (code length, expiry, session length):** the
+  constants at the top of `server/auth.ts`.
+- **Change a site's picture allowance:** `server/image-limits.ts`.
+- **Reserve another address:** `RESERVED_NAMES` in `shared/names.ts`.
+- **Add an API address:** a route in `server/public-routes.ts` (anyone) or
+  `server/me-routes.ts` (logged in), with a test in `tests/api/`.
 - **Add a field to a block:** give it a `.default(…)` in
   `shared/blocks.ts`. Blocks are stored as JSON, so sites saved before the
   field existed don't have it; without a default they would fail to load.
