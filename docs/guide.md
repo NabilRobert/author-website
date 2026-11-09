@@ -338,6 +338,13 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Test account**: `test@framed.local`, which owns `/test` in the local
   database only (`npm run db:seed:test`, which sets its password from
   `LOCAL_DEV_TEST_PASSWORD` in your `.dev.vars`).
+- **Node version**: the same app as one Node process, for a VPS
+  (`server/node/main.ts`, `ops/compose.yaml`). Hono runs on Node's HTTP
+  server; a SQLite file stands in for D1 through a small adapter
+  (`server/node/sqlite-d1.ts`), and Better Auth uses the file directly
+  (`SQLITE_DATABASE`). Migrations apply on start; secrets come from Docker
+  secret files (`server/node/settings.ts`). `npm run test:sqlite` runs every
+  API test against SQLite to keep both versions alike.
 - **Uploads switched off**: picture and PDF storage (R2, the `IMAGES`
   binding) is optional. Without it the upload and download routes answer
   503 (`server/storage.ts: requireStorage`), and the editor hides its

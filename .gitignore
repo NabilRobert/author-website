@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-node/
 coverage/
 .DS_Store
 
@@ -20,3 +21,7 @@ backups/
 
 # Local dev-server config for the Claude app; it holds a machine path.
 .claude/launch.json
+
+# Framed on a server (ops/compose.yaml)
+ops/secrets/
+ops/.env

@@ -2,6 +2,11 @@
 export interface Env {
   /** Everyone's accounts and sites (D1). */
   DB: D1Database
+  /**
+   * On the Node version only: the SQLite file itself (better-sqlite3), which
+   * Better Auth uses directly while the rest of the code uses DB.
+   */
+  SQLITE_DATABASE?: object
   /** Uploaded pictures and PDFs (R2). Optional: without it uploads are off (server/storage.ts). */
   IMAGES?: R2Bucket
   /** The site's own address, like "https://framed.my.id"; login cookies are set for it. */

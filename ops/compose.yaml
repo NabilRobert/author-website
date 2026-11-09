@@ -1,0 +1,39 @@
+# Framed's Node version on a small shared server, hardened like Juku's
+# ops/compose.yaml: read-only filesystem, no capabilities, non-root, a hard
+# memory limit, and published only on loopback, behind the server's
+# existing proxy (which must also keep Cloudflare in front, see the README).
+#
+# Secrets are files under ops/secrets/ (git-ignored, made by
+# ops/make-secrets.sh), mounted at /run/secrets; each is named after the
+# setting it fills (BETTER_AUTH_SECRET -> better_auth_secret). Non-secret
+# settings come from ops/.env (copy ops/.env.example).
+#
+#   cd ops && docker compose up -d --build
+#   docker compose exec framed node dist-node/invite-cli.mjs you@example.com
+name: framed
+
+services:
+  framed:
+    build:
+      context: ..
+    image: framed:local
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    tmpfs: ['/tmp:size=16m']
+    restart: unless-stopped
+    mem_limit: 256m
+    env_file: .env
+    secrets: [better_auth_secret, resend_api_key]
+    volumes:
+      # The SQLite database (framed.sqlite and its -wal/-shm files).
+      - framed-data:/data
+    ports:
+      - '127.0.0.1:${FRAMED_PORT:-8790}:8790'
+
+volumes:
+  framed-data: {}
+
+secrets:
+  better_auth_secret: { file: ./secrets/better_auth_secret }
+  resend_api_key: { file: ./secrets/resend_api_key }

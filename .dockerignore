@@ -1,0 +1,10 @@
+# Kept out of the image's build context: dependencies, builds, local state, secrets, history.
+.git
+node_modules
+dist
+dist-node
+.wrangler
+.dev.vars
+ops/secrets
+ops/.env
+coverage
