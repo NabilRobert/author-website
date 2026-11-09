@@ -1,6 +1,7 @@
 /**
  * Adds link-preview tags (server/link-previews.ts) to the HTML of a site's
- * pages as Cloudflare Pages sends them (functions/_middleware.ts). The page
+ * pages as they are sent: by Cloudflare Pages (functions/_middleware.ts) or
+ * by the Node version (server/node/server.ts). The page
  * itself is the same single-page app for every address; only its <head>
  * changes. If anything goes wrong, the page goes out unchanged: a preview
  * is a nicety, never a reason to fail.
@@ -8,7 +9,7 @@
 import { siteNameSchema } from '../shared/names'
 import { loadContent } from './content-read'
 import type { Env } from './env'
-import { linkPreviewFor, previewTags } from './link-previews'
+import { escapeHtml, linkPreviewFor, previewTags } from './link-previews'
 import type { LinkPreview } from './link-previews'
 import { findSiteByName } from './sites'
 
@@ -35,10 +36,19 @@ async function findPreview(env: Env, siteName: string, path: string): Promise<Li
   return content ? linkPreviewFor(content, path) : null
 }
 
-function addTags(response: Response, preview: LinkPreview, url: URL, siteUrl: string): Response {
+// A plain string edit of the page (it is one small, known index.html), so
+// it works on Cloudflare and on Node alike.
+async function addTags(response: Response, preview: LinkPreview, url: URL, siteUrl: string): Promise<Response> {
   const tags = previewTags(preview, `${siteUrl}${url.pathname}`, siteUrl)
-  return new HTMLRewriter()
-    .on('title', { element: (title) => void title.setInnerContent(preview.title) })
-    .on('head', { element: (head) => void head.append(tags, { html: true }) })
-    .transform(response)
+  const html = injectPreview(await response.text(), preview.title, tags)
+  const headers = new Headers(response.headers)
+  headers.delete('content-length')
+  return new Response(html, { status: response.status, headers })
+}
+
+/** The page with its <title> replaced and the preview tags added before </head>. */
+export function injectPreview(html: string, title: string, tags: string): string {
+  return html
+    .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)}</title>`)
+    .replace('</head>', `${tags}</head>`)
 }

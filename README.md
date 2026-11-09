@@ -47,15 +47,41 @@ editor's **Done** brings you back.
 | `shared/` | Used by both sides: the content's shape (`schema.ts`, `blocks.ts`, `theme.ts`, `fields.ts`), name rules (`names.ts`), picture rules (`images.ts`), the example content |
 | `functions/api/` | The Pages Function entry: hands every `/api/*` request to the API |
 | `server/` | The API (Hono): `app.ts` wires it; `auth.ts` and `email.ts` log people in; `session.ts` checks logins; `public-routes.ts`, `me-routes.ts`, `content-routes.ts` and `image-routes.ts` answer requests; `content-read.ts` and `content-write.ts` talk to D1 |
-| `migrations/` | The D1 tables: Better Auth's (`0001`), then sites and content (`0002`) |
+| `server/node/` | The Node version for a VPS: `main.ts` starts it, `server.ts` serves the site and API, `sqlite-d1.ts` lets the code use a SQLite file as if it were D1, `migrate.ts` applies migrations on start, plus the `invite-cli` and `backup-cli` commands |
+| `ops/` | Running the Node version with Docker: `compose.yaml`, `.env.example`, `make-secrets.sh` (the `Dockerfile` is at the root) |
+| `migrations/` | The database tables, numbered; the same files for D1 and for the Node version's SQLite |
 | `src/views/` | One view per address: `LandingView`, `LoginView`, `SiteLayout` + `PageView` (someone's site), `EditView` (their editor), terms and privacy |
 | `src/auth/` | The login page's steps and the account calls |
 | `src/components/` | What a site is made of: one component per block, work, header and footer |
 | `src/editor/` | The editor: its state and API calls, tabs, a form per block type, fields, cropper, preview |
 | `src/content/` | Loading a site, its links (`sitePath.ts`), theme and background as CSS variables, formatting |
-| `tests/` | Vitest specs: `api/` on a real local D1 and R2 (Miniflare), `site/`, `editor/` and `auth/` for the pages |
+| `tests/` | Vitest specs: `api/` on a real local D1 and R2 (Miniflare), and again on SQLite (`npm run test:sqlite`); `site/`, `editor/` and `auth/` for the pages |
 | `scripts/` | `seed-test-site.ts`: a local example page at `/test`; `print-auth-tables.mjs`: regenerates Better Auth's table SQL after an upgrade |
 | `docs/guide.md` | How a request flows through the code, a glossary, and where to change things |
+
+## Run it on a server (Docker)
+
+The same app also runs as one Node process with a SQLite file, for a VPS
+instead of Cloudflare (Hono's Node adapter and better-sqlite3;
+`server/node/`). Picture uploads are off in this version too.
+
+```bash
+cd ops
+cp .env.example .env              # non-secret settings
+./make-secrets.sh                 # makes the login secret, asks for the Resend key (not shown)
+docker compose up -d --build      # builds and starts it on 127.0.0.1:8790
+docker compose exec framed node dist-node/invite-cli.mjs you@example.com   # your first invite
+```
+
+- **Migrations** apply by themselves on every start.
+- **The database** is one SQLite file in the `framed-data` volume. Take a consistent copy while it runs
+  with `docker compose exec framed node dist-node/backup-cli.mjs /data/backup.sqlite`, then encrypt and
+  ship it with the server's other backups.
+- **In front of it:** the server's proxy forwards `framed.my.id` to `127.0.0.1:8790`, and Cloudflare
+  must stay in front (the DNS record proxied, "orange cloud"). Rate limits and the contact form read the
+  visitor's address from Cloudflare's `CF-Connecting-IP` header, so the server should accept web traffic
+  only from Cloudflare; otherwise that header could be faked.
+- `npm run build:node` builds it without Docker (`node dist-node/main.mjs`, settings from the environment).
 
 ## Setup checklist (Arthur)
 

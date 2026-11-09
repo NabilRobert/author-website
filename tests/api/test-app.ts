@@ -46,7 +46,7 @@ const cookieFrom = (response: Response) =>
     .join('; ')
 
 export async function createTestApp() {
-  const { db, images, dispose } = await createTestDatabase()
+  const { db, images, sqlite, dispose } = await createTestDatabase()
   const codes = new Map<string, string>()
   const leakedPasswords = new Set<string>()
   fakeLeakedPasswordService(leakedPasswords)
@@ -62,6 +62,7 @@ export async function createTestApp() {
     BETTER_AUTH_SECRET: 'test-secret-0123456789-abcdefghij',
     // Most tests sign people up freely; tests/api/invites.spec.ts switches invites on.
     SIGN_UP_MODE: 'open',
+    SQLITE_DATABASE: sqlite,
   }
 
   function request(path: string, init: RequestInit = {}, cookie = '') {

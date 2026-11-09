@@ -9,6 +9,7 @@
  * database, the secrets) with each request.
  */
 import { betterAuth } from 'better-auth'
+import type { BetterAuthOptions } from 'better-auth'
 import { emailOTP, haveIBeenPwned } from 'better-auth/plugins'
 import type { Env } from './env'
 import type { SendEmailCode } from './email'
@@ -36,7 +37,8 @@ const RATE_LIMITS = {
 
 export function createAuth(env: Env, sendEmailCode: SendEmailCode) {
   return betterAuth({
-    database: env.DB,
+    // D1 on Cloudflare; on the Node version, the SQLite file itself (server/node/main.ts).
+    database: (env.SQLITE_DATABASE ?? env.DB) as BetterAuthOptions['database'],
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.SITE_URL,
     basePath: '/api/auth',
