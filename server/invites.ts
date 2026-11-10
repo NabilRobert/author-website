@@ -7,8 +7,9 @@
  *   GET  /api/sign-up             whether sign-up needs an invite
  *   POST /api/auth/sign-up/email  checked here first (guardSignUp), then Better Auth
  *
- * The invite is only used up once the sign-up succeeds, so a refused
- * password doesn't waste it. Invites are made with `npm run invite`
+ * The invite is claimed in one atomic UPDATE before the sign-up runs, so
+ * several sign-ups racing on one code get one account; if the sign-up then
+ * fails (a refused password), the claim is released so it isn't wasted. Invites are made with `npm run invite`
  * (scripts/create-invite.ts). Logging in never needs one.
  */
 import { Hono } from 'hono'
@@ -44,7 +45,7 @@ export const signUpRoutes = new Hono<AppEnv>()
 
 signUpRoutes.get('/sign-up', (c) => c.json({ isInviteOnly: isInviteOnly(c.env) }))
 
-/** Runs before Better Auth's sign-up: refuses it without a usable invite, and uses the invite up after. */
+/** Runs before Better Auth's sign-up: claims a usable invite, or refuses; releases the claim if sign-up fails. */
 export const guardSignUp = createMiddleware<AppEnv>(async (c, next) => {
   if (!isInviteOnly(c.env)) return next()
   const code = normaliseInviteCode(c.req.header(INVITE_HEADER) ?? '')
@@ -52,24 +53,31 @@ export const guardSignUp = createMiddleware<AppEnv>(async (c, next) => {
     .clone()
     .json()
     .catch(() => ({}))) as { email?: unknown }
-  const refusal = await checkInvite(c.env.DB, code, String(body.email ?? ''))
+  const claimedAt = new Date().toISOString()
+  const refusal = await claimInvite(c.env.DB, code, String(body.email ?? ''), claimedAt)
   if (refusal) return c.json({ message: refusal, code: 'INVITE_REQUIRED' }, 403)
   await next()
-  if (c.res.ok) {
-    await c.env.DB.prepare('UPDATE invites SET used_at = ? WHERE code = ? AND used_at IS NULL')
-      .bind(new Date().toISOString(), code)
+  if (!c.res.ok) {
+    // Matching on the claim's own time releases only this request's claim.
+    await c.env.DB.prepare('UPDATE invites SET used_at = NULL WHERE code = ? AND used_at = ?')
+      .bind(code, claimedAt)
       .run()
   }
 })
 
-// Why this code can't be used to sign up as `email`, or null if it can.
-async function checkInvite(db: D1Database, code: string, email: string): Promise<string | null> {
+// Marks the invite used as `email`, or says why it can't be. The UPDATE only
+// changes an unused row, so of several racing requests exactly one wins.
+async function claimInvite(db: D1Database, code: string, email: string, claimedAt: string): Promise<string | null> {
   if (!code) return NEEDS_INVITE
   const invite = await db
-    .prepare('SELECT email, used_at FROM invites WHERE code = ?')
+    .prepare('SELECT email FROM invites WHERE code = ?')
     .bind(code)
-    .first<{ email: string | null; used_at: string | null }>()
-  if (!invite || invite.used_at) return BAD_INVITE
+    .first<{ email: string | null }>()
+  if (!invite) return BAD_INVITE
   if (invite.email && invite.email.toLowerCase() !== email.trim().toLowerCase()) return WRONG_EMAIL
-  return null
+  const claim = await db
+    .prepare('UPDATE invites SET used_at = ? WHERE code = ? AND used_at IS NULL')
+    .bind(claimedAt, code)
+    .run()
+  return claim.meta.changes === 1 ? null : BAD_INVITE
 }
