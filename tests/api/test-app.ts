@@ -7,7 +7,7 @@
 import { vi } from 'vitest'
 import { createApp } from '../../server/app'
 import type { Env } from '../../server/env'
-import type { OutgoingMessage } from '../../server/email'
+import type { OutgoingMessage, ReportNotice } from '../../server/email'
 import { createTestDatabase } from './test-database'
 
 export const ORIGIN = 'http://localhost:8788'
@@ -51,9 +51,11 @@ export async function createTestApp() {
   const leakedPasswords = new Set<string>()
   fakeLeakedPasswordService(leakedPasswords)
   const sentMessages: OutgoingMessage[] = []
+  const sentReportNotices: ReportNotice[] = []
   const app = createApp({
     emailCodeSenderFor: () => async (email, code) => void codes.set(email, code),
     contactMessageSenderFor: () => async (message) => void sentMessages.push(message),
+    reportNoticeSenderFor: () => async (notice) => void sentReportNotices.push(notice),
   })
   const env: Env = {
     DB: db,
@@ -109,7 +111,20 @@ export async function createTestApp() {
     vi.unstubAllGlobals()
     await dispose()
   }
-  return { app, env, db, codes, sentMessages, leakedPasswords, request, postJson, logIn, signUp, dispose: disposeAll }
+  return {
+    app,
+    env,
+    db,
+    codes,
+    sentMessages,
+    sentReportNotices,
+    leakedPasswords,
+    request,
+    postJson,
+    logIn,
+    signUp,
+    dispose: disposeAll,
+  }
 }
 
 export type TestApp = Awaited<ReturnType<typeof createTestApp>>

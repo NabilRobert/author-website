@@ -1,6 +1,7 @@
 /**
  * Sends Framed's emails: the 6-digit codes (to confirm an email address at
- * sign-up, and to reset a forgotten password), and contact-form messages. In production through
+ * sign-up, and to reset a forgotten password), contact-form messages and
+ * report notices. In production through
  * Resend's HTTP API (free tier: 3,000 emails a month); in local development
  * it can print the code in the terminal instead.
  */
@@ -33,8 +34,35 @@ export interface OutgoingMessage {
 }
 export type SendContactMessage = (message: OutgoingMessage) => Promise<void>
 
+export interface ReportNotice {
+  to: string
+  siteName: string
+  reason: string
+}
+export type SendReportNotice = (notice: ReportNotice) => Promise<void>
+
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
+
+/**
+ * LOCAL_DEV_PRINT_CODES prints emails in the terminal instead of sending
+ * them. It only counts when the site itself is on this computer: set by
+ * mistake on a server, codes would land in its logs, so it is ignored there.
+ */
+export function printsInsteadOfSending(env: Env): boolean {
+  if (env.LOCAL_DEV_PRINT_CODES !== 'true') return false
+  return LOCAL_HOSTS.has(hostnameOf(env.SITE_URL))
+}
+
+function hostnameOf(address: string): string {
+  try {
+    return new URL(address).hostname
+  } catch {
+    return ''
+  }
+}
+
 export function emailCodeSender(env: Env): SendEmailCode {
-  if (env.LOCAL_DEV_PRINT_CODES === 'true') {
+  if (printsInsteadOfSending(env)) {
     return async (email, code, purpose) => console.log(`${MESSAGES[purpose].subject} (${email}): ${code}`)
   }
   return async (email, code, purpose) => {
@@ -48,7 +76,7 @@ export function emailCodeSender(env: Env): SendEmailCode {
 }
 
 export function contactMessageSender(env: Env): SendContactMessage {
-  if (env.LOCAL_DEV_PRINT_CODES === 'true') {
+  if (printsInsteadOfSending(env)) {
     return async (message) => console.log(`Message for ${message.to} from ${message.senderEmail}: ${message.message}`)
   }
   return async ({ to, siteName, senderName, senderEmail, message }) => {
@@ -58,6 +86,23 @@ export function contactMessageSender(env: Env): SendContactMessage {
       // One line only, whatever the visitor typed.
       subject: `Message from ${senderName.replace(/\s+/g, ' ')} via framed.my.id/${siteName}`,
       text: `${message}\n\n— ${senderName} (${senderEmail})\nReply to this email to answer them.`,
+    })
+  }
+}
+
+export function reportNoticeSender(env: Env): SendReportNotice {
+  if (printsInsteadOfSending(env)) {
+    return async (notice) => console.log(`Report for ${notice.siteName}: ${notice.reason}`)
+  }
+  return async ({ to, siteName, reason }) => {
+    const address = `${env.SITE_URL}/${siteName}`
+    await sendWithResend(env, {
+      to,
+      subject: `Framed: a visitor reported /${siteName}`,
+      text:
+        `A visitor reported ${address}:\n\n${reason}\n\n` +
+        'To hide the page: docker compose exec framed node dist-node/takedown-cli.mjs hide ' +
+        `${siteName}\nTo see recent reports: ... takedown-cli.mjs reports`,
     })
   }
 }

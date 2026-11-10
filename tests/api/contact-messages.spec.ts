@@ -1,6 +1,10 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { MESSAGES_PER_SENDER_PER_HOUR, MESSAGES_PER_SITE_PER_DAY } from '../../server/contact-messages'
+import {
+  MESSAGES_PER_DAY_ALL_SITES,
+  MESSAGES_PER_SENDER_PER_HOUR,
+  MESSAGES_PER_SITE_PER_DAY,
+} from '../../server/contact-messages'
 import { createTestApp } from './test-app'
 import type { TestApp } from './test-app'
 
@@ -70,6 +74,20 @@ describe('POST /api/sites/<name>/messages', () => {
     const response = await send(MESSAGE, '192.0.2.1')
     expect(response.status).toBe(429)
     expect(((await response.json()) as { error: string }).error).toContain('many messages today')
+  })
+
+  it(`stops at ${MESSAGES_PER_DAY_ALL_SITES} a day across all sites, so login codes keep their email quota`, async () => {
+    await api.signUp('other@example.com', 'other')
+    const other = await api.db.prepare("SELECT id FROM sites WHERE name = 'other'").first<{ id: string }>()
+    const now = new Date().toISOString()
+    const fill = api.db.prepare('INSERT INTO contact_messages (site_id, sender_hash, sent_at) VALUES (?, ?, ?)')
+    await api.db.batch(
+      Array.from({ length: MESSAGES_PER_DAY_ALL_SITES }, (_, index) => fill.bind(other!.id, `sender-${index}`, now)),
+    )
+    const response = await send(MESSAGE)
+    expect(response.status).toBe(429)
+    expect(((await response.json()) as { error: string }).error).toContain('for today')
+    expect(api.sentMessages).toEqual([])
   })
 
   it('answers 404 for a site that does not exist', async () => {

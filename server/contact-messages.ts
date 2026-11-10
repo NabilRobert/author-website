@@ -9,8 +9,9 @@
  *   of the sender (their IP address) and the time are kept, for a day.
  * - A filled-in trap field (`website`) means a bot: it is told "sent" and
  *   nothing is sent.
- * - Limits keep one sender from flooding a site and keep Framed inside
- *   Resend's free 100 emails a day, which the login codes share.
+ * - Limits keep one sender from flooding a site, and a cap across all sites
+ *   keeps contact messages well inside Resend's free 100 emails a day, so
+ *   sign-up and password-reset codes, which share that quota, still go out.
  */
 import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
@@ -20,6 +21,9 @@ import type { AppEnv } from './session'
 
 export const MESSAGES_PER_SENDER_PER_HOUR = 3
 export const MESSAGES_PER_SITE_PER_DAY = 20
+// Resend's free tier sends 100 a day; this leaves at least half for codes
+// and report notices (server/reports.ts).
+export const MESSAGES_PER_DAY_ALL_SITES = 40
 const MAX_BODY_BYTES = 16 * 1024
 const NO_SITE = 'There is no page at this address.'
 
@@ -59,18 +63,20 @@ async function checkLimits(db: D1Database, siteId: string, sender: string): Prom
   const now = Date.now()
   const hourAgo = new Date(now - 60 * 60 * 1000).toISOString()
   const dayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString()
-  const [, bySender, bySite] = await db.batch<{ count: number }>([
+  const count = 'SELECT COUNT(*) AS count FROM contact_messages WHERE sent_at > ?'
+  const [, bySender, bySite, allSites] = await db.batch<{ count: number }>([
     db.prepare('DELETE FROM contact_messages WHERE sent_at < ?').bind(dayAgo),
-    db
-      .prepare('SELECT COUNT(*) AS count FROM contact_messages WHERE sender_hash = ? AND sent_at > ?')
-      .bind(sender, hourAgo),
-    db.prepare('SELECT COUNT(*) AS count FROM contact_messages WHERE site_id = ? AND sent_at > ?').bind(siteId, dayAgo),
+    db.prepare(`${count} AND sender_hash = ?`).bind(hourAgo, sender),
+    db.prepare(`${count} AND site_id = ?`).bind(dayAgo, siteId),
+    db.prepare(count).bind(dayAgo),
   ])
-  if ((bySender?.results[0]?.count ?? 0) >= MESSAGES_PER_SENDER_PER_HOUR) {
-    return 'You have sent several messages in a row. Please wait an hour, or email them directly.'
-  }
-  if ((bySite?.results[0]?.count ?? 0) >= MESSAGES_PER_SITE_PER_DAY) {
-    return 'This page has had many messages today. Please try again tomorrow, or email them directly.'
+  const limits: [D1Result<{ count: number }> | undefined, number, string][] = [
+    [bySender, MESSAGES_PER_SENDER_PER_HOUR, 'You have sent several messages in a row. Please wait an hour'],
+    [bySite, MESSAGES_PER_SITE_PER_DAY, 'This page has had many messages today. Please try again tomorrow'],
+    [allSites, MESSAGES_PER_DAY_ALL_SITES, 'Framed has sent its contact messages for today. Please try again tomorrow'],
+  ]
+  for (const [result, limit, refusal] of limits) {
+    if ((result?.results[0]?.count ?? 0) >= limit) return `${refusal}, or email them directly.`
   }
   return null
 }

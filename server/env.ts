@@ -19,7 +19,9 @@ export interface Env {
   EMAIL_FROM?: string
   /** "open" lets anyone sign up; anything else ("invite", or unset) needs an invite (server/invites.ts). */
   SIGN_UP_MODE?: string
-  /** "true" prints emailed codes in the terminal instead of sending them: local development only. */
+  /** Gets an email for each page a visitor reports (server/reports.ts); unset, reports are only stored. */
+  REPORTS_EMAIL?: string
+  /** "true" prints emails in the terminal instead of sending them; ignored unless SITE_URL is localhost. */
   LOCAL_DEV_PRINT_CODES?: string
 }
 

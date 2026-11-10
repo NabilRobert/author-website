@@ -33,7 +33,8 @@ const env: Env = {
   RESEND_API_KEY: readSetting('RESEND_API_KEY'),
   EMAIL_FROM: readSetting('EMAIL_FROM'),
   SIGN_UP_MODE: readSetting('SIGN_UP_MODE'),
-  // Local trials only (prints codes instead of emailing them); never set on a server.
+  REPORTS_EMAIL: readSetting('REPORTS_EMAIL'),
+  // Local trials only (prints codes instead of emailing them); ignored unless SITE_URL is localhost.
   LOCAL_DEV_PRINT_CODES: readSetting('LOCAL_DEV_PRINT_CODES'),
 }
 
