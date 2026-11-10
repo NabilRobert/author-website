@@ -98,8 +98,11 @@ sequenceDiagram
    Passwords are hashed with PBKDF2 (`server/password-hash.ts`), and ones
    found in data breaches are refused (Better Auth's `haveIBeenPwned`).
    Codes are stored hashed, expire after 10 minutes and allow 5 tries;
-   logging in and asking for codes are rate-limited (`server/auth.ts`).
-   Locally the codes are printed in the terminal (`server/email.ts`).
+   logging in and asking for codes are rate-limited per visitor address
+   (`server/auth.ts`), and 10 wrong passwords lock an account for 15
+   minutes wherever they come from (`server/sign-in-lockout.ts`).
+   Locally the codes are printed in the terminal (`server/email.ts`; only
+   while `SITE_URL` is localhost).
 2. **A name** (first time only): `POST /api/me/site` claims
    `framed.my.id/<name>` (`server/sites.ts: createSite`); the rules are in
    `shared/names.ts`, checked in the form and again by the API.
@@ -328,6 +331,26 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   Auth sees the sign-up (`server/invites.ts: guardSignUp`). It is used up
   only when the sign-up succeeds. `npm run invite` makes one and prints
   the link (`scripts/create-invite.ts`).
+- **Account lockout**: after 10 wrong passwords in 15 minutes an account
+  refuses logins for a while, however many addresses the guesses come
+  from; a correct login or a password reset clears it
+  (`server/sign-in-lockout.ts`, table `sign_in_failures`).
+- **Client IP (Node version)**: the visitor's address, for rate limits. The
+  proxy records who connected to it in `X-Forwarded-For`; only if that was
+  Cloudflare is Cloudflare's `CF-Connecting-IP` believed
+  (`server/node/client-ip.ts`).
+- **Request size limit**: every API request body is capped at 64 KB
+  (`MAX_REQUEST_BYTES` in `server/app.ts`) so one huge request can't use up
+  the server's memory; saving a site and uploads have their own limits.
+- **Report and takedown**: a visitor reports a page (`server/reports.ts`);
+  Arthur gets an email (`REPORTS_EMAIL`, at most 10 a day) and can hide the
+  page with `takedown-cli.mjs` (`server/node/takedown.ts`).
+- **Email quota**: Resend's free plan sends 100 emails a day. Contact
+  messages stop at 40 a day across all sites and report notices at 10, so
+  sign-up and reset codes always have room.
+- **CSP and HSTS**: two security headers in `public/_headers`. The Content
+  Security Policy lets the browser run only Framed's own scripts and embed
+  only the two video players; HSTS keeps browsers on https.
 - **Session**: a login, remembered by an HttpOnly cookie for a week; "Log
   out" ends it at once.
 - **Site name**: the part of the address after `framed.my.id/`
@@ -413,7 +436,13 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   the constants at the top of `server/auth.ts`; password length in
   `shared/passwords.ts`; hashing rounds in `server/password-hash.ts`.
 - **Change a site's picture allowance:** `server/image-limits.ts`.
-- **Reserve another address:** `RESERVED_NAMES` in `shared/names.ts`.
+- **Reserve another address:** `RESERVED_NAMES` in `shared/names.ts` (names
+  with "framed" as a word are refused by `isReservedName`).
+- **Change a security header (CSP, HSTS):** `public/_headers`; both versions
+  send it. A new embed host must be added to the CSP's `frame-src`.
+- **Change an email cap:** `MESSAGES_PER_DAY_ALL_SITES`
+  (`server/contact-messages.ts`) and `REPORT_NOTICES_PER_DAY`
+  (`server/reports.ts`).
 - **Add an API address:** a route in `server/public-routes.ts` (anyone) or
   `server/me-routes.ts` (logged in), with a test in `tests/api/`.
 - **Add a field to a block:** give it a `.default(…)` in

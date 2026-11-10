@@ -1,7 +1,7 @@
 -- Better Auth's tables: people, their sessions, pending login codes, and
 -- login rate limits. Generated from the library (scripts/print-auth-tables.mjs)
 -- so they match the version in package.json; regenerate after upgrading it.
--- No passwords are stored: people log in with a code sent by email.
+-- Passwords are stored only as hashes (account.password; server/password-hash.ts).
 
 create table "user" ("id" text not null primary key, "name" text not null, "email" text not null unique, "emailVerified" integer not null, "image" text, "createdAt" date not null, "updatedAt" date not null);
 

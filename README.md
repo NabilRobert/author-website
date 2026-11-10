@@ -8,14 +8,15 @@ news, contact details, a press kit). Choose your colours, fonts and
 background, crop your pictures, and edit it all from the browser with a
 live preview.
 
-Built with Vue 3, TypeScript, Tailwind and Vite. Runs on Cloudflare's free
-plan: Pages for the site, a Pages Function (Hono) for the API, D1 for
-accounts and content, R2 for pictures. Login is an email and password
+Built with Vue 3, TypeScript, Tailwind and Vite, with a Hono API. It runs
+two ways from the same code: on Cloudflare's free plan (Pages, a Pages
+Function, D1 for accounts and content, R2 for pictures), or as one Node
+process with a SQLite file on a VPS, which is how framed.my.id runs. Login is an email and password
 through Better Auth; emailed codes (Resend's free tier) confirm the email
 at sign-up and reset a forgotten password.
 
-> Status: works end to end locally (sign up, edit, save, public page). Not
-> deployed yet: see the setup checklist below. The example content is an
+> Status: live at https://framed.my.id (the Node version, invite-only, with
+> picture uploads switched off for now). The example content is an
 > invented designer, "Alex Rowan".
 
 ## Run it
@@ -35,7 +36,8 @@ editor's **Done** brings you back.
 
 > **Never set `LOCAL_DEV_PRINT_CODES` (or any `LOCAL_DEV_` setting) on a
 > deployed site.** It would print people's codes in the logs instead of
-> emailing them. A test fails if `wrangler.toml` ever sets one; the safe
+> emailing them. The code ignores it unless `SITE_URL` is localhost, and a
+> test fails if `wrangler.toml` or `ops/` ever sets one; the safe
 > rule is: local `.dev.vars` only. For live reloading while changing the
 > site, also run `npm run dev` (http://localhost:5173, with `/api` passed
 > to port 8788).
@@ -46,8 +48,8 @@ editor's **Done** brings you back.
 | --- | --- |
 | `shared/` | Used by both sides: the content's shape (`schema.ts`, `blocks.ts`, `theme.ts`, `fields.ts`), name rules (`names.ts`), picture rules (`images.ts`), the example content |
 | `functions/api/` | The Pages Function entry: hands every `/api/*` request to the API |
-| `server/` | The API (Hono): `app.ts` wires it; `auth.ts` and `email.ts` log people in; `session.ts` checks logins; `public-routes.ts`, `me-routes.ts`, `content-routes.ts` and `image-routes.ts` answer requests; `content-read.ts` and `content-write.ts` talk to D1 |
-| `server/node/` | The Node version for a VPS: `main.ts` starts it, `server.ts` serves the site and API, `sqlite-d1.ts` lets the code use a SQLite file as if it were D1, `migrate.ts` applies migrations on start, plus the `invite-cli` and `backup-cli` commands |
+| `server/` | The API (Hono): `app.ts` wires it; `auth.ts`, `sign-in-lockout.ts` and `email.ts` log people in; `session.ts` checks logins; `public-routes.ts`, `reports.ts`, `me-routes.ts`, `content-routes.ts` and `image-routes.ts` answer requests; `content-read.ts` and `content-write.ts` talk to D1 |
+| `server/node/` | The Node version for a VPS: `main.ts` starts it, `server.ts` serves the site and API, `sqlite-d1.ts` lets the code use a SQLite file as if it were D1, `migrate.ts` applies migrations on start, `client-ip.ts` works out the visitor's address, plus the `invite-cli`, `takedown-cli` and `backup-cli` commands |
 | `ops/` | Running the Node version with Docker: `compose.yaml`, `.env.example`, `make-secrets.sh` (the `Dockerfile` is at the root) |
 | `migrations/` | The database tables, numbered; the same files for D1 and for the Node version's SQLite |
 | `src/views/` | One view per address: `LandingView`, `LoginView`, `SiteLayout` + `PageView` (someone's site), `EditView` (their editor), terms and privacy |
@@ -77,10 +79,15 @@ docker compose exec framed node dist-node/invite-cli.mjs you@example.com   # you
 - **The database** is one SQLite file in the `framed-data` volume. Take a consistent copy while it runs
   with `docker compose exec framed node dist-node/backup-cli.mjs /data/backup.sqlite`, then encrypt and
   ship it with the server's other backups.
-- **In front of it:** the server's proxy forwards `framed.my.id` to `127.0.0.1:8790`, and Cloudflare
-  must stay in front (the DNS record proxied, "orange cloud"). Rate limits and the contact form read the
-  visitor's address from Cloudflare's `CF-Connecting-IP` header, so the server should accept web traffic
-  only from Cloudflare; otherwise that header could be faked.
+- **Reported pages:** set `REPORTS_EMAIL` in `ops/.env` to get an email for each report (up to 10 a
+  day). `docker compose exec framed node dist-node/takedown-cli.mjs reports` lists recent ones;
+  `… takedown-cli.mjs hide <name>` hides a page from visitors, and `show <name>` brings it back.
+- **In front of it:** the server's proxy (Caddy) forwards `framed.my.id` to `127.0.0.1:8790`, and
+  Cloudflare stays in front (the DNS record proxied, "orange cloud"). The app trusts Cloudflare's
+  `CF-Connecting-IP` only when the request reached the proxy from a Cloudflare address
+  (`server/node/client-ip.ts`), so rate limits hold even if someone finds the server's address. Still,
+  let only Cloudflare reach ports 80 and 443, and cap request bodies in the proxy too:
+  [`ops/hardening.md`](ops/hardening.md) has the steps.
 - `npm run build:node` builds it without Docker (`node dist-node/main.mjs`, settings from the environment).
 
 ## Setup checklist (Arthur)
@@ -123,7 +130,7 @@ these once, in order. Steps 2–4 run in this folder after `npx wrangler login`.
    prints a link that works once, for that address only (leave the email
    out for a link anyone can use once).
 
-**Taking a page down** after a report (reports are in the `reports` table):
+**Taking a page down** after a report, on Cloudflare (on the VPS, use `takedown-cli.mjs` above):
 
 ```bash
 npx wrangler d1 execute DB --remote --command "SELECT r.created_at, s.name, r.reason FROM reports r JOIN sites s ON s.id = r.site_id ORDER BY r.created_at DESC LIMIT 20"
