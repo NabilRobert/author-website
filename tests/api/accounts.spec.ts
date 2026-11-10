@@ -113,6 +113,9 @@ describe('claiming a name', () => {
 
   it.each([
     ['edit', 'That name is used by Framed itself. Pick another.'],
+    ['support', 'That name is used by Framed itself. Pick another.'],
+    ['administrator', 'That name is used by Framed itself. Pick another.'],
+    ['framed-security', 'That name is used by Framed itself. Pick another.'],
     ['ab', 'Use at least 3 characters.'],
     ['no spaces', 'Use letters, numbers and dashes, like "mara-ellison".'],
   ])('refuses the name "%s"', async (name, message) => {
@@ -120,6 +123,11 @@ describe('claiming a name', () => {
     const response = await api.postJson('/api/me/site', { name }, cookie)
     expect(response.status).toBe(400)
     expect(await response.json()).toEqual({ error: message })
+  })
+
+  it('allows names that only contain "framed" inside a word', async () => {
+    const cookie = await api.logIn('mara@example.com')
+    expect((await api.postJson('/api/me/site', { name: 'reframed-studio' }, cookie)).status).toBe(201)
   })
 
   it('allows one site per person', async () => {
