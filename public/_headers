@@ -1,8 +1,15 @@
-# Security headers for every page Cloudflare Pages serves.
-# DENY framing stops another site from hiding the editor in a frame and
-# tricking the owner into clicking Save (clickjacking).
+# Security headers for every page, read by Cloudflare Pages and by the Node
+# version (server/node/server.ts), so both send the same ones.
+# - DENY framing (and frame-ancestors) stops another site from hiding the
+#   editor in a frame and tricking the owner into clicking Save.
+# - The CSP allows only Framed's own scripts and API, and video players from
+#   the two hosts shared/videos.ts embeds. Inline styles are allowed because
+#   Vue sets per-block colours as style attributes.
+# - HSTS keeps browsers on https for a year once they have visited.
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-src https://www.youtube-nocookie.com https://player.vimeo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
