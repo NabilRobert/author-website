@@ -5,13 +5,14 @@
  *
  * It opens the SQLite file (DATABASE_PATH), applies any new migrations,
  * reads the settings (server/node/settings.ts) and serves the site and API
- * on PORT. Picture storage isn't connected here, so uploads are off
- * (server/storage.ts).
+ * on PORT. Uploaded pictures and PDFs are kept in a folder on disk
+ * (FILES_PATH, server/node/disk-bucket.ts), in the same volume as the database.
  */
 import { join } from 'node:path'
 import { serve } from '@hono/node-server'
 import type { Env } from '../env'
 import { asD1 } from './sqlite-d1'
+import { asR2Bucket, DEFAULT_FILES_PATH, DiskBucket } from './disk-bucket'
 import { DEFAULT_DATABASE_PATH, openDatabase } from './database'
 import { applyMigrations } from './migrate'
 import { readSetting, requireSetting } from './settings'
@@ -27,6 +28,7 @@ if (applied.length) console.log(`Applied migrations: ${applied.join(', ')}`)
 const env: Env = {
   DB: asD1(sqlite),
   SQLITE_DATABASE: sqlite,
+  IMAGES: asR2Bucket(new DiskBucket(readSetting('FILES_PATH') ?? DEFAULT_FILES_PATH)),
   SITE_URL: requireSetting('SITE_URL'),
   // Checked on every request (server/env.ts: secretProblem): without a real one the API answers 503.
   BETTER_AUTH_SECRET: readSetting('BETTER_AUTH_SECRET') ?? '',

@@ -22,7 +22,7 @@ export interface AppEnv {
     sendReportNotice: SendReportNotice
     user: { id: string; email: string }
     site: Site
-    /** The R2 bucket, set by requireStorage (server/storage.ts) on routes that store or serve files. */
+    /** The file storage (R2 or disk), set by requireStorage (server/storage.ts) on routes that store or serve files. */
     storage: R2Bucket
   }
 }
