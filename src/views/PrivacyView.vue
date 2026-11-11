@@ -35,13 +35,13 @@ useHead({ title: 'Privacy · Framed' })
       </p>
       <h2 class="text-xl font-semibold">Where it is kept</h2>
       <p>
-        On Framed's own server, with Cloudflare in front of it. Emailed codes are stored scrambled (hashed) and expire
-        after 10 minutes.
+        On Framed's own server, with Cloudflare in front of it. A copy is backed up every night, encrypted, to Amazon
+        S3. Emailed codes are stored scrambled (hashed) and expire after 10 minutes.
       </p>
       <h2 class="text-xl font-semibold">Deleting everything</h2>
       <p>
         In your editor, under "About you", choose "Delete my account". Your account, page and pictures are removed at
-        once. Backups disappear within 7 days.
+        once. Backups are deleted after 14 days, so your data is gone from them by then too.
       </p>
     </article>
   </FramedShell>
