@@ -22,6 +22,7 @@ useHead({ title: 'Privacy · Framed' })
         </li>
         <li>Your page and the pictures you upload, to show them to visitors.</li>
         <li>Your login sessions (which device, until when), so you stay logged in for up to a week.</li>
+        <li>Wrong-password attempts on your account (only when they happened), for 15 minutes, to stop guessing.</li>
       </ul>
       <h2 class="text-xl font-semibold">What we don't do</h2>
       <p>
@@ -33,7 +34,10 @@ useHead({ title: 'Privacy · Framed' })
         nothing about who visited.
       </p>
       <h2 class="text-xl font-semibold">Where it is kept</h2>
-      <p>On Cloudflare's servers. Emailed codes are stored scrambled (hashed) and expire after 10 minutes.</p>
+      <p>
+        On Framed's own server, with Cloudflare in front of it. Emailed codes are stored scrambled (hashed) and expire
+        after 10 minutes.
+      </p>
       <h2 class="text-xl font-semibold">Deleting everything</h2>
       <p>
         In your editor, under "About you", choose "Delete my account". Your account, page and pictures are removed at

@@ -7,7 +7,7 @@
 import { createMiddleware } from 'hono/factory'
 import type { Env } from './env'
 import type { Auth } from './auth'
-import type { SendContactMessage } from './email'
+import type { SendContactMessage, SendReportNotice } from './email'
 import { findSiteByOwner } from './sites'
 import type { Site } from './sites'
 
@@ -18,6 +18,8 @@ export interface AppEnv {
     auth: () => Auth
     /** Emails a contact-form message (server/email.ts); tests pass one that keeps them. */
     sendContactMessage: SendContactMessage
+    /** Emails Arthur about a reported page (server/reports.ts); tests pass one that keeps them. */
+    sendReportNotice: SendReportNotice
     user: { id: string; email: string }
     site: Site
     /** The R2 bucket, set by requireStorage (server/storage.ts) on routes that store or serve files. */

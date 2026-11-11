@@ -58,12 +58,22 @@ describe('sending emailed codes', () => {
     const fetchStub = vi.fn()
     vi.stubGlobal('fetch', fetchStub)
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const local = { ...PRODUCTION, SITE_URL: 'http://localhost:8788', LOCAL_DEV_PRINT_CODES: 'true' }
+    await emailCodeSender(local)('mara@example.com', '123456', 'forget-password')
+    expect(fetchStub).not.toHaveBeenCalled()
+    expect(log).toHaveBeenCalledWith('Reset your Framed password (mara@example.com): 123456')
+  })
+
+  it('ignores the print-codes setting on a real site, so codes never land in server logs', async () => {
+    const fetchStub = vi.fn(async () => new Response('{}'))
+    vi.stubGlobal('fetch', fetchStub)
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     await emailCodeSender({ ...PRODUCTION, LOCAL_DEV_PRINT_CODES: 'true' })(
       'mara@example.com',
       '123456',
       'forget-password',
     )
-    expect(fetchStub).not.toHaveBeenCalled()
-    expect(log).toHaveBeenCalledWith('Reset your Framed password (mara@example.com): 123456')
+    expect(fetchStub).toHaveBeenCalledOnce()
+    expect(log).not.toHaveBeenCalled()
   })
 })

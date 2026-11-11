@@ -10,7 +10,7 @@
     "invite": "tsx scripts/create-invite.ts",
     "db:seed:test": "tsx scripts/seed-test-site.ts",
     "build": "vite build",
-    "build:node": "vite build && esbuild server/node/main.ts server/node/invite-cli.ts server/node/backup-cli.ts --bundle --platform=node --target=node24 --format=esm --packages=external --outdir=dist-node --out-extension:.js=.mjs",
+    "build:node": "vite build && esbuild server/node/main.ts server/node/invite-cli.ts server/node/backup-cli.ts server/node/takedown-cli.ts --bundle --platform=node --target=node24 --format=esm --packages=external --outdir=dist-node --out-extension:.js=.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:sqlite": "TEST_DATABASE=sqlite vitest run tests/api",
