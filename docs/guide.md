@@ -391,6 +391,15 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   It refuses any key that isn't `images/<name>` or `files/<name>`, so a key
   can't reach outside the folder, and writes to a temporary file then
   renames it, so nobody ever reads half a file.
+- **Nightly backup**: `ops/backup.sh` on the VPS host streams a tar of
+  the database and uploads out of the container (`server/node/backup-cli.ts`
+  → `backup-archive.ts: writeArchive`), encrypts it with age as it arrives,
+  uploads it to S3 (rclone) and deletes copies older than 14 days.
+  `ops/restore.sh` puts one back (`restore-cli.ts` → `restoreArchive`),
+  checking the backup before replacing anything.
+- **age**: a small, modern file-encryption tool. The server holds only the
+  public key, which can encrypt but not decrypt; the private key is kept
+  elsewhere.
 - **Upload queue**: the Node version handles one picture or PDF upload at a
   time (`server/node/upload-queue.ts`). Reading a 10 MB upload briefly takes
   about 100 MB and the container has 256 MB; 8 at once crashed it in a test.
@@ -431,6 +440,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Change a field's rules or its error message:** `shared/fields.ts` or the
   schema that uses it.
 - **Change the demo content:** `shared/demo-content.ts`.
+- **Change how long backups are kept:** `BACKUP_KEEP_DAYS` in the server's
+  `ops/backup.env` (default in `ops/backup.sh`), and the same number on the
+  privacy page (`src/views/PrivacyView.vue`); a test checks they agree.
 - **Change how a selected block looks:** the outline classes
   (`BLOCK_OUTLINES`) in `src/editor/SitePreview.vue`, and the `data-selected:`
   classes in `src/editor/tabs/PageBlocksEditor.vue`.

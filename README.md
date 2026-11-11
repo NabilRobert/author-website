@@ -50,8 +50,8 @@ editor's **Done** brings you back.
 | `shared/` | Used by both sides: the content's shape (`schema.ts`, `blocks.ts`, `theme.ts`, `fields.ts`), name rules (`names.ts`), picture rules (`images.ts`), the example content |
 | `functions/api/` | The Pages Function entry: hands every `/api/*` request to the API |
 | `server/` | The API (Hono): `app.ts` wires it; `auth.ts`, `sign-in-lockout.ts` and `email.ts` log people in; `session.ts` checks logins; `public-routes.ts`, `reports.ts`, `me-routes.ts`, `content-routes.ts` and `image-routes.ts` answer requests; `content-read.ts` and `content-write.ts` talk to D1 |
-| `server/node/` | The Node version for a VPS: `main.ts` starts it, `server.ts` serves the site and API, `sqlite-d1.ts` lets the code use a SQLite file as if it were D1, `disk-bucket.ts` keeps uploads in a folder as if it were R2, `migrate.ts` applies migrations on start, `client-ip.ts` works out the visitor's address, plus the `invite-cli`, `takedown-cli` and `backup-cli` commands |
-| `ops/` | Running the Node version with Docker: `compose.yaml`, `.env.example`, `make-secrets.sh` (the `Dockerfile` is at the root) |
+| `server/node/` | The Node version for a VPS: `main.ts` starts it, `server.ts` serves the site and API, `sqlite-d1.ts` lets the code use a SQLite file as if it were D1, `disk-bucket.ts` keeps uploads in a folder as if it were R2, `migrate.ts` applies migrations on start, `client-ip.ts` works out the visitor's address, `upload-queue.ts` takes uploads one at a time, `backup-archive.ts` packs and unpacks backups, plus the `invite-cli`, `takedown-cli`, `backup-cli` and `restore-cli` commands |
+| `ops/` | Running the Node version with Docker: `compose.yaml`, `.env.example`, `make-secrets.sh`, the nightly `backup.sh` (settings in `backup.env.example`) and `restore.sh`, and `hardening.md` (the `Dockerfile` is at the root) |
 | `migrations/` | The database tables, numbered; the same files for D1 and for the Node version's SQLite |
 | `src/views/` | One view per address: `LandingView`, `LoginView`, `SiteLayout` + `PageView` (someone's site), `EditView` (their editor), terms and privacy |
 | `src/auth/` | The login page's steps and the account calls |
@@ -79,10 +79,7 @@ docker compose exec framed node dist-node/invite-cli.mjs you@example.com   # you
 
 - **Migrations** apply by themselves on every start.
 - **The data** is all in the `framed-data` volume: the SQLite file `framed.sqlite` and the uploads
-  under `files/`. Back up both. Take a consistent copy of the database while it runs with
-  `docker compose exec framed node dist-node/backup-cli.mjs /data/backup.sqlite`, then copy it and the
-  `files/` folder out, encrypt them and ship them with the server's other backups. Uploads are never
-  changed once written, so copying the folder while it runs is safe.
+  under `files/`. The nightly backup below covers both.
 - **Reported pages:** set `REPORTS_EMAIL` in `ops/.env` to get an email for each report (up to 10 a
   day). `docker compose exec framed node dist-node/takedown-cli.mjs reports` lists recent ones;
   `… takedown-cli.mjs hide <name>` hides a page from visitors, and `show <name>` brings it back.
@@ -93,6 +90,43 @@ docker compose exec framed node dist-node/invite-cli.mjs you@example.com   # you
   let only Cloudflare reach ports 80 and 443, and cap request bodies in the proxy too:
   [`ops/hardening.md`](ops/hardening.md) has the steps.
 - `npm run build:node` builds it without Docker (`node dist-node/main.mjs`, settings from the environment).
+
+### Backups (nightly, encrypted)
+
+`ops/backup.sh`, run by cron on the host:
+1. It streams the database (copied safely while the site runs) and the uploads out of the container
+   (`server/node/backup-cli.ts`).
+2. It encrypts them with [age](https://age-encryption.org) as they arrive, so no unencrypted copy
+   touches the disk.
+3. It uploads the result to S3 under `framed/` with rclone.
+4. It deletes copies older than 14 days, both locally (`~/backups/framed/`) and in S3. Pruning only
+   ever follows a successful upload, so the newest copy always stays.
+
+It needs `age` and `rclone` on the host, and its settings in `ops/backup.env` (copy
+`ops/backup.env.example`, then `chmod 600`). Those settings are kept out of `ops/.env` on purpose:
+the container reads that file, and the S3 keys don't belong in the app.
+
+```bash
+47 3 * * * $HOME/framed/ops/backup.sh >> $HOME/backups/framed/backup.log 2>&1   # crontab -e
+```
+
+**Restore** (`ops/restore.sh`, which replaces the database and uploads in the volume):
+
+```bash
+cd ops && docker compose stop framed
+./restore.sh ~/backups/framed/framed-<date>.tar.age <age private key file>
+docker compose start framed
+```
+
+- To keep the private key off the server, decrypt on your own computer and pipe it over ssh:
+  `age -d -i key.txt framed-<date>.tar.age | ssh <server> 'cd framed/ops && ./restore.sh -'`.
+- Older copies are in S3: `rclone copy :s3:<bucket>/framed/framed-<date>.tar.age .` (with the
+  `RCLONE_S3_*` variables set as in `backup.sh`).
+- The restore checks the backup before replacing anything. A damaged or foreign file changes nothing.
+- `tests/api/backup-archive.spec.ts` runs backup → age with a test key → restore → check the
+  content on every test run.
+- The whole thing was also drilled against the real image: back up a live container, restore into an
+  empty volume, then the page, picture and login came back.
 
 ## Setup checklist (Arthur)
 
@@ -141,5 +175,5 @@ npx wrangler d1 execute DB --remote --command "SELECT r.created_at, s.name, r.re
 npx wrangler d1 execute DB --remote --command "UPDATE sites SET is_hidden = 1 WHERE name = 'the-name'"
 ```
 
-Backups: D1 can restore the database to any minute in the last 7 days
-(`npx wrangler d1 time-travel restore DB --timestamp=…`).
+Backups on Cloudflare: D1 can restore the database to any minute in the last 7 days
+(`npx wrangler d1 time-travel restore DB --timestamp=…`). On the VPS, see "Backups" above.
