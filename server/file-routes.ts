@@ -1,5 +1,5 @@
 /**
- * Files to download, stored in R2 under `files/<random id>.pdf`:
+ * Files to download, stored (R2, or disk on the VPS) under `files/<random id>.pdf`:
  *
  *   POST /api/me/files        upload a PDF to my site, within its allowance
  *   GET  /api/files/<name>    download one (?as=<label> names the file)

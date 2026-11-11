@@ -1,5 +1,5 @@
 /**
- * Deletes a person completely: their pictures in R2, their site's content,
+ * Deletes a person completely: their uploaded pictures and files, their site's content,
  * their site, their logins and their account. Nothing is kept.
  */
 import type { Env } from './env'

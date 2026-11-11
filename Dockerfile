@@ -29,7 +29,8 @@ COPY --from=build /app/dist-node dist-node
 COPY --from=build /app/migrations migrations
 ENV NODE_ENV=production \
     PORT=8790 \
-    DATABASE_PATH=/data/framed.sqlite
+    DATABASE_PATH=/data/framed.sqlite \
+    FILES_PATH=/data/files
 USER framed
 EXPOSE 8790
 HEALTHCHECK --interval=30s --timeout=3s \

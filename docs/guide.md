@@ -147,9 +147,9 @@ sequenceDiagram
 2. `uploadImage` (`src/editor/editorApi.ts`) sends it to
    `POST /api/me/images` (`server/image-routes.ts`), behind the same login
    check. The API checks again, including the file's first bytes, checks
-   the site's allowance (200 pictures, 200 MB), stores it in R2 as
-   `images/<random id>.<jpg|png|webp>` and records it in the `images`
-   table.
+   the site's allowance (200 pictures, 200 MB), stores it as
+   `images/<random id>.<jpg|png|webp>` (in R2 on Cloudflare, in a folder on
+   the VPS) and records it in the `images` table.
 3. The returned key goes into the draft (a picture of work, a photo, a banner); the
    preview shows it straight away. It goes live when the owner saves.
 4. Visitors load it from `GET /api/images/<id>.png`, cached for a year (a
@@ -250,7 +250,7 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   free allowance (`migrations/0007`).
 - **Downloads block**: PDFs to download, like a CV (`DownloadsBlock.vue`,
   `shared/files.ts`). They are uploaded to `POST /api/me/files` (PDF bytes
-  checked, up to 10 MB), stored in R2 under `files/`, count towards the
+  checked, up to 10 MB), stored under `files/` (R2 or disk), count towards the
   same allowance as pictures, and are always sent as sandboxed downloads
   (`server/file-routes.ts`), never shown inside Framed's pages.
 - **Video block**: a YouTube or Vimeo link (`shared/videos.ts:
@@ -368,8 +368,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   (`SQLITE_DATABASE`). Migrations apply on start; secrets come from Docker
   secret files (`server/node/settings.ts`). `npm run test:sqlite` runs every
   API test against SQLite to keep both versions alike.
-- **Uploads switched off**: picture and PDF storage (R2, the `IMAGES`
-  binding) is optional. Without it the upload and download routes answer
+- **Uploads switched off**: picture and PDF storage (the `IMAGES`
+  binding: R2 on Cloudflare, a folder on the VPS) is optional. The Node
+  version always has it; on Cloudflare it needs an R2 bucket. Without it the upload and download routes answer
   503 (`server/storage.ts: requireStorage`), and the editor hides its
   upload buttons (`GET /api/features`, `src/editor/uploads.ts`).
 - **Fail closed**: when something is missing or wrong, refuse rather than
@@ -384,6 +385,25 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   API refuses it (409) so it can't undo newer changes.
 - **R2**: Cloudflare's file storage, here for pictures. The bucket is
   private; pictures are served through the API.
+- **Disk bucket**: the Node version's stand-in for R2
+  (`server/node/disk-bucket.ts`): the same `put`, `get` and `delete`, on
+  files under `FILES_PATH` (`/data/files` in Docker, beside the database).
+  It refuses any key that isn't `images/<name>` or `files/<name>`, so a key
+  can't reach outside the folder, and writes to a temporary file then
+  renames it, so nobody ever reads half a file.
+- **Nightly backup**: `ops/backup.sh` on the VPS host streams a tar of
+  the database and uploads out of the container (`server/node/backup-cli.ts`
+  → `backup-archive.ts: writeArchive`), encrypts it with age as it arrives,
+  uploads it to S3 (rclone) and deletes copies older than 14 days.
+  `ops/restore.sh` puts one back (`restore-cli.ts` → `restoreArchive`),
+  checking the backup before replacing anything.
+- **age**: a small, modern file-encryption tool. The server holds only the
+  public key, which can encrypt but not decrypt; the private key is kept
+  elsewhere.
+- **Upload queue**: the Node version handles one picture or PDF upload at a
+  time (`server/node/upload-queue.ts`). Reading a 10 MB upload briefly takes
+  about 100 MB and the container has 256 MB; 8 at once crashed it in a test.
+  Other requests don't wait.
 - **Crop (focus point and zoom)**: how a picture sits in its frame; the
   file itself is never changed.
 - **Magic bytes**: the first bytes every file of a type starts with (a PNG
@@ -420,6 +440,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Change a field's rules or its error message:** `shared/fields.ts` or the
   schema that uses it.
 - **Change the demo content:** `shared/demo-content.ts`.
+- **Change how long backups are kept:** `BACKUP_KEEP_DAYS` in the server's
+  `ops/backup.env` (default in `ops/backup.sh`), and the same number on the
+  privacy page (`src/views/PrivacyView.vue`); a test checks they agree.
 - **Change how a selected block looks:** the outline classes
   (`BLOCK_OUTLINES`) in `src/editor/SitePreview.vue`, and the `data-selected:`
   classes in `src/editor/tabs/PageBlocksEditor.vue`.

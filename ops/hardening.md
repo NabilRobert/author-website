@@ -29,7 +29,7 @@ framed.my.id {
 	respond @not_cloudflare 403
 
 	# The app refuses API bodies over 64 KB; this stops larger ones earlier.
-	# 11 MB leaves room for PDF uploads (10 MB) once uploads are switched on.
+	# 11 MB leaves room for PDF uploads (10 MB).
 	request_body {
 		max_size 11MB
 	}

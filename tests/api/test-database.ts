@@ -4,14 +4,17 @@
  *
  * With TEST_DATABASE=sqlite (`npm run test:sqlite`), the database is instead
  * a SQLite file in memory behind the Node version's adapter
- * (server/node/sqlite-d1.ts), so the same tests prove both versions behave alike.
+ * (server/node/sqlite-d1.ts), and the bucket is a temporary folder behind
+ * server/node/disk-bucket.ts, so the same tests prove both versions behave alike.
  */
-import { readdirSync, readFileSync } from 'node:fs'
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Miniflare } from 'miniflare'
 import Database from 'better-sqlite3'
 import { asD1 } from '../../server/node/sqlite-d1'
 import { applyMigrations } from '../../server/node/migrate'
+import { asR2Bucket, DiskBucket } from '../../server/node/disk-bucket'
 
 const MIGRATIONS_DIR = join(import.meta.dirname, '../../migrations')
 
@@ -42,7 +45,12 @@ export async function createTestDatabase(): Promise<TestBindings> {
     const sqlite = new Database(':memory:')
     sqlite.pragma('foreign_keys = ON')
     applyMigrations(sqlite, MIGRATIONS_DIR)
-    return { db: asD1(sqlite), images, sqlite, dispose: () => miniflare.dispose() }
+    const folder = mkdtempSync(join(tmpdir(), 'framed-files-'))
+    const dispose = async () => {
+      rmSync(folder, { recursive: true, force: true })
+      await miniflare.dispose()
+    }
+    return { db: asD1(sqlite), images: asR2Bucket(new DiskBucket(folder)), sqlite, dispose }
   }
   return { db, images, dispose: () => miniflare.dispose() }
 }

@@ -26,7 +26,7 @@ services:
     env_file: .env
     secrets: [better_auth_secret, resend_api_key]
     volumes:
-      # The SQLite database (framed.sqlite and its -wal/-shm files).
+      # The SQLite database (framed.sqlite and its -wal/-shm files) and uploads (files/).
       - framed-data:/data
     ports:
       - '127.0.0.1:${FRAMED_PORT:-8790}:8790'

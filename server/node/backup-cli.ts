@@ -1,14 +1,23 @@
 /**
- * A consistent copy of the Node version's database, safe to take while it
- * runs (SQLite's online backup), for the server's encrypted backups:
+ * Writes a backup of everything Framed keeps (the database, copied safely
+ * while it runs, and the uploads) to standard output as a tar stream
+ * (server/node/backup-archive.ts). ops/backup.sh runs it nightly and pipes
+ * it straight into age, so nothing unencrypted is written to the host:
  *
- *   docker compose exec framed node dist-node/backup-cli.mjs /data/backups/framed.sqlite
+ *   docker exec -i framed-framed-1 node dist-node/backup-cli.mjs | age -r <public key> > backup.tar.age
  */
-import { DEFAULT_DATABASE_PATH, openDatabase } from './database'
+import { writeArchive } from './backup-archive'
+import { DEFAULT_DATABASE_PATH } from './database'
+import { DEFAULT_FILES_PATH } from './disk-bucket'
 import { readSetting } from './settings'
 
-const target = process.argv[2]
-if (!target) throw new Error('Say where to write the copy, like /data/backups/framed.sqlite.')
-const db = openDatabase(readSetting('DATABASE_PATH') ?? DEFAULT_DATABASE_PATH)
-await db.backup(target)
-console.log(`Backed up to ${target}.`)
+if (process.stdout.isTTY) {
+  throw new Error('The backup is binary: pipe it into age (ops/backup.sh) instead of printing it.')
+}
+await writeArchive(
+  {
+    databasePath: readSetting('DATABASE_PATH') ?? DEFAULT_DATABASE_PATH,
+    filesPath: readSetting('FILES_PATH') ?? DEFAULT_FILES_PATH,
+  },
+  process.stdout,
+)

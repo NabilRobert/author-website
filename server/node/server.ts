@@ -3,7 +3,8 @@
  * /api/*, the built site's files, and every other address answered with
  * the single-page app's index.html, with link previews added
  * (server/link-preview-page.ts). The visitor's address is checked before
- * the API sees it (server/node/client-ip.ts). Security headers come from the same
+ * the API sees it (server/node/client-ip.ts), and uploads are handled one at a
+ * time (server/node/upload-queue.ts). Security headers come from the same
  * `_headers` file Cloudflare Pages uses, so both versions send the same ones.
  */
 import { readFileSync } from 'node:fs'
@@ -14,6 +15,7 @@ import { createApp } from '../app'
 import type { Env } from '../env'
 import { withLinkPreview } from '../link-preview-page'
 import { withClientIp } from './client-ip'
+import { createUploadQueue, isUploadRequest } from './upload-queue'
 
 // Built files have a content hash in their name, so they never change.
 const BUILT_FILE_CACHE = 'public, max-age=31536000, immutable'
@@ -39,13 +41,17 @@ export function createNodeServer(distDir: string) {
   const securityHeaders = parseHeadersFile(readFileSync(join(distDir, '_headers'), 'utf8'))
   const indexHtml = readFileSync(join(distDir, 'index.html'), 'utf8')
   const api = createApp()
+  const inTurn = createUploadQueue()
   const server = new Hono<{ Bindings: Env }>()
 
   server.use('*', async (c, next) => {
     await next()
     for (const [name, value] of securityHeaders) c.res.headers.set(name, value)
   })
-  server.all('/api/*', (c) => api.fetch(withClientIp(c.req.raw), c.env))
+  server.all('/api/*', (c) => {
+    const answer = async () => api.fetch(withClientIp(c.req.raw), c.env)
+    return isUploadRequest(c.req.method, c.req.path) ? inTurn(answer) : answer()
+  })
   // Build files for Cloudflare Pages (_headers, _routes.json) aren't pages.
   server.all('/_*', (c) => c.text('Not found', 404))
   server.use('/assets/*', async (c, next) => {

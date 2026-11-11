@@ -10,6 +10,8 @@ const read = (path: string) => readFileSync(join(import.meta.dirname, '../..', p
 const WRANGLER_TOML = read('wrangler.toml')
 const OPS_ENV_EXAMPLE = read('ops/.env.example')
 const OPS_COMPOSE = read('ops/compose.yaml')
+const BACKUP_ENV_EXAMPLE = read('ops/backup.env.example')
+const GITIGNORE = read('.gitignore')
 
 describe('the Cloudflare deploy config (wrangler.toml)', () => {
   it('never switches on a local-development setting', () => {
@@ -41,5 +43,19 @@ describe('the VPS deploy config (ops/)', () => {
 
   it('publishes the container on the loopback only, behind the proxy', () => {
     expect(OPS_COMPOSE).toContain("- '127.0.0.1:${FRAMED_PORT:-8790}:8790'")
+  })
+
+  it('keeps the backup settings out of git, and the S3 keys out of the container', () => {
+    expect(GITIGNORE).toMatch(/^ops\/backup\.env$/m)
+    expect(OPS_COMPOSE).not.toContain('backup.env')
+    for (const secret of ['AGE_PUBLIC_KEY', 'BACKUP_S3_ACCESS_KEY_ID', 'BACKUP_S3_SECRET_ACCESS_KEY']) {
+      expect(BACKUP_ENV_EXAMPLE).toMatch(new RegExp(`^${secret}=$`, 'm'))
+    }
+  })
+
+  it('keeps backups for the 14 days the privacy page promises', () => {
+    expect(BACKUP_ENV_EXAMPLE).toMatch(/^BACKUP_KEEP_DAYS=14$/m)
+    expect(read('ops/backup.sh')).toContain('DEFAULT_KEEP_DAYS=14')
+    expect(read('src/views/PrivacyView.vue')).toContain('Backups are deleted after 14 days')
   })
 })

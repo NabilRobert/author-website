@@ -1,5 +1,5 @@
 /**
- * Pictures, stored in R2 under `images/<random id>.<jpg|png|webp>`:
+ * Pictures, stored (R2, or disk on the VPS) under `images/<random id>.<jpg|png|webp>`:
  *
  *   POST /api/me/images        upload one to my site, within its limits
  *   GET  /api/images/<name>    serve one to anyone

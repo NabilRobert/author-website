@@ -1,9 +1,9 @@
 /**
- * Storage for uploaded pictures and PDFs (R2, the IMAGES binding) is
- * optional. Without it, Framed runs with uploads switched off: the routes
- * that store or serve files answer 503, and the editor hides its upload
- * buttons (GET /api/features). Adding the binding back to wrangler.toml
- * turns uploads on again.
+ * Storage for uploaded pictures and PDFs (the IMAGES binding) is optional.
+ * The Node version always sets it (a folder on disk, server/node/disk-bucket.ts);
+ * on Cloudflare it is an R2 bucket in wrangler.toml. Without it, Framed runs
+ * with uploads switched off: the routes that store or serve files answer
+ * 503, and the editor hides its upload buttons (GET /api/features).
  */
 import { Hono } from 'hono'
 import { createMiddleware } from 'hono/factory'

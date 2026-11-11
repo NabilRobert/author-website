@@ -25,3 +25,4 @@ backups/
 # Framed on a server (ops/compose.yaml)
 ops/secrets/
 ops/.env
+ops/backup.env

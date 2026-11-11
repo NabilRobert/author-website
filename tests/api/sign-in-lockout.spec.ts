@@ -33,7 +33,11 @@ async function guessWrong(times: number) {
   for (let count = 0; count < times; count++) expect((await signIn(`wrong-guess-${count}`)).status).toBe(401)
 }
 
-describe('the per-account sign-in lockout', () => {
+// Each test hashes a password about 20 times. That takes ~6 s alone, but it
+// went past the usual 20 s when the whole suite ran at once.
+const MANY_SIGN_INS_TIMEOUT_MS = 60_000
+
+describe('the per-account sign-in lockout', { timeout: MANY_SIGN_INS_TIMEOUT_MS }, () => {
   it(`locks an account after ${WRONG_PASSWORDS_BEFORE_LOCK} wrong passwords, even from many addresses`, async () => {
     await guessWrong(WRONG_PASSWORDS_BEFORE_LOCK)
     const locked = await signIn(PASSWORD)
