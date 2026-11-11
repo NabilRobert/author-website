@@ -11,12 +11,13 @@ live preview.
 Built with Vue 3, TypeScript, Tailwind and Vite, with a Hono API. It runs
 two ways from the same code: on Cloudflare's free plan (Pages, a Pages
 Function, D1 for accounts and content, R2 for pictures), or as one Node
-process with a SQLite file on a VPS, which is how framed.my.id runs. Login is an email and password
+process on a VPS, with a SQLite file and pictures in a folder on disk, which
+is how framed.my.id runs. Login is an email and password
 through Better Auth; emailed codes (Resend's free tier) confirm the email
 at sign-up and reset a forgotten password.
 
-> Status: live at https://framed.my.id (the Node version, invite-only, with
-> picture uploads switched off for now). The example content is an
+> Status: live at https://framed.my.id (the Node version, invite-only). The
+> example content is an
 > invented designer, "Alex Rowan".
 
 ## Run it
@@ -49,7 +50,7 @@ editor's **Done** brings you back.
 | `shared/` | Used by both sides: the content's shape (`schema.ts`, `blocks.ts`, `theme.ts`, `fields.ts`), name rules (`names.ts`), picture rules (`images.ts`), the example content |
 | `functions/api/` | The Pages Function entry: hands every `/api/*` request to the API |
 | `server/` | The API (Hono): `app.ts` wires it; `auth.ts`, `sign-in-lockout.ts` and `email.ts` log people in; `session.ts` checks logins; `public-routes.ts`, `reports.ts`, `me-routes.ts`, `content-routes.ts` and `image-routes.ts` answer requests; `content-read.ts` and `content-write.ts` talk to D1 |
-| `server/node/` | The Node version for a VPS: `main.ts` starts it, `server.ts` serves the site and API, `sqlite-d1.ts` lets the code use a SQLite file as if it were D1, `migrate.ts` applies migrations on start, `client-ip.ts` works out the visitor's address, plus the `invite-cli`, `takedown-cli` and `backup-cli` commands |
+| `server/node/` | The Node version for a VPS: `main.ts` starts it, `server.ts` serves the site and API, `sqlite-d1.ts` lets the code use a SQLite file as if it were D1, `disk-bucket.ts` keeps uploads in a folder as if it were R2, `migrate.ts` applies migrations on start, `client-ip.ts` works out the visitor's address, plus the `invite-cli`, `takedown-cli` and `backup-cli` commands |
 | `ops/` | Running the Node version with Docker: `compose.yaml`, `.env.example`, `make-secrets.sh` (the `Dockerfile` is at the root) |
 | `migrations/` | The database tables, numbered; the same files for D1 and for the Node version's SQLite |
 | `src/views/` | One view per address: `LandingView`, `LoginView`, `SiteLayout` + `PageView` (someone's site), `EditView` (their editor), terms and privacy |
@@ -65,7 +66,8 @@ editor's **Done** brings you back.
 
 The same app also runs as one Node process with a SQLite file, for a VPS
 instead of Cloudflare (Hono's Node adapter and better-sqlite3;
-`server/node/`). Picture uploads are off in this version too.
+`server/node/`). Uploaded pictures and PDFs are kept on disk beside the
+database (`server/node/disk-bucket.ts`).
 
 ```bash
 cd ops
@@ -76,9 +78,11 @@ docker compose exec framed node dist-node/invite-cli.mjs you@example.com   # you
 ```
 
 - **Migrations** apply by themselves on every start.
-- **The database** is one SQLite file in the `framed-data` volume. Take a consistent copy while it runs
-  with `docker compose exec framed node dist-node/backup-cli.mjs /data/backup.sqlite`, then encrypt and
-  ship it with the server's other backups.
+- **The data** is all in the `framed-data` volume: the SQLite file `framed.sqlite` and the uploads
+  under `files/`. Back up both. Take a consistent copy of the database while it runs with
+  `docker compose exec framed node dist-node/backup-cli.mjs /data/backup.sqlite`, then copy it and the
+  `files/` folder out, encrypt them and ship them with the server's other backups. Uploads are never
+  changed once written, so copying the folder while it runs is safe.
 - **Reported pages:** set `REPORTS_EMAIL` in `ops/.env` to get an email for each report (up to 10 a
   day). `docker compose exec framed node dist-node/takedown-cli.mjs reports` lists recent ones;
   `… takedown-cli.mjs hide <name>` hides a page from visitors, and `show <name>` brings it back.
