@@ -21,6 +21,7 @@ const OPS = join(import.meta.dirname, '../../ops')
 const KEY = 'age1testkeyfrombackupenv'
 const S3_SECRET = 'test-s3-secret-value'
 const DAY_MS = 24 * 60 * 60 * 1000
+const daysFromMinutes = (minutes: number) => minutes / (24 * 60)
 
 const STUBS: Record<string, string> = {
   // exec streams a pretend archive; ps reports $RUNNING_CONTAINER; run keeps what it was sent.
@@ -131,6 +132,15 @@ describe('the nightly backup (ops/backup.sh)', () => {
 
     expect(backupFiles()).not.toContain(old)
     expect(backupFiles()).toContain(recent)
+  })
+
+  it('deletes the copy from 14 days ago on day 14, even if the run starts a little earlier', () => {
+    writeSettings()
+    const fromTwoWeeksAgo = writeOldCopy('framed-20260101-034700.tar.age', 14 - daysFromMinutes(5))
+
+    run('backup.sh')
+
+    expect(backupFiles()).not.toContain(fromTwoWeeksAgo)
   })
 
   it('never deletes anything in S3: the bucket expires its own copies', () => {

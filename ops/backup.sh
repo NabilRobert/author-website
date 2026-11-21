@@ -29,6 +29,7 @@ SETTINGS_FILE="${FRAMED_BACKUP_SETTINGS:-$OPS_DIR/backup.env}"
 BACKUP_DIR="$HOME/backups/framed"
 DEFAULT_KEEP_DAYS=14
 DEFAULT_CONTAINER=framed-framed-1
+RUN_TIME_SLACK_MINUTES=60
 
 if [ ! -f "$SETTINGS_FILE" ]; then
   echo "backup: $SETTINGS_FILE is missing: copy ops/backup.env.example to it and fill it in" >&2
@@ -93,7 +94,9 @@ REMOTE=":s3:$S3_BUCKET/framed"
 # and pruning only ever follows a fresh copy, so the newest one always stays.
 rclone copy "$OUT" "$REMOTE/"
 
-find "$BACKUP_DIR" -maxdepth 1 -name 'framed-*.tar.age' -mmin +$((KEEP_DAYS * 24 * 60)) -delete
+# An hour short of KEEP_DAYS: the nightly runs never start at the same second,
+# so the full figure would keep the copy from KEEP_DAYS ago one more night.
+find "$BACKUP_DIR" -maxdepth 1 -name 'framed-*.tar.age' -mmin +$((KEEP_DAYS * 24 * 60 - RUN_TIME_SLACK_MINUTES)) -delete
 
 echo "backup: $(basename "$OUT") uploaded; local copies older than $KEEP_DAYS days removed"
 ping_healthcheck ""
