@@ -12,10 +12,17 @@ reaches the container. Check each config before reloading.
 
 ## 1. Let only Cloudflare reach framed.my.id
 
+**Why this matters:** the server's address isn't secret. Other names on
+the same server aren't behind Cloudflare's proxy, so their DNS records
+show it, and old DNS history may too. Anyone with the address can send
+`framed.my.id` requests straight to the server and skip Cloudflare's
+protection. Hiding the address isn't enough; the server has to refuse
+connections that don't come from Cloudflare.
+
 Cloudflare's address ranges are published at
 <https://www.cloudflare.com/ips-v4> and <https://www.cloudflare.com/ips-v6>.
 Fetch them fresh when you set this up; the list below was current on
-2026-11-10.
+2026-11-21.
 
 ### Option A, in Caddy (recommended)
 
@@ -34,9 +41,15 @@ framed.my.id {
 		max_size 11MB
 	}
 
+	# Keep the site's existing reverse_proxy line. 127.0.0.1:8790 is right
+	# for Caddy on the host; Caddy in Docker reaches the container by its
+	# name on their shared network instead.
 	reverse_proxy 127.0.0.1:8790
 }
 ```
+
+Back up the Caddyfile before editing it, so you can put it back in one
+step.
 
 - `remote_ip` is the address that actually connected, so it can't be faked
   with a header.
@@ -46,9 +59,16 @@ framed.my.id {
   `caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy`.
   If Caddy runs in Docker, use `docker exec <caddy> caddy validate …` and
   `caddy reload`.
-- Then check: `curl -sI https://framed.my.id/` returns 200 (through
-  Cloudflare). From another machine, connecting straight to the server's
-  address with `--resolve framed.my.id:443:<server address>` returns 403.
+- Then check, from your own computer:
+  - through Cloudflare, `curl -sI https://framed.my.id/` returns 200;
+  - straight to the server,
+    `curl -sk -o /dev/null -w '%{http_code}\n' --resolve framed.my.id:443:<server address> https://framed.my.id/`
+    returns 403.
+- **Trap, if Caddy runs in Docker:** `remote_ip` must see Cloudflare's
+  address. If Docker hands Caddy its own bridge address instead (172.x,
+  for example through Docker's userland proxy), every visitor is refused
+  and the first check returns 403 too. Put the backed-up Caddyfile back and
+  reload at once, then look at which address Caddy's access log shows.
 
 ### Option B, in the firewall (ufw)
 
@@ -84,8 +104,9 @@ Download that file from Cloudflare's documentation.
 
 ## 2. Check the security headers arrive
 
-The app sends a CSP, HSTS and the other headers itself (`public/_headers`).
-After a redeploy:
+The app sends a CSP, HSTS and the other headers itself: they're written in
+`public/_headers`, which the Node server reads at start
+(`server/node/server.ts`). After a redeploy:
 
 ```bash
 curl -sI https://framed.my.id/ | grep -iE "content-security-policy|strict-transport-security|x-frame-options"
