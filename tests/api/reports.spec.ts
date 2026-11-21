@@ -24,6 +24,11 @@ describe('report notices', () => {
     expect(api.sentReportNotices).toEqual([{ to: MODERATOR, siteName: 'mara', reason: 'This page copies my work.' }])
   })
 
+  it('removes invisible characters from the reason before emailing it', async () => {
+    expect((await report('Copies my \u202Ekrow\u202C, see page 2.')).status).toBe(201)
+    expect(api.sentReportNotices[0]?.reason).toBe('Copies my krow, see page 2.')
+  })
+
   it('only stores the report when no moderator address is set', async () => {
     api.env.REPORTS_EMAIL = undefined
     expect((await report()).status).toBe(201)
