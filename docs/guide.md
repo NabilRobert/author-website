@@ -36,7 +36,7 @@ flowchart TD
    `src/components/blocks/ImageTextBlock.vue` puts the picture beside the
    text. Work comes from `src/components/works/WorkList.vue`, in exactly the
    order the owner arranged it; neighbouring works of one group share a
-   heading (`src/content/format.ts: groupAdjacentSeries`). In the editor the
+   heading (`src/content/format.ts: groupWorks`). In the editor the
    owner drags them into order (`vue-draggable-plus`) or uses Up and Down.
 
 ### Behind GET /api/sites/&lt;name&gt;/content
@@ -172,9 +172,9 @@ is a day old (`server/image-limits.ts: pruneUnusedImages`).
 ### Colours, fonts and the menu
 
 The site's colours and fonts come from `content.theme`:
-`src/composables/useSiteTheme.ts` turns them into CSS variables
-(`src/content/themeVariables.ts`) on the page and loads the chosen fonts
-(`src/styles/fonts.ts`). Every style uses those variables, so changing the
+`src/views/SiteLayout.vue` turns them into CSS variables
+(`src/content/themeVariables.ts: themeVariables`) on the page and loads the
+chosen fonts (`src/styles/fonts.ts: loadFonts`). Every style uses those variables, so changing the
 theme restyles the whole site at once. The background is part of the theme
 too: a pattern drawn in CSS from the text colour, or a picture with a light
 panel over it (`src/content/backgroundStyle.ts`, the `site-background` and
@@ -300,8 +300,10 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   owner picks for the whole site (portrait, landscape, square, wide).
 - **Typeset card**: the plain title-on-colour card shown until a work has a
   picture (`src/components/works/WorkPicture.vue`).
-- **D1**: Cloudflare's SQLite database. The tables are in
-  `migrations/0001_create_content_tables.sql`.
+- **D1**: Cloudflare's SQLite database. The tables are made by the
+  numbered files in `migrations/`, applied in order: accounts in
+  `migrations/0001_create_account_tables.sql`, sites in
+  `migrations/0002_create_site_tables.sql`, then one file per later change.
 - **Binding**: how the API reaches a Cloudflare resource, like `env.DB` for
   the database. Named in `wrangler.toml` and typed in `server/env.ts`.
 - **Pages Function**: code Cloudflare Pages runs on the server for some
@@ -421,7 +423,7 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   starts `89 50 4E 47`). The API checks them so a renamed file is refused.
 - **Image key**: the name an uploaded image is stored under, like
   `images/<id>.jpg`; the site loads it from `/api/images/<id>.jpg`
-  (`src/content/format.ts: imageUrl`).
+  (`shared/images.ts: imageUrl`).
 
 ## Where to change things
 
