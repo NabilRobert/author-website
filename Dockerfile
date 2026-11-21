@@ -6,9 +6,19 @@
 # that npm keeps because the lockfile records it as Better Auth's optional
 # peers; dropping it would mean installing without the lockfile, which would
 # lose exact, repeatable versions, so it stays.
+#
+# The base image is pinned by digest, so a rebuild gets exactly the image that
+# was tested, not whatever the tag points to that day. Both stages use it. To
+# update it (for a Node security release):
+#   1. find the new digest for the tag, on Docker Hub or with
+#      `docker buildx imagetools inspect node:24-slim` (the top "Digest:");
+#   2. replace the version and digest in NODE_IMAGE below;
+#   3. rebuild, run the checks, and redeploy.
+
+ARG NODE_IMAGE=node:24.22.3-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
 
 # 1. The site (Vite) and the server bundles (esbuild), then only runtime dependencies.
-FROM node:24-slim AS build
+FROM ${NODE_IMAGE} AS build
 # better-sqlite3 compiles itself if no prebuilt binary matches the platform.
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
@@ -18,7 +28,7 @@ COPY . .
 RUN npm run build:node && npm prune --omit=dev
 
 # 2. What runs: the built files, the runtime dependencies and the migrations.
-FROM node:24-slim
+FROM ${NODE_IMAGE}
 RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin framed \
     && mkdir /data && chown framed /data
 WORKDIR /app

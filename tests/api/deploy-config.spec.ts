@@ -3,9 +3,9 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-// The deploy configs: Cloudflare's wrangler.toml, and the VPS's ops/ files
-// (compose.yaml, the .env.example that ops/.env is copied from, and the S3
-// rules for the backups, which Arthur applies in AWS).
+// The deploy configs: Cloudflare's wrangler.toml, the Dockerfile, and the
+// VPS's ops/ files (compose.yaml, the .env.example that ops/.env is copied
+// from, and the S3 rules for the backups, which Arthur applies in AWS).
 // Production secrets live outside the repo, so these are what can be checked.
 const read = (path: string) => readFileSync(join(import.meta.dirname, '../..', path), 'utf8')
 const WRANGLER_TOML = read('wrangler.toml')
@@ -13,6 +13,7 @@ const OPS_ENV_EXAMPLE = read('ops/.env.example')
 const OPS_COMPOSE = read('ops/compose.yaml')
 const BACKUP_ENV_EXAMPLE = read('ops/backup.env.example')
 const GITIGNORE = read('.gitignore')
+const DOCKERFILE = read('Dockerfile')
 const PRIVACY_PAGE_BACKUP_DAYS = 14
 
 interface S3LifecycleRule {
@@ -101,5 +102,11 @@ describe('the VPS deploy config (ops/)', () => {
         's3:PutBucketPolicy',
       ]),
     )
+  })
+
+  it('builds from a base image pinned by digest, not a tag that can move', () => {
+    expect(DOCKERFILE).toMatch(/^ARG NODE_IMAGE=node:[\w.-]+@sha256:[0-9a-f]{64}$/m)
+    const baseImages = [...DOCKERFILE.matchAll(/^FROM (\S+)/gm)].map((match) => match[1])
+    expect(baseImages).toEqual(['${NODE_IMAGE}', '${NODE_IMAGE}'])
   })
 })
