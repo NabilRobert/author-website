@@ -402,7 +402,10 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Nightly backup**: `ops/backup.sh` on the VPS host streams a tar of
   the database and uploads out of the container (`server/node/backup-cli.ts`
   → `backup-archive.ts: writeArchive`), encrypts it with age as it arrives,
-  uploads it to S3 (rclone) and deletes copies older than 14 days.
+  uploads it to S3 (rclone) and deletes local copies older than 14 days.
+  It never deletes in S3, and its key isn't allowed to: the bucket expires
+  the copies there itself (`ops/s3-lifecycle.json`), so a taken-over server
+  can't destroy the off-site backups.
   `ops/restore.sh` puts one back (`restore-cli.ts` → `restoreArchive`),
   checking the backup before replacing anything.
 - **age**: a small, modern file-encryption tool. The server holds only the
@@ -449,8 +452,10 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   schema that uses it.
 - **Change the demo content:** `shared/demo-content.ts`.
 - **Change how long backups are kept:** `BACKUP_KEEP_DAYS` in the server's
-  `ops/backup.env` (default in `ops/backup.sh`), and the same number on the
-  privacy page (`src/views/PrivacyView.vue`); a test checks they agree.
+  `ops/backup.env` (default in `ops/backup.sh`) for the server's copies,
+  the S3 rule (`ops/s3-lifecycle.json`, then the same change in AWS) for
+  the off-site ones, and the number on the privacy page
+  (`src/views/PrivacyView.vue`); a test checks they agree.
 - **Change how a selected block looks:** the outline classes
   (`BLOCK_OUTLINES`) in `src/editor/SitePreview.vue`, and the `data-selected:`
   classes in `src/editor/tabs/PageBlocksEditor.vue`.

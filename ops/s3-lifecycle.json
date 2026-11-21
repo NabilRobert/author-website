@@ -1,0 +1,12 @@
+{
+  "Rules": [
+    {
+      "ID": "framed-backups-expire-inside-the-privacy-pages-14-days",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "framed/" },
+      "Expiration": { "Days": 10 },
+      "NoncurrentVersionExpiration": { "NoncurrentDays": 2 },
+      "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 1 }
+    }
+  ]
+}

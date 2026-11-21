@@ -51,7 +51,7 @@ editor's **Done** brings you back.
 | `functions/api/` | The Pages Function entry: hands every `/api/*` request to the API |
 | `server/` | The API (Hono): `app.ts` wires it; `auth.ts`, `sign-in-lockout.ts` and `email.ts` log people in; `session.ts` checks logins; `public-routes.ts`, `reports.ts`, `me-routes.ts`, `content-routes.ts` and `image-routes.ts` answer requests; `content-read.ts` and `content-write.ts` talk to D1 |
 | `server/node/` | The Node version for a VPS: `main.ts` starts it, `server.ts` serves the site and API, `sqlite-d1.ts` lets the code use a SQLite file as if it were D1, `disk-bucket.ts` keeps uploads in a folder as if it were R2, `migrate.ts` applies migrations on start, `client-ip.ts` works out the visitor's address, `upload-queue.ts` takes uploads one at a time, `backup-archive.ts` packs and unpacks backups, plus the `invite-cli`, `takedown-cli`, `backup-cli` and `restore-cli` commands |
-| `ops/` | Running the Node version with Docker: `compose.yaml`, `.env.example`, `make-secrets.sh`, the nightly `backup.sh` (settings in `backup.env.example`) and `restore.sh`, and `hardening.md` (the `Dockerfile` is at the root) |
+| `ops/` | Running the Node version with Docker: `compose.yaml`, `.env.example`, `make-secrets.sh`, the nightly `backup.sh` (settings in `backup.env.example`) and `restore.sh`, the S3 rules for the backups (`s3-lifecycle.json`, `s3-backup-key-policy.json`), and `hardening.md` (the `Dockerfile` is at the root) |
 | `migrations/` | The database tables, numbered; the same files for D1 and for the Node version's SQLite |
 | `src/views/` | One view per address: `LandingView`, `LoginView`, `SiteLayout` + `PageView` (someone's site), `EditView` (their editor), terms and privacy |
 | `src/auth/` | The login page's steps and the account calls |
@@ -99,8 +99,10 @@ docker compose exec framed node dist-node/invite-cli.mjs you@example.com   # you
 2. It encrypts them with [age](https://age-encryption.org) as they arrive, so no unencrypted copy
    touches the disk.
 3. It uploads the result to S3 under `framed/` with rclone.
-4. It deletes copies older than 14 days, both locally (`~/backups/framed/`) and in S3. Pruning only
-   ever follows a successful upload, so the newest copy always stays.
+4. It deletes local copies (`~/backups/framed/`) older than 14 days. Pruning only ever follows a
+   successful upload, so the newest copy always stays.
+5. It never deletes anything in S3. The bucket expires the copies there itself (below), so someone
+   who takes over the server can't destroy the off-site backups along with the site.
 
 It needs `age` and `rclone` on the host, and its settings in `ops/backup.env` (copy
 `ops/backup.env.example`, then `chmod 600`). Those settings are kept out of `ops/.env` on purpose:
@@ -109,6 +111,27 @@ the container reads that file, and the S3 keys don't belong in the app.
 ```bash
 47 3 * * * $HOME/framed/ops/backup.sh >> $HOME/backups/framed/backup.log 2>&1   # crontab -e
 ```
+
+**In AWS, once** (Arthur, with his own AWS login, not the server's key):
+1. **Expiry rule.** S3 → the bucket → Management → Create lifecycle rule, matching
+   [`ops/s3-lifecycle.json`](ops/s3-lifecycle.json):
+   - prefix `framed/`;
+   - expire current versions after 10 days;
+   - permanently delete noncurrent versions 2 days after they become noncurrent;
+   - delete incomplete multipart uploads after 1 day.
+
+   S3 rounds each step up to the next midnight (UTC), so a copy is gone within 13 days, inside the
+   privacy page's 14. The bucket has one lifecycle configuration for all its rules: add this rule
+   next to any others, don't replace them. With the CLI that means `get-bucket-lifecycle-configuration`,
+   adding the rule to its `Rules`, then `put-bucket-lifecycle-configuration`.
+2. **A key of its own.** IAM → create a user for the backup (no console access) with the inline
+   policy [`ops/s3-backup-key-policy.json`](ops/s3-backup-key-policy.json), `BUCKET_NAME` replaced
+   by the bucket's name. It can write, read and list under `framed/` only, and every delete or
+   change to the bucket's rules is refused. Create an access key for it and type it into
+   `ops/backup.env`.
+3. **Check** on the server, after the first backup: deleting with the backup's key must fail with
+   `AccessDenied`, for example `rclone deletefile ":s3:<bucket>/framed/framed-<date>.tar.age"` with
+   the `RCLONE_S3_*` variables set as in `backup.sh`.
 
 **Restore** (`ops/restore.sh`, which replaces the database and uploads in the volume):
 

@@ -89,6 +89,16 @@ const calls = () => {
 }
 const backupFiles = () => readdirSync(join(home, 'backups/framed')).sort()
 
+/** Puts a backup made `daysAgo` days ago in the local backup folder; returns its name. */
+function writeOldCopy(name: string, daysAgo: number): string {
+  mkdirSync(join(home, 'backups/framed'), { recursive: true })
+  const path = join(home, 'backups/framed', name)
+  writeFileSync(path, 'an older backup')
+  const madeAt = new Date(Date.now() - daysAgo * DAY_MS)
+  utimesSync(path, madeAt, madeAt)
+  return name
+}
+
 describe('the nightly backup (ops/backup.sh)', () => {
   it('encrypts the archive from the container to the key in backup.env, keeping only that', () => {
     writeSettings()
@@ -112,21 +122,27 @@ describe('the nightly backup (ops/backup.sh)', () => {
     expect(calls()).not.toContain(S3_SECRET)
   })
 
-  it('deletes copies older than the kept days, here and in S3, and keeps newer ones', () => {
+  it('deletes local copies older than the kept days and keeps newer ones', () => {
     writeSettings()
-    mkdirSync(join(home, 'backups/framed'), { recursive: true })
-    const old = join(home, 'backups/framed/framed-20260101-034700.tar.age')
-    const recent = join(home, 'backups/framed/framed-20260102-034700.tar.age')
-    writeFileSync(old, 'old')
-    writeFileSync(recent, 'recent')
-    utimesSync(old, new Date(Date.now() - 15 * DAY_MS), new Date(Date.now() - 15 * DAY_MS))
-    utimesSync(recent, new Date(Date.now() - 13 * DAY_MS), new Date(Date.now() - 13 * DAY_MS))
+    const old = writeOldCopy('framed-20260101-034700.tar.age', 15)
+    const recent = writeOldCopy('framed-20260102-034700.tar.age', 13)
 
     run('backup.sh')
 
-    expect(backupFiles()).not.toContain('framed-20260101-034700.tar.age')
-    expect(backupFiles()).toContain('framed-20260102-034700.tar.age')
-    expect(calls()).toContain('rclone delete :s3:test-bucket/framed --min-age 14d --include framed-*.tar.age')
+    expect(backupFiles()).not.toContain(old)
+    expect(backupFiles()).toContain(recent)
+  })
+
+  it('never deletes anything in S3: the bucket expires its own copies', () => {
+    writeSettings()
+    writeOldCopy('framed-20260101-034700.tar.age', 15)
+    run('backup.sh')
+
+    const rcloneCommands = calls()
+      .split('\n')
+      .filter((line) => line.startsWith('rclone '))
+      .map((line) => line.split(' ')[1])
+    expect(rcloneCommands).toEqual(['copy'])
   })
 
   it('stops before asking the container for anything when a setting is missing', () => {
@@ -150,12 +166,13 @@ describe('the nightly backup (ops/backup.sh)', () => {
     'with %s: fails, reports it, leaves no half-written file and prunes nothing',
     (failingTool) => {
       writeSettings()
+      const old = writeOldCopy('framed-20260101-034700.tar.age', 15)
       const result = run('backup.sh', [], { [failingTool]: '1' })
 
       expect(result.status).not.toBe(0)
       expect(backupFiles().filter((name) => name.endsWith('.partial'))).toEqual([])
       expect(calls()).toContain('curl -fsS -m 10 --retry 3 https://hc.example/check/fail')
-      expect(calls()).not.toContain('rclone delete')
+      expect(backupFiles()).toContain(old)
     },
   )
 
