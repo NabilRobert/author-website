@@ -11,7 +11,7 @@ import { onMounted, ref } from 'vue'
 import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { siteNameSchema } from '@shared/names'
-import { MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT } from '@shared/passwords'
+import { isPasswordTooShort, PASSWORD_TOO_SHORT } from '@shared/passwords'
 import { authClient } from '@/auth/authClient'
 import { claimName } from '@/auth/account'
 import { refreshAccount, useAccount } from '@/auth/useAccount'
@@ -101,7 +101,7 @@ function useLogInAndSignUp(state: LoginState, inviteState: InviteState, afterLog
 
   const signUp = () =>
     busy(async () => {
-      if (password.value.length < MIN_PASSWORD_LENGTH) return fail(PASSWORD_TOO_SHORT)
+      if (isPasswordTooShort(password.value)) return fail(PASSWORD_TOO_SHORT)
       if (isInviteOnly.value && !invite.value.trim()) return fail(NEEDS_INVITE)
       const fetchOptions = { headers: { [INVITE_HEADER]: invite.value.trim() } }
       const account = { email: trimmedEmail(), password: password.value, name: '' }
@@ -135,7 +135,7 @@ function usePasswordReset(state: LoginState, afterLogin: () => Promise<void>) {
 
   const resetPassword = () =>
     busy(async () => {
-      if (password.value.length < MIN_PASSWORD_LENGTH) return fail(PASSWORD_TOO_SHORT)
+      if (isPasswordTooShort(password.value)) return fail(PASSWORD_TOO_SHORT)
       const reset = { email: trimmedEmail(), otp: code.value.trim(), password: password.value }
       const { error } = await authClient.emailOtp.resetPassword(reset)
       if (error) return fail(problemFrom(error, WRONG_CODE))

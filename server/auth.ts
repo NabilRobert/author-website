@@ -11,10 +11,11 @@
 import { betterAuth } from 'better-auth'
 import type { BetterAuthOptions } from 'better-auth'
 import { emailOTP, haveIBeenPwned } from 'better-auth/plugins'
+import { APIError, createAuthMiddleware } from 'better-auth/api'
 import type { Env } from './env'
 import type { SendEmailCode } from './email'
 import { hashPassword, verifyPassword } from './password-hash'
-import { MIN_PASSWORD_LENGTH } from '../shared/passwords'
+import { isPasswordTooShort, MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT } from '../shared/passwords'
 
 const CODE_LENGTH = 6
 const CODE_LIFETIME_SECONDS = 10 * 60
@@ -35,6 +36,25 @@ const RATE_LIMITS = {
   '/email-otp/reset-password': PER_MINUTE(5),
 }
 
+// Where a new password is chosen, and the field it comes in. Logging in is
+// left out on purpose: an older, shorter password must still work.
+const NEW_PASSWORD_FIELDS: Record<string, 'password' | 'newPassword'> = {
+  '/sign-up/email': 'password',
+  '/email-otp/reset-password': 'password',
+  '/reset-password': 'newPassword',
+  '/change-password': 'newPassword',
+}
+
+// Better Auth's own minimum counts UTF-16 units, so 5 emoji pass for 10
+// characters; this counts what people see (shared/passwords.ts).
+const refuseShortPasswords = createAuthMiddleware(async (ctx) => {
+  const field = NEW_PASSWORD_FIELDS[ctx.path]
+  const password: unknown = field ? ctx.body?.[field] : undefined
+  if (typeof password === 'string' && isPasswordTooShort(password)) {
+    throw new APIError('BAD_REQUEST', { code: 'PASSWORD_TOO_SHORT', message: PASSWORD_TOO_SHORT })
+  }
+})
+
 export function createAuth(env: Env, sendEmailCode: SendEmailCode) {
   return betterAuth({
     // D1 on Cloudflare; on the Node version, the SQLite file itself (server/node/main.ts).
@@ -54,6 +74,7 @@ export function createAuth(env: Env, sendEmailCode: SendEmailCode) {
       revokeSessionsOnPasswordReset: true,
       password: { hash: hashPassword, verify: verifyPassword },
     },
+    hooks: { before: refuseShortPasswords },
     emailVerification: { autoSignInAfterVerification: true },
     // Cookies are HttpOnly, Secure (on https) and SameSite=Lax by default.
     session: { expiresIn: SESSION_SECONDS, updateAge: SESSION_RENEW_SECONDS },
