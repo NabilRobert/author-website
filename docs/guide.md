@@ -91,8 +91,9 @@ sequenceDiagram
 ```
 
 1. **Login** (`src/auth/useLogin.ts`, `src/auth/authClient.ts`): a new
-   person signs up with an email and a password (at least 10 characters,
-   `shared/passwords.ts`), then types the 6-digit code we email to confirm
+   person signs up with an email and a password (at least 10 characters as
+   people count them, so an emoji is one: `shared/passwords.ts`, checked
+   again by a hook in `server/auth.ts`), then types the 6-digit code we email to confirm
    the address; after that they log in with the password. "Forgot your
    password?" emails a code that sets a new one and logs out every device.
    Passwords are hashed with PBKDF2 (`server/password-hash.ts`), and ones
@@ -320,7 +321,14 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Password hash (PBKDF2)**: a password scrambled one way, with a random
   salt and 100,000 rounds (the most Cloudflare allows), so a stolen
   database doesn't reveal passwords (`server/password-hash.ts`). The round
-  count is stored with each hash so it can be raised later.
+  count is stored with each hash so it can be raised later. Passwords are
+  hashed in one Unicode form (NFC), so "é" typed as one character or as e
+  plus an accent is the same password.
+- **Invisible characters**: control and format characters (Unicode Cc and
+  Cf), like a right-to-left override or a zero-width space. They are
+  removed from every name and text people type (`shared/fields.ts:
+  lineOfText`, `blockOfText`), so they can't disguise a name in an email
+  subject or make one look blank. The joiners emoji need are kept.
 - **Leaked-password check**: Better Auth's `haveIBeenPwned` plugin sends the
   first 5 characters of the password's SHA-1 hash to api.pwnedpasswords.com
   and refuses passwords found in breaches; the password itself never
