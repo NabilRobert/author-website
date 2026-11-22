@@ -353,8 +353,7 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   (`MAX_REQUEST_BYTES` in `server/app.ts`) so one huge request can't use up
   the server's memory; saving a site and uploads have their own limits.
 - **Report and takedown**: a visitor reports a page (`server/reports.ts`);
-  Arthur gets an email (`REPORTS_EMAIL`, at most 10 a day) and can hide the
-  page with `takedown-cli.mjs` (`server/node/takedown.ts`).
+  the operator gets an email (`REPORTS_EMAIL`) and can hide the page with `takedown-cli.mjs` (`server/node/takedown.ts`).
 - **Email quota**: Resend's free plan sends 100 emails a day. Contact
   messages stop at 40 a day across all sites and report notices at 10, so
   sign-up and reset codes always have room.
@@ -401,18 +400,13 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
   It refuses any key that isn't `images/<name>` or `files/<name>`, so a key
   can't reach outside the folder, and writes to a temporary file then
   renames it, so nobody ever reads half a file.
-- **Nightly backup**: `ops/backup.sh` on the VPS host streams a tar of
-  the database and uploads out of the container (`server/node/backup-cli.ts`
-  → `backup-archive.ts: writeArchive`), encrypts it with age as it arrives,
-  uploads it to S3 (rclone) and deletes local copies older than 14 days.
-  It never deletes in S3, and its key isn't allowed to: the bucket expires
-  the copies there itself (`ops/s3-lifecycle.json`), so a taken-over server
-  can't destroy the off-site backups.
-  `ops/restore.sh` puts one back (`restore-cli.ts` → `restoreArchive`),
-  checking the backup before replacing anything.
-- **age**: a small, modern file-encryption tool. The server holds only the
-  public key, which can encrypt but not decrypt; the private key is kept
-  elsewhere.
+- **Backup archive**: the database and uploads as one tar stream
+  (`server/node/backup-cli.ts` → `backup-archive.ts: writeArchive`), which
+  `ops/backup.sh` encrypts as it arrives. `ops/restore.sh` puts one back
+  (`restore-cli.ts` → `restoreArchive`), checking it before replacing
+  anything.
+- **age**: a small, modern file-encryption tool. Encrypting needs only the
+  public key; decrypting needs the private one.
 - **Upload queue**: the Node version handles one picture or PDF upload at a
   time (`server/node/upload-queue.ts`). Reading a 10 MB upload briefly takes
   about 100 MB and the container has 256 MB; 8 at once crashed it in a test.
@@ -424,6 +418,28 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Image key**: the name an uploaded image is stored under, like
   `images/<id>.jpg`; the site loads it from `/api/images/<id>.jpg`
   (`shared/images.ts: imageUrl`).
+
+## Deploying
+
+**The Node version, with Docker:**
+
+```bash
+cd ops
+cp .env.example .env              # non-secret settings
+./make-secrets.sh                 # makes the login secret, asks for the Resend key (not shown)
+docker compose up -d --build
+docker compose exec framed node dist-node/invite-cli.mjs you@example.com   # your first invite
+```
+
+Migrations apply by themselves on every start. `npm run build:node` builds it
+without Docker (`node dist-node/main.mjs`, settings from the environment).
+`docker compose exec framed node dist-node/takedown-cli.mjs reports` lists
+reported pages; `hide <name>` hides one and `show <name>` brings it back.
+
+**On Cloudflare Pages:** `npm run build` makes `dist/`. `wrangler.toml` holds
+the bindings; `BETTER_AUTH_SECRET` and `RESEND_API_KEY` are encrypted
+variables on the Pages project. `npm run invite -- --remote you@example.com`
+prints an invite link.
 
 ## Where to change things
 
@@ -453,11 +469,9 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Change a field's rules or its error message:** `shared/fields.ts` or the
   schema that uses it.
 - **Change the demo content:** `shared/demo-content.ts`.
-- **Change how long backups are kept:** `BACKUP_KEEP_DAYS` in the server's
-  `ops/backup.env` (default in `ops/backup.sh`) for the server's copies,
-  the S3 rule (`ops/s3-lifecycle.json`, then the same change in AWS) for
-  the off-site ones, and the number on the privacy page
-  (`src/views/PrivacyView.vue`); a test checks they agree.
+- **Change how long backups are kept:** `ops/backup.sh`,
+  `ops/backup.env.example`, `ops/s3-lifecycle.json` and the privacy page
+  (`src/views/PrivacyView.vue`) go together; a test checks they agree.
 - **Change how a selected block looks:** the outline classes
   (`BLOCK_OUTLINES`) in `src/editor/SitePreview.vue`, and the `data-selected:`
   classes in `src/editor/tabs/PageBlocksEditor.vue`.
@@ -486,9 +500,8 @@ The menu (`src/components/layout/SiteHeader.vue`) lists the pages whose
 - **Add a field to a block:** give it a `.default(…)` in
   `shared/blocks.ts`. Blocks are stored as JSON, so sites saved before the
   field existed don't have it; without a default they would fail to load.
-- **Deploy or change the Cloudflare setup:** the checklist at the end of
-  the README; bindings live in `wrangler.toml`, security headers in
-  `public/_headers`.
+- **Change the Cloudflare setup:** bindings live in `wrangler.toml`,
+  security headers in `public/_headers`.
 - **Change the database tables:** add a new numbered file in `migrations/`
   (never edit one that has been applied), then update
   `server/content-read.ts` and `server/content-write.ts`.

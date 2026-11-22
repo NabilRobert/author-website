@@ -8,3 +8,4 @@ dist-node
 ops/secrets
 ops/.env
 coverage
+ops/private

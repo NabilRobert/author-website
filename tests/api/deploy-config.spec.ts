@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 // The deploy configs: Cloudflare's wrangler.toml, the Dockerfile, and the
 // VPS's ops/ files (compose.yaml, the .env.example that ops/.env is copied
-// from, and the S3 rules for the backups, which Arthur applies in AWS).
+// from, and the S3 rules for the backups, which are applied by hand).
 // Production secrets live outside the repo, so these are what can be checked.
 const read = (path: string) => readFileSync(join(import.meta.dirname, '../..', path), 'utf8')
 const WRANGLER_TOML = read('wrangler.toml')
@@ -73,6 +73,11 @@ describe('the VPS deploy config (ops/)', () => {
     for (const secret of ['AGE_PUBLIC_KEY', 'BACKUP_S3_ACCESS_KEY_ID', 'BACKUP_S3_SECRET_ACCESS_KEY']) {
       expect(BACKUP_ENV_EXAMPLE).toMatch(new RegExp(`^${secret}=$`, 'm'))
     }
+  })
+
+  it('keeps the private server notes out of git and out of the image', () => {
+    expect(GITIGNORE).toMatch(/^ops\/private\/$/m)
+    expect(read('.dockerignore')).toMatch(/^ops\/private$/m)
   })
 
   it('keeps backups for the 14 days the privacy page promises', () => {

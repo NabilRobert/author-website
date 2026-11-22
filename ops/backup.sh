@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Nightly encrypted backup of Framed on the VPS: the database (copied safely
+# Encrypted backup of Framed's Node version: the database (copied safely
 # while the site runs) and the uploaded pictures and PDFs, as one tar stream
 # from the container (server/node/backup-cli.ts), encrypted with age as it
 # arrives. No unencrypted copy is ever written to the host's disk. Then the
@@ -10,15 +10,11 @@
 # (ops/s3-backup-key-policy.json): someone who takes over the server must not
 # be able to destroy the off-site copies along with the site. The bucket
 # expires them itself (ops/s3-lifecycle.json), inside the 14 days the privacy
-# page promises. README, "Backups", has the AWS steps.
-#
-# Run by cron on the host (README, "Backups"):
-#   47 3 * * * $HOME/framed/ops/backup.sh >> $HOME/backups/framed/backup.log 2>&1
+# page promises.
 #
 # Settings come from ops/backup.env at run time (copy ops/backup.env.example).
 # They are kept out of ops/.env on purpose: that file is passed into the
-# container, and the S3 keys have no business there. The age public key can
-# only encrypt; the private key stays off the server.
+# container, and the S3 keys have no business there.
 #
 # Pattern from MCP-backbone's deploy/backup_bookkeeping.sh (commit fe5d10c).
 set -euo pipefail

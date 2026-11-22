@@ -1,7 +1,7 @@
 # Cloudflare Pages settings for Framed: the built site, the API function's
 # bindings and public settings, and the database migrations. Ids aren't
 # secret; secrets (BETTER_AUTH_SECRET, RESEND_API_KEY) are encrypted
-# settings on the Pages project, never in this file (README).
+# settings on the Pages project, never in this file.
 name = "framed"
 pages_build_output_dir = "./dist"
 compatibility_date = "2026-11-01"
@@ -20,10 +20,9 @@ database_name = "frameddatabase"
 database_id = "c57218ea-d56f-4325-8baf-93ded646ebe2"
 migrations_dir = "migrations"
 
-# Picture and PDF storage is off for now (Arthur, 2026-11-09: R2 skipped
-# while another option is chosen). Without this binding Framed runs with
-# uploads switched off (server/storage.ts). To turn them on with R2, create
-# the bucket and put these three lines back without the "#":
+# Without an R2 binding named IMAGES, Framed runs with picture and PDF
+# uploads switched off (server/storage.ts). To turn them on, create a private
+# bucket and add:
 # [[r2_buckets]]
 # binding = "IMAGES"
-# bucket_name = "framed-images"
+# bucket_name = "<your bucket>"

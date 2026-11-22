@@ -2,7 +2,7 @@
 # Makes ops/secrets/ for Framed on a server: a fresh random login secret,
 # and the Resend API key, which it asks for without showing it. It never
 # overwrites a file that exists, so rerunning it is safe. Run once per
-# server, by Arthur.
+# server.
 #
 # The folder is private (700) but the files are readable (644): Compose
 # mounts secret files with the host's owner and mode, and the container runs
