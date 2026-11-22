@@ -4,10 +4,12 @@
 # site first; the script refuses while the volume is in use.
 #
 #   cd ops && docker compose stop framed
-#   ./restore.sh <backup.tar.age> <age private key file>
+#   ./restore.sh ~/backups/framed/framed-20261112-034700.tar.age <age private key file>
 #   docker compose start framed
 #
-# With "-" for the backup, it reads an already decrypted one from standard input.
+# To keep the private key off the server, decrypt on your own computer and
+# send the result over ssh instead, with "-" for the backup:
+#   age -d -i key.txt framed-….tar.age | ssh <server> 'cd framed/ops && ./restore.sh -'
 set -euo pipefail
 
 VOLUME="${FRAMED_VOLUME:-framed_framed-data}"

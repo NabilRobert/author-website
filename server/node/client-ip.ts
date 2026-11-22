@@ -2,12 +2,14 @@
  * The visitor's real address on the Node version, passed on to the API in
  * CF-Connecting-IP, the header its rate limits read (server/auth.ts,
  * server/contact-messages.ts). On Cloudflare Pages, Cloudflare sets that
- * header itself; here a visitor could send it, so it is worked out instead.
+ * header itself; on the VPS a visitor could send it, so it is worked out here.
  *
- * A reverse proxy puts the address that connected to it at the end of
+ * The path is visitor → Cloudflare → Caddy on the VPS → this container.
+ * Caddy puts the address that connected to it at the end of
  * X-Forwarded-For. If that address is Cloudflare's, Cloudflare's
- * CF-Connecting-IP names the visitor. If not, CF-Connecting-IP could say
- * anything, so the connecting address is used, and faking it buys nothing.
+ * CF-Connecting-IP names the visitor. If not, someone reached the VPS
+ * directly, skipping Cloudflare: their CF-Connecting-IP could say anything,
+ * so their own connecting address is used, and faking it buys nothing.
  */
 import { BlockList, isIP } from 'node:net'
 

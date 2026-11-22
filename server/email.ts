@@ -109,9 +109,7 @@ export function reportNoticeSender(env: Env): SendReportNotice {
 
 async function sendWithResend(env: Env, email: { to: string; subject: string; text: string; reply_to?: string }) {
   if (!env.RESEND_API_KEY || !env.EMAIL_FROM) {
-    throw new Error(
-      'RESEND_API_KEY or EMAIL_FROM is not set: add them to the deployed site (docs/guide.md, "Deploying").',
-    )
+    throw new Error('RESEND_API_KEY or EMAIL_FROM is not set: add them as secrets (README, setup checklist).')
   }
   const response = await fetch(RESEND_URL, {
     method: 'POST',

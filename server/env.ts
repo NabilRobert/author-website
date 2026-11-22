@@ -39,7 +39,7 @@ const BETTER_AUTH_DEFAULT_SECRET = 'better-auth-secret-12345678901234567890'
 export function secretProblem(env: Env): string | null {
   const secret = env.BETTER_AUTH_SECRET ?? ''
   if (!secret)
-    return 'BETTER_AUTH_SECRET is not set: add it as a secret to the deployed site (docs/guide.md, "Deploying").'
+    return 'BETTER_AUTH_SECRET is not set: add it as an encrypted secret on the Pages project (README, step 6).'
   if (secret === BETTER_AUTH_DEFAULT_SECRET)
     return "BETTER_AUTH_SECRET is Better Auth's public default: replace it with `openssl rand -base64 32`."
   if (secret.length < MIN_SECRET_LENGTH)

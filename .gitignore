@@ -26,5 +26,3 @@ backups/
 ops/secrets/
 ops/.env
 ops/backup.env
-# How the live server is set up and run: kept off the public repo.
-ops/private/

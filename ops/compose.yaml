@@ -1,5 +1,7 @@
-# Framed's Node version with Docker: read-only filesystem, no capabilities,
-# non-root, a hard memory limit, and published only on loopback.
+# Framed's Node version on a small shared server, hardened like Juku's
+# ops/compose.yaml: read-only filesystem, no capabilities, non-root, a hard
+# memory limit, and published only on loopback, behind the server's
+# existing proxy (which must also keep Cloudflare in front, see the README).
 #
 # Secrets are files under ops/secrets/ (git-ignored, made by
 # ops/make-secrets.sh), mounted at /run/secrets; each is named after the

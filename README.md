@@ -47,4 +47,5 @@ the code that confirms the email is printed in the terminal.
 ## Docs
 
 - [`docs/guide.md`](docs/guide.md): how a request flows through the code, a
-  glossary, where to change things, and deploying.
+  glossary, and where to change things.
+- Deploying: [`ops/`](ops/).
