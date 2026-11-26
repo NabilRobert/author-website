@@ -1,0 +1,18 @@
+# gitleaks (run in CI): the default rules, plus the known false positives below.
+[extend]
+useDefault = true
+
+# The test API's BETTER_AUTH_SECRET in tests/api/test-app.ts: a made-up
+# 33-character value spelling out "test secret" and the alphabet, used only by
+# the local test suite (Miniflare and SQLite). The live site's secret is made
+# by ops/make-secrets.sh and never committed. Matched on the two commits that
+# added and moved the line AND this one file, so a new secret anywhere,
+# including later in this file, is still caught.
+[[allowlists]]
+description = "Made-up Better Auth secret used only by the API tests"
+condition = "AND"
+commits = [
+    "8f8dd7f67dac660394c7996593a67b8fec798f70",
+    "0d9418a695499b24d7345dd991f32cb79200e04b",
+]
+paths = ['''^tests/api/test-app\.ts$''']

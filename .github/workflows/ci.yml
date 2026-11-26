@@ -1,5 +1,7 @@
 # Runs the same checks as `npm run check` locally: type check, lint, format
-# check, tests and the production build.
+# check, tests and the production build. Then gitleaks scans every commit for
+# secrets (.gitleaks.toml lists the known test values). Step copied from
+# whatsapp-finance-tracker's CI (0b5fd91).
 name: CI
 
 on:
@@ -13,11 +15,25 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: '8.30.1'
     steps:
       - uses: actions/checkout@v5
+        with:
+          # gitleaks scans every commit, not only the last one.
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run check
+      - name: Install gitleaks, checked against its published checksum
+        run: |
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfLO "${base}/${archive}"
+          curl -sSfL "${base}/gitleaks_${GITLEAKS_VERSION}_checksums.txt" | grep " ${archive}$" | sha256sum -c -
+          tar -xzf "${archive}" gitleaks
+          sudo install gitleaks /usr/local/bin/gitleaks
+      - run: gitleaks git --no-banner --redact .
