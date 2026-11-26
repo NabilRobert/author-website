@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useHead } from '@unhead/vue'
 import FramedShell from '@/components/layout/FramedShell.vue'
+import { CODE_LIFETIME_MINUTES, SIGN_IN_LOCK_MINUTES, VISIT_KEEP_DAYS } from '@shared/retention'
 
 // What Framed keeps about people, and why, in plain words (Indonesia's
 // personal data protection law, UU PDP). A draft for Arthur to quote.
@@ -22,7 +23,10 @@ useHead({ title: 'Privacy · Framed' })
         </li>
         <li>Your page and the pictures you upload, to show them to visitors.</li>
         <li>Your login sessions (which device, until when), so you stay logged in for up to a week.</li>
-        <li>Wrong-password attempts on your account (only when they happened), for 15 minutes, to stop guessing.</li>
+        <li>
+          Wrong-password attempts on your account (only when they happened), for {{ SIGN_IN_LOCK_MINUTES }} minutes, to
+          stop guessing.
+        </li>
       </ul>
       <h2 class="text-xl font-semibold">What we don't do</h2>
       <p>
@@ -30,13 +34,13 @@ useHead({ title: 'Privacy · Framed' })
         video on a page loads from YouTube (without its tracking cookies) or Vimeo (with do-not-track) only when a
         visitor presses play. A message sent through a page's contact form is emailed to the page's owner and not kept;
         to stop floods of messages we keep a scrambled stand-in for the sender's internet address, and the time, for one
-        day. For each page's owner we count views per page per day, for 90 days: only the number, with no cookies and
-        nothing about who visited.
+        day. For each page's owner we count views per page per day, for {{ VISIT_KEEP_DAYS }} days: only the number,
+        with no cookies and nothing about who visited.
       </p>
       <h2 class="text-xl font-semibold">Where it is kept</h2>
       <p>
         On Framed's own server, with Cloudflare in front of it. A copy is backed up every night, encrypted, to Amazon
-        S3. Emailed codes are stored scrambled (hashed) and expire after 10 minutes.
+        S3. Emailed codes are stored scrambled (hashed) and expire after {{ CODE_LIFETIME_MINUTES }} minutes.
       </p>
       <h2 class="text-xl font-semibold">Deleting everything</h2>
       <p>

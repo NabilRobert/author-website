@@ -81,6 +81,14 @@ describe('the VPS deploy config (ops/)', () => {
     expect(read('src/views/PrivacyView.vue')).toContain('Backups are deleted after 14 days')
   })
 
+  it("changes the privacy page's backup days whenever the script's default changes", () => {
+    // The page can't read the default: a server can override it in
+    // ops/backup.env. So the page's number is checked against the script's.
+    const defaultDays = /^DEFAULT_KEEP_DAYS=(\d+)$/m.exec(read('ops/backup.sh'))?.[1]
+    expect(defaultDays).toBeDefined()
+    expect(read('src/views/PrivacyView.vue')).toContain(`Backups are deleted after ${defaultDays} days`)
+  })
+
   it('has S3 expire the off-site backups inside those 14 days', () => {
     const rule = S3_LIFECYCLE.Rules.find((candidate) => candidate.Filter.Prefix === 'framed/')
     expect(rule?.Status).toBe('Enabled')

@@ -16,6 +16,7 @@
 import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { contactMessageSchema } from '../shared/contact'
+import { DAY_MS } from '../shared/retention'
 import { findSiteByName } from './sites'
 import type { AppEnv } from './session'
 
@@ -62,7 +63,7 @@ contactRoutes.post('/sites/:name/messages', bodyLimit({ maxSize: MAX_BODY_BYTES 
 async function checkLimits(db: D1Database, siteId: string, sender: string): Promise<string | null> {
   const now = Date.now()
   const hourAgo = new Date(now - 60 * 60 * 1000).toISOString()
-  const dayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString()
+  const dayAgo = new Date(now - DAY_MS).toISOString()
   const count = 'SELECT COUNT(*) AS count FROM contact_messages WHERE sent_at > ?'
   const [, bySender, bySite, allSites] = await db.batch<{ count: number }>([
     db.prepare('DELETE FROM contact_messages WHERE sent_at < ?').bind(dayAgo),

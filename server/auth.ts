@@ -15,10 +15,11 @@ import { APIError, createAuthMiddleware } from 'better-auth/api'
 import type { Env } from './env'
 import type { SendEmailCode } from './email'
 import { hashPassword, verifyPassword } from './password-hash'
+import { CODE_LIFETIME_MINUTES } from '../shared/retention'
 import { isPasswordTooShort, MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT } from '../shared/passwords'
 
 const CODE_LENGTH = 6
-const CODE_LIFETIME_SECONDS = 10 * 60
+const CODE_LIFETIME_SECONDS = CODE_LIFETIME_MINUTES * 60
 const WRONG_CODE_TRIES = 5
 // A login lasts a week and is renewed once a day while in use.
 const SESSION_SECONDS = 7 * 24 * 60 * 60
