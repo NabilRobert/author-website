@@ -48,6 +48,21 @@ describe('POST /api/sites/<name>/messages', () => {
     expect(row!.sender_hash).not.toContain('203.0.113.7')
   })
 
+  it("removes invisible characters from the visitor's name before it reaches the owner's email", async () => {
+    const disguised = 'Bank BCA \u202Egnp.exe\u202C'
+    expect((await send({ ...MESSAGE, name: disguised })).status).toBe(201)
+    expect(api.sentMessages[0]?.senderName).toBe('Bank BCA gnp.exe')
+  })
+
+  it.each(['\u200B', '\u200B\u200D\u202E', '  \uFEFF '])(
+    'refuses a name made only of invisible characters',
+    async (name) => {
+      const response = await send({ ...MESSAGE, name })
+      expect(response.status).toBe(400)
+      expect(await response.json()).toEqual({ error: 'Add your name.' })
+    },
+  )
+
   it('refuses a message without a valid email, saying why', async () => {
     const response = await send({ ...MESSAGE, email: 'not an email' })
     expect(response.status).toBe(400)

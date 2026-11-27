@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { emailCodeSender } from '../../server/email'
+import { contactMessageSender, emailCodeSender } from '../../server/email'
 import type { Env } from '../../server/env'
 
 const BASE: Env = {
@@ -75,5 +75,26 @@ describe('sending emailed codes', () => {
     )
     expect(fetchStub).toHaveBeenCalledOnce()
     expect(log).not.toHaveBeenCalled()
+  })
+})
+
+describe('emailing a contact-form message', () => {
+  async function subjectFor(env: Env): Promise<string> {
+    const fetchStub = vi.fn(async () => Response.json({ id: 'email-1' }))
+    vi.stubGlobal('fetch', fetchStub)
+    const message = { siteName: 'alex', senderName: 'Mara', senderEmail: 'mara@example.com', message: 'Hello' }
+    await contactMessageSender(env)({ to: 'alex@example.com', ...message })
+    const [, init] = fetchStub.mock.calls[0] as unknown as [string, RequestInit]
+    return (JSON.parse(String(init.body)) as Record<string, string>).subject ?? ''
+  }
+
+  it('names the page by its address on the live site', async () => {
+    expect(await subjectFor(PRODUCTION)).toBe('Message from Mara via framed.my.id/alex')
+  })
+
+  it('takes that address from SITE_URL', async () => {
+    expect(await subjectFor({ ...PRODUCTION, SITE_URL: 'https://example.test' })).toBe(
+      'Message from Mara via example.test/alex',
+    )
   })
 })

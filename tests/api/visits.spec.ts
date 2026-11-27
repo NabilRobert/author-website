@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { dayKey, KEEP_DAYS } from '../../server/visits'
+import { dayKey } from '../../server/visits'
+import { VISIT_KEEP_DAYS } from '../../shared/retention'
 import { findSiteByName } from '../../server/sites'
 import { createTestApp } from './test-app'
 import type { TestApp } from './test-app'
@@ -46,9 +47,9 @@ describe('counting visits', () => {
     expect(Object.keys(row!).sort()).toEqual(['count', 'day', 'path', 'site_id'])
   })
 
-  it(`forgets days older than ${KEEP_DAYS}`, async () => {
+  it(`forgets days older than ${VISIT_KEEP_DAYS}`, async () => {
     const site = await findSiteByName(api.db, 'mara')
-    const old = dayKey(Date.now(), KEEP_DAYS + 1)
+    const old = dayKey(Date.now(), VISIT_KEEP_DAYS + 1)
     await api.db.prepare("INSERT INTO visits VALUES (?, ?, '/', 5)").bind(site!.id, old).run()
     await countVisit('/')
     const left = await api.db.prepare('SELECT day FROM visits').all<{ day: string }>()

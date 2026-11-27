@@ -12,6 +12,11 @@
  * Each hash is stored as "pbkdf2-sha256$<rounds>$<salt>$<hash>" (base64),
  * so if the round count is raised later, old hashes still check against
  * their own count.
+ *
+ * Passwords are compared in one Unicode form (NFC): "café" can be typed as
+ * one character é or as e plus an accent, and both must be the same
+ * password. Hashes made before this rule used the password as typed, so
+ * verifying also tries that form when it differs; nobody is locked out.
  */
 const ALGORITHM = 'pbkdf2-sha256'
 const ROUNDS = 100_000 // the most Workers' Web Crypto allows
@@ -20,15 +25,18 @@ const HASH_BITS = 256
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES))
-  const hash = await derive(password, salt, ROUNDS)
+  const hash = await derive(password.normalize('NFC'), salt, ROUNDS)
   return [ALGORITHM, ROUNDS, toBase64(salt), toBase64(hash)].join('$')
 }
 
 export async function verifyPassword({ hash, password }: { hash: string; password: string }): Promise<boolean> {
   const [algorithm, rounds, salt, expected] = hash.split('$')
   if (algorithm !== ALGORITHM || !rounds || !salt || !expected) return false
-  const actual = await derive(password, fromBase64(salt), Number(rounds))
-  return isSameBytes(actual, fromBase64(expected))
+  const typedForms = new Set([password.normalize('NFC'), password])
+  for (const form of typedForms) {
+    if (isSameBytes(await derive(form, fromBase64(salt), Number(rounds)), fromBase64(expected))) return true
+  }
+  return false
 }
 
 async function derive(password: string, salt: Uint8Array<ArrayBuffer>, rounds: number): Promise<Uint8Array> {

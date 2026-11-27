@@ -3,8 +3,14 @@
 # while the site runs) and the uploaded pictures and PDFs, as one tar stream
 # from the container (server/node/backup-cli.ts), encrypted with age as it
 # arrives. No unencrypted copy is ever written to the host's disk. Then the
-# encrypted file goes to S3 with rclone, and copies older than
-# BACKUP_KEEP_DAYS (14 by default) are deleted, here and in S3.
+# encrypted file goes to S3 with rclone, and local copies older than
+# BACKUP_KEEP_DAYS (14 by default) are deleted.
+#
+# This script never deletes anything in S3, and its S3 key isn't allowed to
+# (ops/s3-backup-key-policy.json): someone who takes over the server must not
+# be able to destroy the off-site copies along with the site. The bucket
+# expires them itself (ops/s3-lifecycle.json), inside the 14 days the privacy
+# page promises. README, "Backups", has the AWS steps.
 #
 # Run by cron on the host (README, "Backups"):
 #   47 3 * * * $HOME/framed/ops/backup.sh >> $HOME/backups/framed/backup.log 2>&1
@@ -23,6 +29,7 @@ SETTINGS_FILE="${FRAMED_BACKUP_SETTINGS:-$OPS_DIR/backup.env}"
 BACKUP_DIR="$HOME/backups/framed"
 DEFAULT_KEEP_DAYS=14
 DEFAULT_CONTAINER=framed-framed-1
+RUN_TIME_SLACK_MINUTES=60
 
 if [ ! -f "$SETTINGS_FILE" ]; then
   echo "backup: $SETTINGS_FILE is missing: copy ops/backup.env.example to it and fill it in" >&2
@@ -87,8 +94,9 @@ REMOTE=":s3:$S3_BUCKET/framed"
 # and pruning only ever follows a fresh copy, so the newest one always stays.
 rclone copy "$OUT" "$REMOTE/"
 
-find "$BACKUP_DIR" -maxdepth 1 -name 'framed-*.tar.age' -mmin +$((KEEP_DAYS * 24 * 60)) -delete
-rclone delete "$REMOTE" --min-age "${KEEP_DAYS}d" --include 'framed-*.tar.age'
+# An hour short of KEEP_DAYS: the nightly runs never start at the same second,
+# so the full figure would keep the copy from KEEP_DAYS ago one more night.
+find "$BACKUP_DIR" -maxdepth 1 -name 'framed-*.tar.age' -mmin +$((KEEP_DAYS * 24 * 60 - RUN_TIME_SLACK_MINUTES)) -delete
 
-echo "backup: $(basename "$OUT") uploaded; copies older than $KEEP_DAYS days removed"
+echo "backup: $(basename "$OUT") uploaded; local copies older than $KEEP_DAYS days removed"
 ping_healthcheck ""

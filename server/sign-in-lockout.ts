@@ -12,11 +12,10 @@
  */
 import { createMiddleware } from 'hono/factory'
 import type { AppEnv } from './session'
+import { SIGN_IN_LOCK_MINUTES } from '../shared/retention'
 
 export const WRONG_PASSWORDS_BEFORE_LOCK = 10
-const LOCK_MINUTES = 15
-const LOCKED =
-  'Too many wrong passwords for this account. Wait 15 minutes, or use "Forgot your password?" to set a new one.'
+const LOCKED = `Too many wrong passwords for this account. Wait ${SIGN_IN_LOCK_MINUTES} minutes, or use "Forgot your password?" to set a new one.`
 // What Better Auth answers for a wrong email or password.
 const WRONG_PASSWORD_STATUS = 401
 
@@ -34,7 +33,7 @@ async function emailIn(request: Request): Promise<string> {
 export const guardSignIn = createMiddleware<AppEnv>(async (c, next) => {
   const db = c.env.DB
   const email = await emailIn(c.req.raw)
-  const windowStart = new Date(Date.now() - LOCK_MINUTES * 60 * 1000).toISOString()
+  const windowStart = new Date(Date.now() - SIGN_IN_LOCK_MINUTES * 60 * 1000).toISOString()
   const recent = await db
     .prepare('SELECT COUNT(*) AS count FROM sign_in_failures WHERE email = ? AND failed_at > ?')
     .bind(email, windowStart)

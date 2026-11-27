@@ -16,11 +16,10 @@ import { z } from 'zod'
 import { findSiteByName } from './sites'
 import { requireSite } from './session'
 import type { AppEnv } from './session'
+import { DAY_MS, VISIT_KEEP_DAYS } from '../shared/retention'
 
-export const KEEP_DAYS = 90
 const SHOWN_DAYS = 30
 const TOP_PAGES = 10
-const DAY_MS = 24 * 60 * 60 * 1000
 // '/' for the front page, '/about', or '/work/lantern'.
 const visitSchema = z.object({
   path: z
@@ -48,7 +47,7 @@ visitCountRoutes.post('/sites/:name/visits', bodyLimit({ maxSize: 1024 }), async
       `INSERT INTO visits (site_id, day, path, count) VALUES (?, ?, ?, 1)
        ON CONFLICT (site_id, day, path) DO UPDATE SET count = count + 1`,
     ).bind(site.id, dayKey(now), parsed.data.path),
-    c.env.DB.prepare('DELETE FROM visits WHERE site_id = ? AND day < ?').bind(site.id, dayKey(now, KEEP_DAYS)),
+    c.env.DB.prepare('DELETE FROM visits WHERE site_id = ? AND day < ?').bind(site.id, dayKey(now, VISIT_KEEP_DAYS)),
   ])
   return c.body(null, 204)
 })

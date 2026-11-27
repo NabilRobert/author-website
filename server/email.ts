@@ -84,7 +84,7 @@ export function contactMessageSender(env: Env): SendContactMessage {
       to,
       reply_to: senderEmail,
       // One line only, whatever the visitor typed.
-      subject: `Message from ${senderName.replace(/\s+/g, ' ')} via framed.my.id/${siteName}`,
+      subject: `Message from ${senderName.replace(/\s+/g, ' ')} via ${new URL(env.SITE_URL).host}/${siteName}`,
       text: `${message}\n\n— ${senderName} (${senderEmail})\nReply to this email to answer them.`,
     })
   }

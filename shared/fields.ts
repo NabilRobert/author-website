@@ -10,9 +10,33 @@ const MAX_LONG_TEXT = 5000
 /** Longest title, name, label or place. */
 const MAX_SHORT_TEXT = 200
 
-export const shortText = z.string().trim().max(MAX_SHORT_TEXT, 'Keep this under 200 characters.')
-export const longText = z.string().trim().max(MAX_LONG_TEXT, 'Keep this under 5,000 characters.')
-export const requiredText = (whatIsMissing: string) => shortText.min(1, whatIsMissing)
+// Control and format characters (Unicode Cc and Cf) can't be seen but change
+// how text shows: a right-to-left override makes "Bank BCA <RLO>gnp.exe"
+// read "Bank BCA exe.png" in an email subject, and zero-width spaces make a
+// name that looks blank. They are removed from everything people type.
+// The joiners stay (U+200C, U+200D): emoji like 👩‍💻 and scripts like Persian need them.
+const INVISIBLE_IN_A_LINE = /(?![\u200C\u200D])[\p{Cc}\p{Cf}]/gu
+// Text over several lines keeps its line breaks and tabs.
+const INVISIBLE_IN_TEXT = /(?![\n\t\u200C\u200D])[\p{Cc}\p{Cf}]/gu
+/** At least one character a reader can see: not a space, a joiner or a lone accent. */
+export const HAS_VISIBLE_CHARACTER = /[^\s\p{M}\u200C\u200D]/u
+
+/** One line of text (a name, title or label), trimmed, with invisible characters removed. */
+export const lineOfText = () =>
+  z
+    .string()
+    .overwrite((text) => text.replace(INVISIBLE_IN_A_LINE, ''))
+    .trim()
+/** Text that may run over several lines, trimmed, with invisible characters removed. */
+export const blockOfText = () =>
+  z
+    .string()
+    .overwrite((text) => text.replace(INVISIBLE_IN_TEXT, ''))
+    .trim()
+
+export const shortText = lineOfText().max(MAX_SHORT_TEXT, 'Keep this under 200 characters.')
+export const longText = blockOfText().max(MAX_LONG_TEXT, 'Keep this under 5,000 characters.')
+export const requiredText = (whatIsMissing: string) => shortText.regex(HAS_VISIBLE_CHARACTER, whatIsMissing)
 
 // Only http and https: a `javascript:` link in a button would run code in
 // visitors' browsers.

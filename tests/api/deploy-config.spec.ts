@@ -3,8 +3,9 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-// The deploy configs: Cloudflare's wrangler.toml, and the VPS's ops/ files
-// (compose.yaml and the .env.example that ops/.env is copied from).
+// The deploy configs: Cloudflare's wrangler.toml, the Dockerfile, and the
+// VPS's ops/ files (compose.yaml, the .env.example that ops/.env is copied
+// from, and the S3 rules for the backups, which Arthur applies in AWS).
 // Production secrets live outside the repo, so these are what can be checked.
 const read = (path: string) => readFileSync(join(import.meta.dirname, '../..', path), 'utf8')
 const WRANGLER_TOML = read('wrangler.toml')
@@ -12,6 +13,27 @@ const OPS_ENV_EXAMPLE = read('ops/.env.example')
 const OPS_COMPOSE = read('ops/compose.yaml')
 const BACKUP_ENV_EXAMPLE = read('ops/backup.env.example')
 const GITIGNORE = read('.gitignore')
+const DOCKERFILE = read('Dockerfile')
+const PRIVACY_PAGE_BACKUP_DAYS = 14
+
+interface S3LifecycleRule {
+  Status: string
+  Filter: { Prefix: string }
+  Expiration: { Days: number }
+  NoncurrentVersionExpiration: { NoncurrentDays: number }
+}
+interface S3PolicyStatement {
+  Effect: 'Allow' | 'Deny'
+  Action: string | string[]
+}
+const S3_LIFECYCLE = JSON.parse(read('ops/s3-lifecycle.json')) as { Rules: S3LifecycleRule[] }
+const S3_KEY_POLICY = JSON.parse(read('ops/s3-backup-key-policy.json')) as { Statement: S3PolicyStatement[] }
+
+/** Every action the backup key's policy allows, or denies. */
+function actionsWithEffect(effect: S3PolicyStatement['Effect']): string[] {
+  const statements = S3_KEY_POLICY.Statement.filter((statement) => statement.Effect === effect)
+  return statements.flatMap((statement) => [statement.Action].flat())
+}
 
 describe('the Cloudflare deploy config (wrangler.toml)', () => {
   it('never switches on a local-development setting', () => {
@@ -57,5 +79,42 @@ describe('the VPS deploy config (ops/)', () => {
     expect(BACKUP_ENV_EXAMPLE).toMatch(/^BACKUP_KEEP_DAYS=14$/m)
     expect(read('ops/backup.sh')).toContain('DEFAULT_KEEP_DAYS=14')
     expect(read('src/views/PrivacyView.vue')).toContain('Backups are deleted after 14 days')
+  })
+
+  it("changes the privacy page's backup days whenever the script's default changes", () => {
+    // The page can't read the default: a server can override it in
+    // ops/backup.env. So the page's number is checked against the script's.
+    const defaultDays = /^DEFAULT_KEEP_DAYS=(\d+)$/m.exec(read('ops/backup.sh'))?.[1]
+    expect(defaultDays).toBeDefined()
+    expect(read('src/views/PrivacyView.vue')).toContain(`Backups are deleted after ${defaultDays} days`)
+  })
+
+  it('has S3 expire the off-site backups inside those 14 days', () => {
+    const rule = S3_LIFECYCLE.Rules.find((candidate) => candidate.Filter.Prefix === 'framed/')
+    expect(rule?.Status).toBe('Enabled')
+    // S3 rounds the expiry up to the next midnight (UTC), so it can take a
+    // day longer; an old version is then kept NoncurrentDays more.
+    const worstCaseDays =
+      (rule?.Expiration.Days ?? Infinity) + 1 + (rule?.NoncurrentVersionExpiration.NoncurrentDays ?? 0)
+    expect(worstCaseDays).toBeLessThanOrEqual(PRIVACY_PAGE_BACKUP_DAYS)
+  })
+
+  it('gives the backup key no way to delete a backup or loosen the bucket', () => {
+    const deletesOrLoosens = /Delete|Put(Bucket|Lifecycle)/
+    expect(actionsWithEffect('Allow').filter((action) => deletesOrLoosens.test(action))).toEqual([])
+    expect(actionsWithEffect('Deny')).toEqual(
+      expect.arrayContaining([
+        's3:DeleteObject',
+        's3:DeleteObjectVersion',
+        's3:PutLifecycleConfiguration',
+        's3:PutBucketPolicy',
+      ]),
+    )
+  })
+
+  it('builds from a base image pinned by digest, not a tag that can move', () => {
+    expect(DOCKERFILE).toMatch(/^ARG NODE_IMAGE=node:[\w.-]+@sha256:[0-9a-f]{64}$/m)
+    const baseImages = [...DOCKERFILE.matchAll(/^FROM (\S+)/gm)].map((match) => match[1])
+    expect(baseImages).toEqual(['${NODE_IMAGE}', '${NODE_IMAGE}'])
   })
 })

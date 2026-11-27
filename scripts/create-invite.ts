@@ -12,20 +12,20 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { z } from 'zod'
 import { newInviteCode } from '../server/invites'
+import { insertInviteSql } from './invite-sql'
 
 const LOCAL_SITE_URL = 'http://localhost:8788'
 const args = process.argv.slice(2)
 const isRemote = args.includes('--remote')
 const email = args.find((arg) => !arg.startsWith('--')) ?? ''
 
-// Checked before it goes into the SQL below; an email address has no quotes.
+// An email address may contain a quote; insertInviteSql writes it safely.
 if (email && !z.email().safeParse(email).success) {
   throw new Error(`"${email}" isn't an email address. Run it again with a correct one, or none.`)
 }
 
 const code = newInviteCode()
-const emailValue = email ? `'${email.toLowerCase()}'` : 'NULL'
-const sql = `INSERT INTO invites (code, email, created_at) VALUES ('${code}', ${emailValue}, '${new Date().toISOString()}')`
+const sql = insertInviteSql(code, email ? email.toLowerCase() : null, new Date().toISOString())
 execFileSync('npx', ['wrangler', 'd1', 'execute', 'DB', isRemote ? '--remote' : '--local', '--command', sql], {
   stdio: 'inherit',
 })

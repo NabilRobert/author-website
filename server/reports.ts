@@ -6,6 +6,7 @@
  */
 import { Hono } from 'hono'
 import { z } from 'zod'
+import { blockOfText } from '../shared/fields'
 import { findSiteByName } from './sites'
 import type { AppEnv } from './session'
 
@@ -16,7 +17,7 @@ const MAX_REPORTS_PER_SITE_PER_HOUR = 20
 export const REPORT_NOTICES_PER_DAY = 10
 
 const reportSchema = z.object({
-  reason: z.string().trim().min(5, 'Say briefly what is wrong.').max(1000, 'Keep it under 1,000 characters.'),
+  reason: blockOfText().min(5, 'Say briefly what is wrong.').max(1000, 'Keep it under 1,000 characters.'),
 })
 
 export const reportRoutes = new Hono<AppEnv>()

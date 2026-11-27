@@ -138,6 +138,13 @@ describe('making an account', () => {
     expect(alertText(page)).toContain('Use at least 10 characters')
   })
 
+  it('counts characters as people see them: 5 emoji are too short', async () => {
+    const { page } = await startSignUp()
+    await fillIn(page, { '#login-email': 'new@example.com', '#login-password': '🔥🔥🔥🔥🔥' })
+    expect(authClient.signUp.email).not.toHaveBeenCalled()
+    expect(alertText(page)).toContain('Use at least 10 characters')
+  })
+
   it("passes on the server's warning about a leaked password", async () => {
     const leaked = {
       status: 400,
